@@ -34,7 +34,7 @@ function mamboleo_scraper_admin_page() {
     if (isset($_POST['mamboleo_scrape_trigger'])) {
         // Use plugin_dir_path to get the absolute path to the plugin directory
         $plugin_dir = plugin_dir_path(__FILE__);
-        $scraper_path = realpath($plugin_dir . '../scraper/run_all_scrapers.py');
+        $scraper_path = realpath($plugin_dir . 'scraper/run_all_scrapers.py');
         if ($scraper_path && file_exists($scraper_path)) {
             $output = shell_exec('python ' . escapeshellarg($scraper_path) . ' 2>&1');
         } else {
