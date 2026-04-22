@@ -23,14 +23,13 @@ _SOURCE = "standardmedia.co.ke"
 _BASE   = "https://www.standardmedia.co.ke"
 
 _RSS_FEEDS = [
-    f"{_BASE}/rss/national",
-    f"{_BASE}/rss/crime",
-    f"{_BASE}/rss/counties",
+    f"{_BASE}/rss/kenya.php",
+    f"{_BASE}/rss/headlines.php",
 ]
 
 _CATEGORY_PAGES = [
-    f"{_BASE}/national",
-    f"{_BASE}/crime",
+    f"{_BASE}/category/588/national",
+    f"{_BASE}/category/763/crime-and-justice",
 ]
 
 _ARTICLE_LINK_SELECTORS = [

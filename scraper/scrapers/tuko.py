@@ -20,14 +20,11 @@ from scrapers.base import BaseScraper
 _SOURCE = "tuko.co.ke"
 
 _RSS_FEEDS = [
-    "https://www.tuko.co.ke/crime/rss.xml",
-    "https://www.tuko.co.ke/kenya/rss.xml",
     "https://www.tuko.co.ke/rss.xml",
 ]
 
 _CATEGORY_PAGES = [
-    "https://www.tuko.co.ke/crime/",
-    "https://www.tuko.co.ke/kenyan-disasters/",
+    "https://www.tuko.co.ke/kenya/",
 ]
 
 # Selectors tried in order — Tuko has changed layout several times

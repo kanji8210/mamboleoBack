@@ -26,8 +26,8 @@ _RSS_FEEDS = [
 ]
 
 _CATEGORY_PAGES = [
-    "https://nation.africa/kenya/news",
-    "https://nation.africa/kenya/counties",
+    "https://nation.africa/kenya/news/",
+    "https://nation.africa/kenya/counties/",
 ]
 
 _ARTICLE_LINK_SELECTORS = [
