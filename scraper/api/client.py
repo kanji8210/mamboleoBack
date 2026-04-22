@@ -5,13 +5,14 @@ import logging
 
 import requests
 
-from config import WP_API_BASE, WP_API_KEY
+from config import WP_API_BASE, WP_API_KEY, USER_AGENT
 
 log = logging.getLogger("api.client")
 
 _HEADERS = {
     "X-API-Key":    WP_API_KEY,
     "Content-Type": "application/json",
+    "User-Agent":   USER_AGENT,
 }
 
 _ARTICLES_URL  = f"{WP_API_BASE}/wp-json/mamboleo/v1/articles"
