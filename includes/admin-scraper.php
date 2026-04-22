@@ -30,55 +30,139 @@ add_action('admin_menu', function() {
     );
 });
 
-function mamboleo_scraper_admin_page() {
+// AJAX Handlers
+add_action('wp_ajax_mamboleo_run_scraper', 'mamboleo_run_scraper_ajax');
+add_action('wp_ajax_mamboleo_install_deps', 'mamboleo_install_deps_ajax');
+
+function mamboleo_run_scraper_ajax() {
+    check_ajax_referer('mamboleo_scraper_nonce', 'security');
+    if (!current_user_can('manage_options')) wp_die('Forbidden');
+
     $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
+    if (function_exists('set_time_limit')) @set_time_limit(300);
+
+    $python_cmd = 'python3';
+    $check_py3 = (string) shell_exec('python3 --version 2>&1');
+    if (strpos($check_py3, 'Python 3') === false) $python_cmd = 'python';
+
+    $command = 'cd ' . escapeshellarg($scraper_dir) . ' && ' . $python_cmd . ' run_all_scrapers.py 2>&1';
+    $output = (string) shell_exec($command);
     
-    // Increase execution time for long-running scraping tasks
-    if (function_exists('set_time_limit')) {
-        @set_time_limit(300); // 5 minutes
-    }
+    wp_send_json_success(['output' => $output]);
+}
 
-    if (isset($_POST['mamboleo_install_deps'])) {
-        $command = 'cd ' . escapeshellarg($scraper_dir) . ' && pip install -r requirements.txt 2>&1';
-        $output = (string) shell_exec($command);
-        echo '<div class="notice notice-info"><h3>Dependency Installation Output</h3><pre>' . esc_html($output ?: 'No output from pip.') . '</pre></div>';
-    }
+function mamboleo_install_deps_ajax() {
+    check_ajax_referer('mamboleo_scraper_nonce', 'security');
+    if (!current_user_can('manage_options')) wp_die('Forbidden');
 
-    if (isset($_POST['mamboleo_scrape_trigger'])) {
-        $scraper_path = realpath($scraper_dir . '/run_all_scrapers.py');
-        
-        if ($scraper_path && file_exists($scraper_path)) {
-            // Try python3 first, then python
-            $python_cmd = 'python3';
-            $check_py3 = (string) shell_exec('python3 --version 2>&1');
-            if (strpos($check_py3, 'Python 3') === false) {
-                $python_cmd = 'python';
-            }
+    $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
+    $command = 'cd ' . escapeshellarg($scraper_dir) . ' && pip install -r requirements.txt 2>&1';
+    $output = (string) shell_exec($command);
+    
+    wp_send_json_success(['output' => $output]);
+}
 
-            $command = 'cd ' . escapeshellarg($scraper_dir) . ' && ' . $python_cmd . ' run_all_scrapers.py 2>&1';
-            $output = (string) shell_exec($command);
+function mamboleo_scraper_admin_page() {
+    ?>
+    <style>
+        .mamboleo-admin-card { background: #fff; border: 1px solid #ccd0d4; padding: 20px; max-width: 800px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px; }
+        .mamboleo-terminal { background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', 'Monaco', monospace; padding: 15px; border-radius: 4px; height: 400px; overflow-y: auto; margin-top: 20px; line-height: 1.5; font-size: 13px; border: 1px solid #333; }
+        .mamboleo-terminal-line { margin-bottom: 4px; }
+        .mamboleo-status-bar { display: flex; align-items: center; margin-top: 15px; }
+        .mamboleo-loader { border: 3px solid #f3f3f3; border-top: 3px solid #2271b1; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .mamboleo-btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .terminal-info { color: #569cd6; }
+        .terminal-warning { color: #ce9178; }
+        .terminal-error { color: #f44747; }
+        .terminal-success { color: #6a9955; }
+    </style>
+
+    <div class="wrap">
+        <h1>Mamboleo Scraper Trigger</h1>
+        <div class="mamboleo-admin-card">
+            <p>Control the backend Python scraper. Use "Install Dependencies" first if running on a new server.</p>
             
-            if (strpos($output, 'ModuleNotFoundError') !== false) {
-                echo '<div class="notice notice-error"><h3>Missing Dependencies</h3><p>It looks like some Python packages are missing. Please click the "Install/Update Dependencies" button below.</p><pre>' . esc_html($output) . '</pre></div>';
-            } elseif (empty($output)) {
-                echo '<div class="notice notice-warning"><h3>No Output</h3><p>The scraper ran but returned no output. Check if shell_exec is enabled on your server.</p></div>';
-            } else {
-                echo '<div class="notice notice-success"><h3>Scraper Output</h3><pre>' . esc_html($output) . '</pre></div>';
-            }
-        } else {
-            echo '<div class="notice notice-error"><p>Scraper script not found at: ' . esc_html($scraper_dir . '/run_all_scrapers.py') . '</p></div>';
-        }
-    }
+            <div class="mamboleo-btn-group">
+                <button id="run-scraper-btn" class="button button-primary">Run Scraper Now</button>
+                <button id="install-deps-btn" class="button button-secondary">Install Dependencies</button>
+            </div>
 
-    echo '<h2>Manual Scraper Trigger</h2>';
-    echo '<div class="card" style="max-width: 600px; padding: 20px;">';
-    echo '<p>Trigger the backend Python scraper to fetch the latest security incidents and news articles.</p>';
-    echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
-    echo '<button class="button button-primary" name="mamboleo_scrape_trigger">Run Scraper Now</button>';
-    echo '</form>';
-    
-    echo '<form method="post" style="display: inline-block;">';
-    echo '<button class="button button-secondary" name="mamboleo_install_deps">Install/Update Dependencies</button>';
-    echo '</form>';
-    echo '</div>';
+            <div class="mamboleo-status-bar">
+                <div id="mamboleo-loader" class="mamboleo-loader"></div>
+                <span id="mamboleo-status-text">Ready.</span>
+            </div>
+
+            <div id="mamboleo-terminal" class="mamboleo-terminal">
+                <div class="mamboleo-terminal-line">Waiting for command...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    jQuery(document).ready(function($) {
+        const $terminal = $('#mamboleo-terminal');
+        const $loader = $('#mamboleo-loader');
+        const $status = $('#mamboleo-status-text');
+
+        function logToTerminal(text, type = '') {
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    let className = '';
+                    if (line.includes('INFO')) className = 'terminal-info';
+                    if (line.includes('WARNING')) className = 'terminal-warning';
+                    if (line.includes('ERROR') || line.includes('Traceback')) className = 'terminal-error';
+                    if (line.includes('Done') || line.includes('success')) className = 'terminal-success';
+                    
+                    $terminal.append(`<div class="mamboleo-terminal-line ${className}">${line}</div>`);
+                }
+            });
+            $terminal.scrollTop($terminal[0].scrollHeight);
+        }
+
+        function runAction(action, btnId) {
+            const $btn = $(btnId);
+            $btn.prop('disabled', true);
+            $loader.show();
+            $status.text('Processing... this may take a few minutes.');
+            $terminal.html('<div class="mamboleo-terminal-line">--- Starting ' + action + ' ---</div>');
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'mamboleo_' + action,
+                    security: '<?php echo wp_create_nonce("mamboleo_scraper_nonce"); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        logToTerminal(response.data.output);
+                        $status.text('Completed.');
+                    } else {
+                        logToTerminal('Error: ' + response.data, 'error');
+                        $status.text('Failed.');
+                    }
+                },
+                error: function() {
+                    logToTerminal('Critical Error: Request failed.', 'error');
+                    $status.text('Server error.');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                    $loader.hide();
+                }
+            });
+        }
+
+        $('#run-scraper-btn').on('click', function() {
+            runAction('run_scraper', '#run-scraper-btn');
+        });
+
+        $('#install-deps-btn').on('click', function() {
+            runAction('install_deps', '#install-deps-btn');
+        });
+    });
+    </script>
+    <?php
 }
