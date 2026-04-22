@@ -32,8 +32,14 @@ add_action('admin_menu', function() {
 
 function mamboleo_scraper_admin_page() {
     if (isset($_POST['mamboleo_scrape_trigger'])) {
-        // Trigger the scraper (e.g., via shell_exec or REST call)
-        $output = shell_exec('python ../scraper/run_all_scrapers.py 2>&1');
+        // Use plugin_dir_path to get the absolute path to the plugin directory
+        $plugin_dir = plugin_dir_path(__FILE__);
+        $scraper_path = realpath($plugin_dir . '../scraper/run_all_scrapers.py');
+        if ($scraper_path && file_exists($scraper_path)) {
+            $output = shell_exec('python ' . escapeshellarg($scraper_path) . ' 2>&1');
+        } else {
+            $output = 'Scraper script not found at: ' . $scraper_path;
+        }
         echo '<div class="notice notice-success"><pre>' . esc_html($output) . '</pre></div>';
     }
     echo '<h2>Manual Scraper Trigger</h2>';
