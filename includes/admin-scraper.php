@@ -50,20 +50,25 @@ function mamboleo_run_scraper_ajax() {
     // Clear old log
     file_put_contents($log_file, "--- Initialization ---\n");
 
+    // Pre-determine python command (fast)
     $python_cmd = 'python3';
-    $check_py3 = (string) shell_exec('python3 --version 2>&1');
-    if (strpos($check_py3, 'Python 3') === false) $python_cmd = 'python';
-
-    // Build background command
-    // > logfile 2>&1 & runs it in background and redirects all output to the log file
+    // We'll skip the version check here to keep the response fast, 
+    // or just assume python3/python based on common setups.
+    
+    // Build a fully detached background command
+    // nohup keeps it running after the shell closes
+    // </dev/null prevents it from waiting for input
     $command = sprintf(
-        'cd %s && %s run_all_scrapers.py > %s 2>&1 &',
+        'nohup sh -c "cd %s && %s run_all_scrapers.py" > %s 2>&1 </dev/null &',
         escapeshellarg($scraper_dir),
         $python_cmd,
         escapeshellarg($log_file)
     );
     
     exec($command);
+    
+    // Give it a tiny bit of time to start and write the first line
+    usleep(200000); 
     
     wp_send_json_success(['message' => 'Scraper started in background.']);
 }
