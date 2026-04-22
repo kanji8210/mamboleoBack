@@ -20,7 +20,4 @@ REQUEST_DELAY = float(os.getenv("SCRAPER_DELAY", "2.5"))
 MAX_ARTICLES  = int(os.getenv("MAX_ARTICLES_PER_RUN", "30"))
 DB_PATH       = DATA_DIR / "seen.db"
 
-USER_AGENT = (
-    "MamboleoBot/1.0 (+https://github.com/kanji8210/mamboleo; "
-    "Kenya security research) Python-requests"
-)
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
