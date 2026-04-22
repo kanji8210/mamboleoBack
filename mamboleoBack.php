@@ -16,6 +16,7 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('MAMBOLEO_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MAMBOLEO_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('MAMBOLEO_API_KEY', 'mamboleo-dev-key-change-in-production');
 
 // Include required files
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/post-types.php';

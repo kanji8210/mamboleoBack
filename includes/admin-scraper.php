@@ -32,13 +32,16 @@ add_action('admin_menu', function() {
 
 function mamboleo_scraper_admin_page() {
     if (isset($_POST['mamboleo_scrape_trigger'])) {
-        // Use plugin_dir_path to get the absolute path to the plugin directory
-        $plugin_dir = plugin_dir_path(__FILE__);
-        $scraper_path = realpath($plugin_dir . 'scraper/run_all_scrapers.py');
+        // Use the plugin root constant to find the scraper directory
+        $scraper_path = realpath(MAMBOLEO_PLUGIN_DIR . 'scraper/run_all_scrapers.py');
+        
         if ($scraper_path && file_exists($scraper_path)) {
-            $output = shell_exec('python ' . escapeshellarg($scraper_path) . ' 2>&1');
+            // Get the directory of the scraper to run python from there (to handle relative imports/.env)
+            $scraper_dir = dirname($scraper_path);
+            $command = 'cd ' . escapeshellarg($scraper_dir) . ' && python run_all_scrapers.py 2>&1';
+            $output = shell_exec($command);
         } else {
-            $output = 'Scraper script not found at: ' . $scraper_path;
+            $output = 'Scraper script not found at: ' . (MAMBOLEO_PLUGIN_DIR . 'scraper/run_all_scrapers.py');
         }
         echo '<div class="notice notice-success"><pre>' . esc_html($output) . '</pre></div>';
     }
