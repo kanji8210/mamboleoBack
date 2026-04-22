@@ -32,12 +32,16 @@ add_action('admin_menu', function() {
 
 function mamboleo_scraper_admin_page() {
     $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
-    $requirements_file = $scraper_dir . '/requirements.txt';
+    
+    // Increase execution time for long-running scraping tasks
+    if (function_exists('set_time_limit')) {
+        @set_time_limit(300); // 5 minutes
+    }
 
     if (isset($_POST['mamboleo_install_deps'])) {
         $command = 'cd ' . escapeshellarg($scraper_dir) . ' && pip install -r requirements.txt 2>&1';
-        $output = shell_exec($command);
-        echo '<div class="notice notice-info"><h3>Dependency Installation Output</h3><pre>' . esc_html($output) . '</pre></div>';
+        $output = (string) shell_exec($command);
+        echo '<div class="notice notice-info"><h3>Dependency Installation Output</h3><pre>' . esc_html($output ?: 'No output from pip.') . '</pre></div>';
     }
 
     if (isset($_POST['mamboleo_scrape_trigger'])) {
@@ -46,21 +50,23 @@ function mamboleo_scraper_admin_page() {
         if ($scraper_path && file_exists($scraper_path)) {
             // Try python3 first, then python
             $python_cmd = 'python3';
-            $check_py3 = shell_exec('python3 --version 2>&1');
+            $check_py3 = (string) shell_exec('python3 --version 2>&1');
             if (strpos($check_py3, 'Python 3') === false) {
                 $python_cmd = 'python';
             }
 
             $command = 'cd ' . escapeshellarg($scraper_dir) . ' && ' . $python_cmd . ' run_all_scrapers.py 2>&1';
-            $output = shell_exec($command);
+            $output = (string) shell_exec($command);
             
             if (strpos($output, 'ModuleNotFoundError') !== false) {
-                echo '<div class="notice notice-error"><h3>Missing Dependencies</h3><p>It looks like some Python packages are missing. Please click the button below to install them.</p><pre>' . esc_html($output) . '</pre></div>';
+                echo '<div class="notice notice-error"><h3>Missing Dependencies</h3><p>It looks like some Python packages are missing. Please click the "Install/Update Dependencies" button below.</p><pre>' . esc_html($output) . '</pre></div>';
+            } elseif (empty($output)) {
+                echo '<div class="notice notice-warning"><h3>No Output</h3><p>The scraper ran but returned no output. Check if shell_exec is enabled on your server.</p></div>';
             } else {
                 echo '<div class="notice notice-success"><h3>Scraper Output</h3><pre>' . esc_html($output) . '</pre></div>';
             }
         } else {
-            echo '<div class="notice notice-error"><p>Scraper script not found at: ' . esc_html($scraper_path ?: $scraper_dir . '/run_all_scrapers.py') . '</p></div>';
+            echo '<div class="notice notice-error"><p>Scraper script not found at: ' . esc_html($scraper_dir . '/run_all_scrapers.py') . '</p></div>';
         }
     }
 
