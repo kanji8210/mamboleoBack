@@ -21,7 +21,7 @@ function mamboleo_register_post_types(): void {
         ],
         'public'              => true,
         'show_ui'             => true,
-        'show_in_menu'        => true,
+        'show_in_menu'        => 'mamboleo-main',
         'show_in_rest'        => true,
         'show_in_graphql'     => true,
         'graphql_single_name' => 'incident',
