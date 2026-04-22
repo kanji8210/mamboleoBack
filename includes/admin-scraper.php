@@ -31,20 +31,48 @@ add_action('admin_menu', function() {
 });
 
 function mamboleo_scraper_admin_page() {
+    $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
+    $requirements_file = $scraper_dir . '/requirements.txt';
+
+    if (isset($_POST['mamboleo_install_deps'])) {
+        $command = 'cd ' . escapeshellarg($scraper_dir) . ' && pip install -r requirements.txt 2>&1';
+        $output = shell_exec($command);
+        echo '<div class="notice notice-info"><h3>Dependency Installation Output</h3><pre>' . esc_html($output) . '</pre></div>';
+    }
+
     if (isset($_POST['mamboleo_scrape_trigger'])) {
-        // Use the plugin root constant to find the scraper directory
-        $scraper_path = realpath(MAMBOLEO_PLUGIN_DIR . 'scraper/run_all_scrapers.py');
+        $scraper_path = realpath($scraper_dir . '/run_all_scrapers.py');
         
         if ($scraper_path && file_exists($scraper_path)) {
-            // Get the directory of the scraper to run python from there (to handle relative imports/.env)
-            $scraper_dir = dirname($scraper_path);
-            $command = 'cd ' . escapeshellarg($scraper_dir) . ' && python run_all_scrapers.py 2>&1';
+            // Try python3 first, then python
+            $python_cmd = 'python3';
+            $check_py3 = shell_exec('python3 --version 2>&1');
+            if (strpos($check_py3, 'Python 3') === false) {
+                $python_cmd = 'python';
+            }
+
+            $command = 'cd ' . escapeshellarg($scraper_dir) . ' && ' . $python_cmd . ' run_all_scrapers.py 2>&1';
             $output = shell_exec($command);
+            
+            if (strpos($output, 'ModuleNotFoundError') !== false) {
+                echo '<div class="notice notice-error"><h3>Missing Dependencies</h3><p>It looks like some Python packages are missing. Please click the button below to install them.</p><pre>' . esc_html($output) . '</pre></div>';
+            } else {
+                echo '<div class="notice notice-success"><h3>Scraper Output</h3><pre>' . esc_html($output) . '</pre></div>';
+            }
         } else {
-            $output = 'Scraper script not found at: ' . (MAMBOLEO_PLUGIN_DIR . 'scraper/run_all_scrapers.py');
+            echo '<div class="notice notice-error"><p>Scraper script not found at: ' . esc_html($scraper_path ?: $scraper_dir . '/run_all_scrapers.py') . '</p></div>';
         }
-        echo '<div class="notice notice-success"><pre>' . esc_html($output) . '</pre></div>';
     }
+
     echo '<h2>Manual Scraper Trigger</h2>';
-    echo '<form method="post"><button class="button button-primary" name="mamboleo_scrape_trigger">Run Scraper Now</button></form>';
+    echo '<div class="card" style="max-width: 600px; padding: 20px;">';
+    echo '<p>Trigger the backend Python scraper to fetch the latest security incidents and news articles.</p>';
+    echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
+    echo '<button class="button button-primary" name="mamboleo_scrape_trigger">Run Scraper Now</button>';
+    echo '</form>';
+    
+    echo '<form method="post" style="display: inline-block;">';
+    echo '<button class="button button-secondary" name="mamboleo_install_deps">Install/Update Dependencies</button>';
+    echo '</form>';
+    echo '</div>';
 }
