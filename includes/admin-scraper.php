@@ -3,15 +3,30 @@
  * Mamboleo Admin: Manual Scraper Trigger
  * Adds a button to the WP admin to trigger backend scraping.
  */
+
+// Register a top-level Mamboleo menu if not already present
 add_action('admin_menu', function() {
-    add_menu_page(
-        'Mamboleo Scraper',
+    // Top-level menu
+    if (!isset($GLOBALS['admin_page_hooks']['mamboleo-main'])) {
+        add_menu_page(
+            'Mamboleo',
+            'Mamboleo',
+            'manage_options',
+            'mamboleo-main',
+            '__return_null',
+            'dashicons-shield-alt',
+            80
+        );
+    }
+    // Scraper submenu
+    add_submenu_page(
+        'mamboleo-main',
+        'Scraper Trigger',
         'Scraper Trigger',
         'manage_options',
         'mamboleo-scraper',
         'mamboleo_scraper_admin_page',
-        'dashicons-update',
-        80
+        1
     );
 });
 
