@@ -29,8 +29,11 @@ def post_article(data: dict) -> int | None:
     try:
         resp = requests.post(_ARTICLES_URL, json=data, headers=_HEADERS, timeout=10)
         resp.raise_for_status()
-        result = resp.json()
-        return result.get("id")
+        try:
+            result = resp.json()
+            return result.get("id")
+        except Exception:
+            log.error("Article POST returned non-JSON: %s", resp.text[:500])
     except requests.exceptions.HTTPError as exc:
         log.error("Article POST failed (%s): %s", exc.response.status_code, exc.response.text[:200])
     except Exception as exc:
@@ -48,8 +51,11 @@ def post_incident(data: dict) -> int | None:
     try:
         resp = requests.post(_INCIDENTS_URL, json=data, headers=_HEADERS, timeout=10)
         resp.raise_for_status()
-        result = resp.json()
-        return result.get("id")
+        try:
+            result = resp.json()
+            return result.get("id")
+        except Exception:
+            log.error("Incident POST returned non-JSON: %s", resp.text[:500])
     except requests.exceptions.HTTPError as exc:
         log.error("Incident POST failed (%s): %s", exc.response.status_code, exc.response.text[:200])
     except Exception as exc:
