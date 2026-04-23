@@ -42,6 +42,10 @@ class AdvisoryScraper(BaseScraper):
             self._fetch_france_mae,
             self._fetch_canada,
             self._fetch_australia,
+            self._fetch_germany,
+            self._fetch_japan,
+            self._fetch_ireland,
+            self._fetch_new_zealand,
         ]:
             if count >= limit:
                 break
@@ -306,6 +310,174 @@ class AdvisoryScraper(BaseScraper):
             "content":      content,
             "published_at": published,
             "source":       "Australia Smartraveller",
+        }
+
+    # ── Germany (Auswärtiges Amt) ─────────────────────────────────────────────
+    def _fetch_germany(self) -> Iterator[dict]:
+        # English-language Kenya sicherheit / safety page.
+        url = (
+            "https://www.auswaertiges-amt.de/en/ReiseUndSicherheit/"
+            "kenyasicherheit/203136"
+        )
+        self.log.info("Fetching Germany Auswärtiges Amt advisory...")
+        resp = self.get(url)
+        if not resp:
+            return
+
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Pull the hazard banner near the top (e.g. "Travel warning",
+        # "Partial travel warning", "Exercise increased caution").
+        banner = (
+            soup.select_one(".c-teaser__title")
+            or soup.select_one(".hint")
+            or soup.select_one("h2")
+        )
+        banner_text = banner.get_text(" ", strip=True) if banner else ""
+
+        body_el = (
+            soup.select_one(".c-richtext")
+            or soup.select_one("main")
+            or soup.select_one("article")
+        )
+        content = body_el.get_text(" ", strip=True)[:5000] if body_el else ""
+
+        meta_desc = soup.find("meta", attrs={"name": "description"})
+        excerpt = meta_desc["content"].strip() if meta_desc and meta_desc.get("content") else ""
+
+        # Published / last updated.
+        published = datetime.now(timezone.utc).isoformat()
+        if content:
+            m = re.search(r"Last updated[:\s]+(\d{1,2}\.\d{1,2}\.\d{4})", content)
+            if m:
+                try:
+                    dt = datetime.strptime(m.group(1), "%d.%m.%Y").replace(tzinfo=timezone.utc)
+                    published = dt.isoformat()
+                except ValueError:
+                    pass
+
+        title = "Germany Auswärtiges Amt: Kenya Travel & Safety"
+        if banner_text and len(banner_text) < 120:
+            title += f" — {banner_text}"
+
+        yield {
+            "url":          url,
+            "title":        title,
+            "excerpt":      excerpt or (content[:280] if content else ""),
+            "content":      content,
+            "published_at": published,
+            "source":       "Germany Auswärtiges Amt",
+        }
+
+    # ── Japan (MOFA) ──────────────────────────────────────────────────────────
+    def _fetch_japan(self) -> Iterator[dict]:
+        # MOFA's Overseas Safety Info page for Kenya (Japanese, but the risk
+        # level and dates are machine-readable; title is always consistent).
+        url = "https://www.anzen.mofa.go.jp/info/pcinfectionspothazardinfo_028.html"
+        self.log.info("Fetching Japan MOFA advisory...")
+        resp = self.get(url)
+        if not resp:
+            return
+
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Overall risk level badge — look for 危険レベル followed by number 1-4.
+        raw_text = soup.get_text(" ", strip=True) if soup else ""
+        level_match = re.search(r"(レベル\s*[1-4])", raw_text)
+        level = level_match.group(1) if level_match else ""
+
+        body_el = soup.select_one("#main") or soup.select_one("main") or soup.select_one("article")
+        content = body_el.get_text(" ", strip=True)[:5000] if body_el else ""
+
+        title = "Japan MOFA: Kenya Overseas Safety Info"
+        if level:
+            title += f" — {level}"
+
+        yield {
+            "url":          url,
+            "title":        title,
+            "excerpt":      f"Japan Ministry of Foreign Affairs safety information for Kenya. {level}".strip(),
+            "content":      content,
+            "published_at": datetime.now(timezone.utc).isoformat(),
+            "source":       "Japan MOFA",
+        }
+
+    # ── Ireland (DFA) ─────────────────────────────────────────────────────────
+    def _fetch_ireland(self) -> Iterator[dict]:
+        url = "https://www.dfa.ie/travel/travel-advice/a-z-list-of-countries/kenya/"
+        self.log.info("Fetching Ireland DFA advisory...")
+        resp = self.get(url)
+        if not resp:
+            return
+
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Irish DFA uses a color-coded banner ("High Degree of Caution",
+        # "Avoid Non-Essential Travel", etc).
+        level_el = (
+            soup.select_one(".travel-advice-banner")
+            or soup.select_one(".status-badge")
+            or soup.find(class_=re.compile(r"security[-_]status", re.I))
+        )
+        level_text = level_el.get_text(" ", strip=True) if level_el else ""
+
+        body_el = (
+            soup.select_one(".entry-content")
+            or soup.select_one("main")
+            or soup.select_one("article")
+        )
+        content = body_el.get_text(" ", strip=True)[:5000] if body_el else ""
+
+        meta_desc = soup.find("meta", attrs={"name": "description"})
+        excerpt = meta_desc["content"].strip() if meta_desc and meta_desc.get("content") else ""
+
+        title = "Ireland DFA: Kenya Travel Advice"
+        if level_text and len(level_text) < 120:
+            title += f" — {level_text}"
+
+        yield {
+            "url":          url,
+            "title":        title,
+            "excerpt":      excerpt or (content[:280] if content else ""),
+            "content":      content,
+            "published_at": datetime.now(timezone.utc).isoformat(),
+            "source":       "Ireland DFA",
+        }
+
+    # ── New Zealand (SafeTravel) ──────────────────────────────────────────────
+    def _fetch_new_zealand(self) -> Iterator[dict]:
+        url = "https://www.safetravel.govt.nz/kenya"
+        self.log.info("Fetching New Zealand SafeTravel advisory...")
+        resp = self.get(url)
+        if not resp:
+            return
+
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        level_el = (
+            soup.select_one(".advisory-level")
+            or soup.select_one(".current-level")
+            or soup.find(class_=re.compile(r"risk[-_]level", re.I))
+        )
+        level_text = level_el.get_text(" ", strip=True) if level_el else ""
+
+        body_el = soup.select_one("main") or soup.select_one("article")
+        content = body_el.get_text(" ", strip=True)[:5000] if body_el else ""
+
+        meta_desc = soup.find("meta", attrs={"name": "description"})
+        excerpt = meta_desc["content"].strip() if meta_desc and meta_desc.get("content") else ""
+
+        title = "New Zealand SafeTravel: Kenya"
+        if level_text and len(level_text) < 120:
+            title += f" — {level_text}"
+
+        yield {
+            "url":          url,
+            "title":        title,
+            "excerpt":      excerpt or (content[:280] if content else ""),
+            "content":      content,
+            "published_at": datetime.now(timezone.utc).isoformat(),
+            "source":       "New Zealand SafeTravel",
         }
 
 
