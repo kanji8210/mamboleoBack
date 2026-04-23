@@ -130,7 +130,8 @@
   scrape_pages:
     - https://www.kbc.co.ke/news/
   link_pattern: "/news/"
-  cadence: fast
+  timeout: 45          # host stalls past default 25s under load
+  cadence: slow
   enabled: true
 
 - id: capital_fm
@@ -265,7 +266,7 @@
     - https://nairobinews.nation.africa/news
   link_pattern: "/news/"
   cadence: fast
-  enabled: true
+  enabled: false       # HTTP 403 anti-bot; content overlaps with dedicated nation.africa scraper
 
 - id: hivisasa
   name: Hivisasa
@@ -464,7 +465,7 @@
     - https://www.reuters.com/world/africa/
   link_pattern: "/world/africa/"
   cadence: fast
-  enabled: true
+  enabled: false       # HTTP 401 — Reuters paywall blocks anonymous scraping
 
 - id: ap_africa
   name: Associated Press — Africa
