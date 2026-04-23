@@ -16,7 +16,9 @@ def _make_session() -> requests.Session:
     session = requests.Session()
     retry = Retry(
         total=3,
-        backoff_factor=2,
+        connect=2,           # retry DNS / TCP failures
+        read=0,              # don't retry read-timeouts — they rarely recover
+        backoff_factor=1.5,
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET"],
         raise_on_status=False,
@@ -45,16 +47,25 @@ class BaseScraper:
 
     # ── HTTP helpers ──────────────────────────────────────────────────────────
 
-    def get(self, url: str, **kwargs) -> requests.Response | None:
-        """Rate-limited GET. Returns None on any error."""
+    def get(self, url: str, timeout: int = 25, **kwargs) -> requests.Response | None:
+        """Rate-limited GET. Returns None on any error.
+
+        timeout  — per-request read timeout in seconds. Raise for slow
+                   government sites (Smartraveller, MOFA) that sometimes
+                   stall; keep low for fast news CDNs to fail fast.
+        """
         elapsed = time.time() - self._last_request
         if elapsed < REQUEST_DELAY:
             time.sleep(REQUEST_DELAY - elapsed)
         try:
-            resp = self.session.get(url, timeout=15, **kwargs)
+            # Use a (connect, read) tuple so a dead host fails in 10s
+            # instead of hanging for the full read-timeout window.
+            resp = self.session.get(url, timeout=(10, timeout), **kwargs)
             self._last_request = time.time()
             resp.raise_for_status()
             return resp
+        except requests.exceptions.Timeout:
+            self.log.warning("Timeout (>%ds) → %s", timeout, url)
         except requests.exceptions.HTTPError as exc:
             self.log.warning("HTTP %s → %s", exc.response.status_code, url)
         except requests.exceptions.RequestException as exc:

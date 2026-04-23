@@ -32,6 +32,11 @@ logging.basicConfig(
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
     datefmt="%H:%M:%S",
 )
+# Silence urllib3's transport-level retry warnings — they fire on slow
+# government sites (Smartraveller, MOFA) and add noise. Our own get()
+# wrapper already logs a single, actionable warning per failed URL.
+logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+
 log = logging.getLogger("main")
 
 # ── Review thresholds ─────────────────────────────────────────────────────────
