@@ -19,6 +19,7 @@ from api import client as api
 from config import DB_PATH, MAX_ARTICLES
 from processors import classify, geocoder, locations
 from scrapers.googlenews import GoogleNewsScraper
+from scrapers.international import InternationalScraper
 from scrapers.nation import NationScraper
 from scrapers.standard import StandardScraper
 from scrapers.tuko import TukoScraper
@@ -34,11 +35,12 @@ log = logging.getLogger("main")
 
 # ── Scraper registry ──────────────────────────────────────────────────────────
 ALL_SCRAPERS = {
-    "googlenews": GoogleNewsScraper,
-    "tuko":       TukoScraper,
-    "nation":     NationScraper,
-    "standard":   StandardScraper,
-    "twitter":    TwitterScraper,
+    "googlenews":    GoogleNewsScraper,
+    "international": InternationalScraper,
+    "tuko":          TukoScraper,
+    "nation":        NationScraper,
+    "standard":      StandardScraper,
+    "twitter":       TwitterScraper,
 }
 
 
