@@ -47,9 +47,9 @@
     - https://www.kenyapolice.go.ke/news
     - https://www.kenyapolice.go.ke/2015-09-21-20-53-44/news.html
   link_pattern: "/news"
-  timeout: 45          # gov host is slow, can stall past default 25s
-  cadence: slow        # too slow for 15-min cadence; hourly is plenty
-  enabled: true
+  timeout: 45
+  cadence: slow
+  enabled: false       # host consistently times out; re-enable when service recovers
 
 - id: interior_ministry
   name: Ministry of Interior
@@ -63,7 +63,7 @@
   verify_ssl: false    # hosts a self-signed cert chain (as of 2026)
   timeout: 45
   cadence: slow
-  enabled: true
+  enabled: false       # /newsroom/ currently 404; re-enable with correct URL
 
 - id: state_house
   name: State House Kenya
@@ -130,9 +130,9 @@
   scrape_pages:
     - https://www.kbc.co.ke/news/
   link_pattern: "/news/"
-  timeout: 45          # host stalls past default 25s under load
+  timeout: 45
   cadence: slow
-  enabled: true
+  enabled: false       # host times out consistently; re-enable when service recovers
 
 - id: capital_fm
   name: Capital FM Kenya
