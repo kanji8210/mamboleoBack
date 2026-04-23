@@ -18,6 +18,7 @@ import db
 from api import client as api
 from config import DB_PATH, MAX_ARTICLES
 from processors import classify, geocoder, locations
+from scrapers.advisories import AdvisoryScraper
 from scrapers.googlenews import GoogleNewsScraper
 from scrapers.international import InternationalScraper
 from scrapers.nation import NationScraper
@@ -35,6 +36,7 @@ log = logging.getLogger("main")
 
 # ── Scraper registry ──────────────────────────────────────────────────────────
 ALL_SCRAPERS = {
+    "advisories":    AdvisoryScraper,
     "googlenews":    GoogleNewsScraper,
     "international": InternationalScraper,
     "tuko":          TukoScraper,
@@ -42,6 +44,7 @@ ALL_SCRAPERS = {
     "standard":      StandardScraper,
     "twitter":       TwitterScraper,
 }
+
 
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
