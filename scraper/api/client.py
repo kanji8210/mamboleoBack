@@ -5,6 +5,7 @@ Surfaces richer diagnostics when a WAF / proxy / host blocks the request
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
 
@@ -63,6 +64,34 @@ def _trim_payload(data: dict) -> dict:
     return out
 
 
+def _extract_json(text: str):
+    """Best-effort JSON extractor.
+
+    WordPress in development mode often emits PHP notices / deprecation
+    warnings before the JSON body, which breaks strict parsing. We try strict
+    first, then fall back to locating the last `{...}` or `[...]` block in the
+    response text.
+    """
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except ValueError:
+        pass
+    # Find last top-level JSON object or array in the body.
+    for open_c, close_c in (("{", "}"), ("[", "]")):
+        end = text.rfind(close_c)
+        if end == -1:
+            continue
+        start = text.rfind(open_c, 0, end)
+        while start != -1:
+            try:
+                return json.loads(text[start:end + 1])
+            except ValueError:
+                start = text.rfind(open_c, 0, start)
+    return None
+
+
 def _post(url: str, data: dict, what: str) -> int | None:
     """Shared POST helper with rich diagnostics."""
     payload = _trim_payload(data)
@@ -83,11 +112,18 @@ def _post(url: str, data: dict, what: str) -> int | None:
     server = resp.headers.get("Server", "?")
 
     # Happy path — valid JSON response from WordPress.
-    if status < 400 and "json" in ctype.lower():
-        try:
-            return resp.json().get("id")
-        except ValueError:
-            pass
+    # We do NOT rely on resp.json() alone: some WordPress hosts emit
+    # PHP notices/warnings before the JSON body (e.g. "Deprecated: ..."),
+    # which breaks the strict parser. Instead we fish the last JSON object
+    # out of the body — this is robust to leading warnings or trailing newlines.
+    if status < 400:
+        body = _extract_json(resp.text)
+        if isinstance(body, dict) and "id" in body:
+            return int(body["id"])
+        if isinstance(body, dict):
+            # 2xx JSON without an id → non-fatal (e.g. "already exists" without id)
+            log.debug("%s POST 2xx no id → %s", what, body)
+            return None
 
     # Anything else → surface status + server + body fingerprint.
     hint = _summarise_error_body(resp.text)

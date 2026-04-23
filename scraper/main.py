@@ -99,7 +99,7 @@ def process_article(raw: dict, dry_run: bool) -> bool:
         }
         article_id = api.post_article(article_payload)
         if article_id:
-            log.debug("  ✓ article #%d [%s]", article_id, ",".join(nlp.topics) or "-")
+            log.info("  ✓ article #%d [%s] %s", article_id, ",".join(nlp.topics) or "-", raw["title"][:80])
 
     # ── Step 4: is this also an incident? ─────────────────────────────────────
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
@@ -107,7 +107,8 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     if cls is None or cls.confidence < CONFIDENCE_MIN:
         log.debug("Not an incident (conf=%.2f): %s", cls.confidence if cls else 0, raw["title"][:80])
-        db.mark_seen(url, DB_PATH)
+        if not dry_run:
+            db.mark_seen(url, DB_PATH)
         return False
 
     # ── Location ──────────────────────────────────────────────────────────────
@@ -128,7 +129,8 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     if loc is None:
         log.info("No Kenya location found, skipping incident: %s", raw["title"][:80])
-        db.mark_seen(url, DB_PATH)
+        if not dry_run:
+            db.mark_seen(url, DB_PATH)
         return False
 
     # ── Decide whether this needs human review ────────────────────────────────
@@ -152,7 +154,6 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     log.info("  → %s", raw["title"][:100])
 
     if dry_run:
-        db.mark_seen(url, DB_PATH)
         return True
 
     # ── POST incident ─────────────────────────────────────────────────────────
