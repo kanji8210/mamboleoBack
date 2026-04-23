@@ -17,11 +17,13 @@ from datetime import datetime, timezone
 import db
 from api import client as api
 from config import DB_PATH, MAX_ARTICLES
-from processors import classify, geocoder, locations
+from processors import analyze, classify, geocoder, locations
 from scrapers.advisories import AdvisoryScraper
+from scrapers.generic import GenericScraper
 from scrapers.googlenews import GoogleNewsScraper
 from scrapers.international import InternationalScraper
 from scrapers.nation import NationScraper
+from scrapers.sources_loader import load_sources
 from scrapers.standard import StandardScraper
 from scrapers.tuko import TukoScraper
 from scrapers.twitter import TwitterScraper
@@ -65,9 +67,9 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     """
     Full pipeline for one article:
       1. Deduplicate via SQLite
-      2. Classify incident type + severity
-      3. Extract Kenya location
-      4. POST article + incident to WordPress REST API
+      2. NLP enrich (sentiment / bias / entities / topics / keywords)
+      3. POST enriched article to WordPress (always — this feeds the Media Monitor)
+      4. Classify as incident — if confident, locate + POST incident too
     Returns True if an incident was created.
     """
     url = raw["url"]
@@ -76,7 +78,30 @@ def process_article(raw: dict, dry_run: bool) -> bool:
         log.debug("Skip (seen): %s", url)
         return False
 
-    # ── Classify ──────────────────────────────────────────────────────────────
+    # ── Step 2: article-level NLP (runs on EVERYTHING) ────────────────────────
+    nlp = analyze.analyze(
+        title=raw["title"],
+        content=raw.get("content", "") or raw.get("excerpt", ""),
+        bias_baseline=int(raw.get("bias_baseline", 0)),
+    )
+
+    # ── Step 3: POST enriched article ─────────────────────────────────────────
+    if not dry_run:
+        article_payload = {
+            "title":        raw["title"],
+            "source":       raw["source"],
+            "article_url":  url,
+            "excerpt":      raw.get("excerpt", ""),
+            "content":      raw.get("content", ""),
+            "published_at": raw.get("published_at", datetime.now(timezone.utc).isoformat()),
+            "tier":         raw.get("tier", 3),
+            **nlp.to_payload(),
+        }
+        article_id = api.post_article(article_payload)
+        if article_id:
+            log.debug("  ✓ article #%d [%s]", article_id, ",".join(nlp.topics) or "-")
+
+    # ── Step 4: is this also an incident? ─────────────────────────────────────
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
     cls = classify.classify(raw["title"], raw.get("content", ""))
 
@@ -92,7 +117,6 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     if loc is None:
         # Try Nominatim as fallback
         import re
-        # Pull candidate place names from title
         words = re.findall(r"[A-Z][a-z]{3,}", raw["title"])
         for word in words:
             coords = geocoder.geocode(word)
@@ -103,7 +127,7 @@ def process_article(raw: dict, dry_run: bool) -> bool:
                 break
 
     if loc is None:
-        log.info("No Kenya location found, skipping: %s", raw["title"][:80])
+        log.info("No Kenya location found, skipping incident: %s", raw["title"][:80])
         db.mark_seen(url, DB_PATH)
         return False
 
@@ -130,19 +154,6 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     if dry_run:
         db.mark_seen(url, DB_PATH)
         return True
-
-    # ── POST article ──────────────────────────────────────────────────────────
-    article_id = api.post_article(
-        {
-            "title":       raw["title"],
-            "source":      raw["source"],
-            "article_url": url,
-            "sentiment":   "neutral",
-            "bias_score":  0,
-        }
-    )
-    if article_id:
-        log.info("  ✓ article #%d", article_id)
 
     # ── POST incident ─────────────────────────────────────────────────────────
     incident_id = api.post_incident(
@@ -175,13 +186,62 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
+def _build_runnables(
+    sources_arg: list[str] | None,
+    feeds_arg: list[str] | None,
+    cadence: str | None,
+    run_all: bool,
+) -> list[tuple[str, object]]:
+    """Return a list of (label, scraper_instance) to run, in order.
+
+    Hand-written scrapers always win over YAML entries of the same id.
+    """
+    runnables: list[tuple[str, object]] = []
+
+    # 1. Hand-written scrapers (custom logic — Nation, Tuko, Twitter, etc.)
+    if run_all or sources_arg:
+        names = sources_arg if sources_arg else list(ALL_SCRAPERS)
+        for name in names:
+            if name not in ALL_SCRAPERS:
+                log.warning("Unknown hand-written source '%s' — skipping", name)
+                continue
+            runnables.append((name, ALL_SCRAPERS[name]()))
+
+    # 2. Config-driven feeds from sources.yaml
+    if run_all or feeds_arg is not None or cadence:
+        configs = load_sources(cadence=cadence)
+        wanted = set(feeds_arg) if feeds_arg else None
+        for cfg in configs:
+            if wanted and cfg["id"] not in wanted:
+                continue
+            # Don't double-run if a hand-written scraper already covers it
+            if cfg["id"] in ALL_SCRAPERS and (run_all or not feeds_arg):
+                continue
+            runnables.append((f"feed:{cfg['id']}", GenericScraper(cfg)))
+
+    return runnables
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Mamboleo web scraper")
     parser.add_argument(
         "--sources", nargs="+",
-        choices=list(ALL_SCRAPERS),
-        default=list(ALL_SCRAPERS),
-        help="Which scrapers to run (default: all)",
+        help="Hand-written scrapers to run (e.g. nation standard advisories). "
+             "Valid: " + ", ".join(ALL_SCRAPERS),
+    )
+    parser.add_argument(
+        "--feeds", nargs="+",
+        help="Config-driven source IDs from sources.yaml to run "
+             "(e.g. bbc_africa citizen_digital). Use --feeds with no args "
+             "via --all to run every enabled feed.",
+    )
+    parser.add_argument(
+        "--cadence", choices=["fast", "slow"],
+        help="Restrict YAML feeds to this cadence bucket.",
+    )
+    parser.add_argument(
+        "--all", action="store_true",
+        help="Run ALL hand-written scrapers + every enabled YAML feed.",
     )
     parser.add_argument(
         "--limit", type=int, default=MAX_ARTICLES,
@@ -193,16 +253,31 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    log.info("=== Mamboleo scraper starting — sources: %s ===", ", ".join(args.sources))
+    # Sensible default: if user passed nothing at all, behave like --all
+    if not (args.sources or args.feeds or args.cadence or args.all):
+        args.all = True
+
+    runnables = _build_runnables(
+        sources_arg=args.sources,
+        feeds_arg=args.feeds,
+        cadence=args.cadence,
+        run_all=args.all,
+    )
+    if not runnables:
+        log.error("No scrapers selected — nothing to do.")
+        return
+
+    log.info(
+        "=== Mamboleo scraper starting — %d source(s): %s ===",
+        len(runnables), ", ".join(label for label, _ in runnables),
+    )
     if args.dry_run:
         log.info("DRY-RUN mode: nothing will be posted to WordPress")
 
     total_incidents = 0
 
-    for name in args.sources:
-        scraper_cls = ALL_SCRAPERS[name]
-        scraper = scraper_cls()
-        log.info("--- %s (limit=%d) ---", name.upper(), args.limit)
+    for label, scraper in runnables:
+        log.info("--- %s (limit=%d) ---", label.upper(), args.limit)
         source_incidents = 0
 
         try:
@@ -213,9 +288,9 @@ def main() -> None:
             log.info("Interrupted by user.")
             break
         except Exception as exc:
-            log.error("Scraper %s crashed: %s", name, exc, exc_info=True)
+            log.error("Scraper %s crashed: %s", label, exc, exc_info=True)
 
-        log.info("--- %s done: %d incidents ---", name.upper(), source_incidents)
+        log.info("--- %s done: %d incidents ---", label.upper(), source_incidents)
         total_incidents += source_incidents
 
     log.info("=== Done. Total new incidents: %d ===", total_incidents)

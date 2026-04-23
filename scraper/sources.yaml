@@ -1,0 +1,588 @@
+# Mamboleo Media Monitor — source registry
+#
+# Each entry is consumed by scrapers/generic.py to produce a GenericScraper
+# instance at runtime. To add a new outlet, copy an existing entry and adjust.
+#
+# Fields:
+#   id              — short machine identifier (used in logs + DB)
+#   name            — human-readable label
+#   source_domain   — used as the article "source" string sent to WP
+#   tier            — 1 Official | 2 Mainstream | 3 Digital | 4 Regional | 5 International
+#   bias_baseline   — editorial lean, -100 (left) .. +100 (right), 0 neutral
+#   rss             — list of RSS feed URLs (empty = HTML-only)
+#   scrape_pages    — list of HTML index pages to crawl as fallback
+#   link_selectors  — CSS selectors that match article <a> on index pages
+#   link_pattern    — URL substring fallback when selectors miss
+#   content_selectors — CSS selectors that wrap the article body on detail pages
+#   cadence         — "fast" (every 15min) | "slow" (hourly)
+#   enabled         — toggle without deleting the entry
+#
+# NOTE: We already have dedicated scrapers for Nation, Standard, Tuko,
+# GoogleNews, International, Advisories, Twitter — those remain and are
+# NOT duplicated here. This file is the config-driven long tail.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 1 — Official security & government
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: kdf
+  name: Kenya Defence Forces
+  source_domain: mod.go.ke
+  tier: 1
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://www.mod.go.ke/all-news/
+  link_pattern: "/all-news/"
+  cadence: fast
+  enabled: true
+
+- id: nps
+  name: National Police Service
+  source_domain: kenyapolice.go.ke
+  tier: 1
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://www.kenyapolice.go.ke/news
+    - https://www.kenyapolice.go.ke/2015-09-21-20-53-44/news.html
+  link_pattern: "/news"
+  cadence: fast
+  enabled: true
+
+- id: interior_ministry
+  name: Ministry of Interior
+  source_domain: interior.go.ke
+  tier: 1
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://interior.go.ke/newsroom/
+  link_pattern: "/newsroom/"
+  cadence: fast
+  enabled: true
+
+- id: state_house
+  name: State House Kenya
+  source_domain: statehouse.go.ke
+  tier: 1
+  bias_baseline: 20
+  rss: []
+  scrape_pages:
+    - https://www.president.go.ke/category/news/
+  link_pattern: "/category/news/"
+  cadence: slow
+  enabled: true
+
+- id: kenya_red_cross
+  name: Kenya Red Cross
+  source_domain: redcross.or.ke
+  tier: 1
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://www.redcross.or.ke/news-and-publications/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 2 — Mainstream Kenyan media
+# (Nation, Standard, Tuko handled by dedicated scrapers already)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: citizen_digital
+  name: Citizen Digital
+  source_domain: citizen.digital
+  tier: 2
+  bias_baseline: -5
+  rss:
+    - https://citizen.digital/feed
+  scrape_pages:
+    - https://citizen.digital/news
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: ktn_news
+  name: KTN News
+  source_domain: ktnnews.com
+  tier: 2
+  bias_baseline: 0
+  rss:
+    - https://www.ktnnews.com/feed/
+  scrape_pages:
+    - https://www.ktnnews.com/category/news/
+  link_pattern: "/category/news/"
+  cadence: fast
+  enabled: true
+
+- id: kbc
+  name: KBC Channel 1
+  source_domain: kbc.co.ke
+  tier: 2
+  bias_baseline: 15
+  rss:
+    - https://www.kbc.co.ke/feed/
+  scrape_pages:
+    - https://www.kbc.co.ke/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: capital_fm
+  name: Capital FM Kenya
+  source_domain: capitalfm.co.ke
+  tier: 2
+  bias_baseline: 0
+  rss:
+    - https://www.capitalfm.co.ke/news/feed/
+  scrape_pages:
+    - https://www.capitalfm.co.ke/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: the_star
+  name: The Star Kenya
+  source_domain: the-star.co.ke
+  tier: 2
+  bias_baseline: 0
+  rss:
+    - https://www.the-star.co.ke/feeds/rss/
+  scrape_pages:
+    - https://www.the-star.co.ke/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: business_daily
+  name: Business Daily Africa
+  source_domain: businessdailyafrica.com
+  tier: 2
+  bias_baseline: -5
+  rss:
+    - https://www.businessdailyafrica.com/bd/rss
+  scrape_pages:
+    - https://www.businessdailyafrica.com/bd/news
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: ntv
+  name: NTV Kenya
+  source_domain: ntvkenya.co.ke
+  tier: 2
+  bias_baseline: -5
+  rss:
+    - https://ntvkenya.co.ke/feed/
+  scrape_pages:
+    - https://ntvkenya.co.ke/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: k24
+  name: K24 TV
+  source_domain: k24tv.co.ke
+  tier: 2
+  bias_baseline: 10
+  rss:
+    - https://www.k24tv.co.ke/feed/
+  scrape_pages:
+    - https://www.k24tv.co.ke/news/
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: people_daily
+  name: People Daily
+  source_domain: pd.co.ke
+  tier: 2
+  bias_baseline: 5
+  rss:
+    - https://www.pd.co.ke/feed/
+  scrape_pages:
+    - https://www.pd.co.ke/news/
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 3 — Digital / Blogs / Alternative
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: kenyans_co_ke
+  name: Kenyans.co.ke
+  source_domain: kenyans.co.ke
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://www.kenyans.co.ke/rss.xml
+  scrape_pages:
+    - https://www.kenyans.co.ke/news
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: ghafla
+  name: Ghafla Kenya
+  source_domain: ghafla.com
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://www.ghafla.com/ke/feed/
+  scrape_pages:
+    - https://www.ghafla.com/ke/news/
+  link_pattern: "/ke/"
+  cadence: slow
+  enabled: true
+
+- id: pulse_live
+  name: Pulse Live Kenya
+  source_domain: pulselive.co.ke
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://www.pulselive.co.ke/rss/news.xml
+  scrape_pages:
+    - https://www.pulselive.co.ke/news
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: nairobi_news
+  name: Nairobi News
+  source_domain: nairobinews.nation.africa
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://nairobinews.nation.africa/feed
+  scrape_pages:
+    - https://nairobinews.nation.africa/news
+  link_pattern: "/news/"
+  cadence: fast
+  enabled: true
+
+- id: hivisasa
+  name: Hivisasa
+  source_domain: hivisasa.com
+  tier: 3
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://hivisasa.com/posts/news
+  link_pattern: "/posts/"
+  cadence: slow
+  enabled: true
+
+- id: the_elephant
+  name: The Elephant
+  source_domain: theelephant.info
+  tier: 3
+  bias_baseline: -15
+  rss:
+    - https://www.theelephant.info/feed/
+  scrape_pages:
+    - https://www.theelephant.info/op-eds/
+  link_pattern: "/op-eds/"
+  cadence: slow
+  enabled: true
+
+- id: kenyan_wall_street
+  name: Kenyan Wall Street
+  source_domain: kenyanwallstreet.com
+  tier: 3
+  bias_baseline: -5
+  rss:
+    - https://kenyanwallstreet.com/feed/
+  scrape_pages:
+    - https://kenyanwallstreet.com/category/news/
+  link_pattern: "/category/news/"
+  cadence: slow
+  enabled: true
+
+- id: mpasho
+  name: Mpasho
+  source_domain: mpasho.co.ke
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://mpasho.co.ke/feed/
+  scrape_pages:
+    - https://mpasho.co.ke/news/
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: sauti_kenya
+  name: Sauti Kenya
+  source_domain: sautikenya.com
+  tier: 3
+  bias_baseline: 0
+  rss:
+    - https://sautikenya.com/feed/
+  scrape_pages:
+    - https://sautikenya.com/news/
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: false   # site often down; leave disabled until verified
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 4 — Regional (East African neighbours)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: east_african
+  name: The EastAfrican
+  source_domain: theeastafrican.co.ke
+  tier: 4
+  bias_baseline: 0
+  rss:
+    - https://www.theeastafrican.co.ke/tea/rss
+  scrape_pages:
+    - https://www.theeastafrican.co.ke/tea/news/east-africa
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: monitor_ug
+  name: Daily Monitor (Uganda)
+  source_domain: monitor.co.ug
+  tier: 4
+  bias_baseline: 0
+  rss:
+    - https://www.monitor.co.ug/uganda/rss
+  scrape_pages:
+    - https://www.monitor.co.ug/uganda/news/national
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: the_citizen_tz
+  name: The Citizen (Tanzania)
+  source_domain: thecitizen.co.tz
+  tier: 4
+  bias_baseline: 0
+  rss:
+    - https://www.thecitizen.co.tz/tanzania/rss
+  scrape_pages:
+    - https://www.thecitizen.co.tz/tanzania/news/national
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: new_times_rw
+  name: The New Times (Rwanda)
+  source_domain: newtimes.co.rw
+  tier: 4
+  bias_baseline: 10
+  rss:
+    - https://www.newtimes.co.rw/rss.xml
+  scrape_pages:
+    - https://www.newtimes.co.rw/rwanda
+  link_pattern: "/rwanda/"
+  cadence: slow
+  enabled: true
+
+- id: addis_standard
+  name: Addis Standard (Ethiopia)
+  source_domain: addisstandard.com
+  tier: 4
+  bias_baseline: 0
+  rss:
+    - https://addisstandard.com/feed/
+  scrape_pages:
+    - https://addisstandard.com/category/news/
+  link_pattern: "/category/news/"
+  cadence: slow
+  enabled: true
+
+- id: garowe_online
+  name: Garowe Online (Somalia)
+  source_domain: garoweonline.com
+  tier: 4
+  bias_baseline: 0
+  rss:
+    - https://www.garoweonline.com/en/feed.rss
+  scrape_pages:
+    - https://www.garoweonline.com/en/news
+  link_pattern: "/news/"
+  cadence: slow
+  enabled: true
+
+- id: sudan_tribune
+  name: Sudan Tribune
+  source_domain: sudantribune.com
+  tier: 4
+  bias_baseline: -10
+  rss:
+    - https://sudantribune.com/feed/
+  scrape_pages:
+    - https://sudantribune.com/category/news/
+  link_pattern: "/category/news/"
+  cadence: slow
+  enabled: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 5 — Major international outlets (Kenya / East Africa coverage)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: bbc_africa
+  name: BBC News Africa
+  source_domain: bbc.com
+  tier: 5
+  bias_baseline: -5
+  rss:
+    - http://feeds.bbci.co.uk/news/world/africa/rss.xml
+  scrape_pages: []
+  cadence: fast
+  enabled: true
+
+- id: aljazeera_africa
+  name: Al Jazeera Africa
+  source_domain: aljazeera.com
+  tier: 5
+  bias_baseline: -10
+  rss:
+    - https://www.aljazeera.com/xml/rss/all.xml
+  scrape_pages:
+    - https://www.aljazeera.com/africa/
+  link_pattern: "/africa/"
+  cadence: fast
+  enabled: true
+
+- id: reuters_africa
+  name: Reuters Africa
+  source_domain: reuters.com
+  tier: 5
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://www.reuters.com/world/africa/
+  link_pattern: "/world/africa/"
+  cadence: fast
+  enabled: true
+
+- id: ap_africa
+  name: Associated Press — Africa
+  source_domain: apnews.com
+  tier: 5
+  bias_baseline: 0
+  rss: []
+  scrape_pages:
+    - https://apnews.com/hub/africa
+  link_pattern: "/article/"
+  cadence: slow
+  enabled: true
+
+- id: cnn_africa
+  name: CNN Africa
+  source_domain: cnn.com
+  tier: 5
+  bias_baseline: -10
+  rss:
+    - http://rss.cnn.com/rss/edition_africa.rss
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: france24_africa
+  name: France 24 Africa
+  source_domain: france24.com
+  tier: 5
+  bias_baseline: -5
+  rss:
+    - https://www.france24.com/en/africa/rss
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: dw_africa
+  name: Deutsche Welle Africa
+  source_domain: dw.com
+  tier: 5
+  bias_baseline: 0
+  rss:
+    - https://rss.dw.com/rdf/rss-en-africa
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: voa_africa
+  name: Voice of America — Africa
+  source_domain: voanews.com
+  tier: 5
+  bias_baseline: 5
+  rss:
+    - https://www.voanews.com/api/zmgqoe$omi
+  scrape_pages:
+    - https://www.voaafrica.com/
+  link_pattern: "/a/"
+  cadence: slow
+  enabled: true
+
+- id: guardian_africa
+  name: The Guardian Africa
+  source_domain: theguardian.com
+  tier: 5
+  bias_baseline: -15
+  rss:
+    - https://www.theguardian.com/world/africa/rss
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: nyt_africa
+  name: New York Times — Africa
+  source_domain: nytimes.com
+  tier: 5
+  bias_baseline: -15
+  rss:
+    - https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: economist_mea
+  name: The Economist — Middle East & Africa
+  source_domain: economist.com
+  tier: 5
+  bias_baseline: 5
+  rss:
+    - https://www.economist.com/middle-east-and-africa/rss.xml
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: wsj_africa
+  name: Wall Street Journal — World
+  source_domain: wsj.com
+  tier: 5
+  bias_baseline: 15
+  rss:
+    - https://feeds.a.dj.com/rss/RSSWorldNews.xml
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: xinhua_africa
+  name: Xinhua Africa
+  source_domain: xinhuanet.com
+  tier: 5
+  bias_baseline: 20
+  rss:
+    - http://www.xinhuanet.com/english/africa/rss/africaRss.xml
+  scrape_pages: []
+  cadence: slow
+  enabled: true
+
+- id: rt_africa
+  name: RT Africa
+  source_domain: rt.com
+  tier: 5
+  bias_baseline: 25
+  rss:
+    - https://www.rt.com/rss/africa/
+  scrape_pages: []
+  cadence: slow
+  enabled: false   # kept off by default — state-affiliated

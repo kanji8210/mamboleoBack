@@ -29,6 +29,7 @@ require_once MAMBOLEO_PLUGIN_DIR . 'includes/cors.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-scraper.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-review.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-media-monitor.php';
 
 // Activation/Deactivation hooks
 function mamboleo_activate() {

@@ -48,6 +48,21 @@ function mamboleo_register_rest_routes(): void {
         'callback'            => 'mamboleo_create_social_post',
         'permission_callback' => 'mamboleo_verify_api_key',
     ] );
+
+    // Public: Media Monitor trend snapshot
+    register_rest_route( 'mamboleo/v1', '/trends', [
+        'methods'             => 'GET',
+        'callback'            => 'mamboleo_get_trends',
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'window' => [
+                'required' => false,
+                'type'     => 'string',
+                'default'  => '24h',
+                'enum'     => [ '1h', '24h', '7d', '30d' ],
+            ],
+        ],
+    ] );
 }
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
@@ -188,20 +203,63 @@ function mamboleo_create_article( WP_REST_Request $request ): array|WP_Error {
         return new WP_Error( 'missing_params', __( 'Title is required.', 'mamboleo' ), [ 'status' => 400 ] );
     }
 
-    $post_id = wp_insert_post( [
+    // Dedupe by article_url so repeated scraper runs don't create duplicates.
+    $article_url = isset( $params['article_url'] ) ? esc_url_raw( $params['article_url'] ) : '';
+    if ( $article_url ) {
+        $existing = get_posts( [
+            'post_type'      => 'article',
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'meta_query'     => [ [ 'key' => 'article_url', 'value' => $article_url ] ],
+        ] );
+        if ( ! empty( $existing ) ) {
+            return [ 'id' => (int) $existing[0], 'message' => 'Article already exists (deduped).' ];
+        }
+    }
+
+    // Use scraped published_at if provided, otherwise now.
+    $published_at = isset( $params['published_at'] ) ? sanitize_text_field( $params['published_at'] ) : '';
+    $post_date_gmt = $published_at ? gmdate( 'Y-m-d H:i:s', strtotime( $published_at ) ) : '';
+
+    $post_args = [
         'post_title'   => sanitize_text_field( $params['title'] ),
         'post_content' => wp_kses_post( $params['content'] ?? '' ),
+        'post_excerpt' => sanitize_textarea_field( $params['excerpt'] ?? '' ),
         'post_type'    => 'article',
         'post_status'  => 'publish',
-    ] );
+    ];
+    if ( $post_date_gmt ) {
+        $post_args['post_date_gmt'] = $post_date_gmt;
+        $post_args['post_date']     = get_date_from_gmt( $post_date_gmt );
+    }
+
+    $post_id = wp_insert_post( $post_args );
     if ( is_wp_error( $post_id ) ) {
         return new WP_Error( 'insert_failed', $post_id->get_error_message(), [ 'status' => 500 ] );
     }
 
+    // ── Core attribution ─────────────────────────────────────────────────────
     if ( isset( $params['source'] ) )      update_post_meta( $post_id, 'source',      sanitize_text_field( $params['source'] ) );
-    if ( isset( $params['article_url'] ) ) update_post_meta( $post_id, 'article_url', esc_url_raw( $params['article_url'] ) );
-    if ( isset( $params['bias_score'] ) )  update_post_meta( $post_id, 'bias_score',  (int) $params['bias_score'] );
-    if ( isset( $params['sentiment'] ) )   update_post_meta( $post_id, 'sentiment',   sanitize_text_field( $params['sentiment'] ) );
+    if ( $article_url )                    update_post_meta( $post_id, 'article_url', $article_url );
+    if ( isset( $params['tier'] ) )        update_post_meta( $post_id, 'tier',        (int) $params['tier'] );
+    if ( $published_at )                   update_post_meta( $post_id, 'published_at', $published_at );
+
+    // ── NLP enrichment ───────────────────────────────────────────────────────
+    if ( isset( $params['bias_score'] ) )      update_post_meta( $post_id, 'bias_score',      (int) $params['bias_score'] );
+    if ( isset( $params['sentiment'] ) )       update_post_meta( $post_id, 'sentiment',       sanitize_text_field( $params['sentiment'] ) );
+    if ( isset( $params['sentiment_score'] ) ) update_post_meta( $post_id, 'sentiment_score', (float) $params['sentiment_score'] );
+
+    if ( ! empty( $params['topics'] ) && is_array( $params['topics'] ) ) {
+        update_post_meta( $post_id, 'topics', array_map( 'sanitize_text_field', $params['topics'] ) );
+    }
+    if ( ! empty( $params['keywords'] ) && is_array( $params['keywords'] ) ) {
+        update_post_meta( $post_id, 'keywords', array_map( 'sanitize_text_field', $params['keywords'] ) );
+    }
+    if ( ! empty( $params['entities'] ) && is_array( $params['entities'] ) ) {
+        // Store as JSON — nested arrays don't round-trip cleanly in post meta.
+        update_post_meta( $post_id, 'entities_json', wp_json_encode( $params['entities'] ) );
+    }
 
     if ( ! empty( $params['county'] ) ) {
         wp_set_post_terms( $post_id, $params['county'], 'county' );
@@ -237,5 +295,129 @@ function mamboleo_create_social_post( WP_REST_Request $request ): array|WP_Error
     }
 
     return [ 'id' => $post_id, 'message' => 'Social post created successfully.' ];
+}
+
+// ── Public: Media Monitor trends ──────────────────────────────────────────────
+/**
+ * Aggregate counts over a rolling time window. Cached for 5 minutes.
+ *
+ * Response shape:
+ *   {
+ *     window: "24h",
+ *     total: 234,
+ *     by_source:    [ { name, count } ],
+ *     by_topic:     [ { name, count } ],
+ *     by_sentiment: { positive, neutral, negative },
+ *     by_tier:      { 1, 2, 3, 4, 5 },
+ *     top_entities: { persons, orgs, places },
+ *     timeline:     [ { date, count } ],   // last N days buckets
+ *   }
+ */
+function mamboleo_get_trends( WP_REST_Request $request ): array {
+    $window = $request->get_param( 'window' ) ?: '24h';
+    $cache_key = 'mamboleo_trends_' . $window;
+    $cached = get_transient( $cache_key );
+    if ( $cached !== false ) {
+        return $cached;
+    }
+
+    $windows = [
+        '1h'  => '-1 hour',
+        '24h' => '-1 day',
+        '7d'  => '-7 days',
+        '30d' => '-30 days',
+    ];
+    $since = gmdate( 'Y-m-d H:i:s', strtotime( $windows[ $window ] ?? '-1 day' ) );
+
+    $query = new WP_Query( [
+        'post_type'      => 'article',
+        'post_status'    => 'publish',
+        'posts_per_page' => 500,
+        'date_query'     => [ [ 'after' => $since, 'column' => 'post_date_gmt' ] ],
+        'no_found_rows'  => true,
+        'fields'         => 'ids',
+    ] );
+
+    $by_source    = [];
+    $by_topic     = [];
+    $by_sentiment = [ 'positive' => 0, 'neutral' => 0, 'negative' => 0 ];
+    $by_tier      = [ 1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0 ];
+    $persons_c    = [];
+    $orgs_c       = [];
+    $places_c     = [];
+    $timeline     = [];
+
+    foreach ( $query->posts as $post_id ) {
+        $source = get_post_meta( $post_id, 'source', true );
+        if ( $source ) {
+            $by_source[ $source ] = ( $by_source[ $source ] ?? 0 ) + 1;
+        }
+
+        $tier = (int) get_post_meta( $post_id, 'tier', true );
+        if ( $tier >= 1 && $tier <= 5 ) $by_tier[ $tier ]++;
+
+        $sent = get_post_meta( $post_id, 'sentiment', true );
+        if ( isset( $by_sentiment[ $sent ] ) ) $by_sentiment[ $sent ]++;
+
+        $topics = get_post_meta( $post_id, 'topics', true );
+        if ( is_array( $topics ) ) {
+            foreach ( $topics as $t ) {
+                $by_topic[ $t ] = ( $by_topic[ $t ] ?? 0 ) + 1;
+            }
+        }
+
+        $ents_json = get_post_meta( $post_id, 'entities_json', true );
+        if ( $ents_json ) {
+            $ents = json_decode( $ents_json, true );
+            if ( is_array( $ents ) ) {
+                foreach ( (array) ( $ents['persons'] ?? [] ) as $p ) {
+                    $persons_c[ $p ] = ( $persons_c[ $p ] ?? 0 ) + 1;
+                }
+                foreach ( (array) ( $ents['orgs'] ?? [] ) as $o ) {
+                    $orgs_c[ $o ] = ( $orgs_c[ $o ] ?? 0 ) + 1;
+                }
+                foreach ( (array) ( $ents['places'] ?? [] ) as $pl ) {
+                    $places_c[ $pl ] = ( $places_c[ $pl ] ?? 0 ) + 1;
+                }
+            }
+        }
+
+        $date = get_the_date( 'Y-m-d', $post_id );
+        $timeline[ $date ] = ( $timeline[ $date ] ?? 0 ) + 1;
+    }
+
+    arsort( $by_source );
+    arsort( $by_topic );
+    arsort( $persons_c );
+    arsort( $orgs_c );
+    arsort( $places_c );
+    ksort( $timeline );
+
+    $format = fn( $arr, $limit ) => array_slice(
+        array_map( fn( $k, $v ) => [ 'name' => $k, 'count' => $v ],
+            array_keys( $arr ), array_values( $arr ) ),
+        0, $limit
+    );
+
+    $result = [
+        'window'       => $window,
+        'total'        => count( $query->posts ),
+        'by_source'    => $format( $by_source, 15 ),
+        'by_topic'     => $format( $by_topic, 10 ),
+        'by_sentiment' => $by_sentiment,
+        'by_tier'      => $by_tier,
+        'top_entities' => [
+            'persons' => $format( $persons_c, 10 ),
+            'orgs'    => $format( $orgs_c, 10 ),
+            'places'  => $format( $places_c, 10 ),
+        ],
+        'timeline'     => array_map(
+            fn( $k, $v ) => [ 'date' => $k, 'count' => $v ],
+            array_keys( $timeline ), array_values( $timeline )
+        ),
+    ];
+
+    set_transient( $cache_key, $result, 5 * MINUTE_IN_SECONDS );
+    return $result;
 }
 

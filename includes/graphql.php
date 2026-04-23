@@ -67,6 +67,37 @@ function mamboleo_register_graphql_types(): void {
         'type'    => 'String',
         'resolve' => fn( $p ) => get_post_meta( $p->ID, 'sentiment', true ) ?: 'neutral',
     ] );
+    register_graphql_field( 'Article', 'sentimentScore', [
+        'type'    => 'Float',
+        'resolve' => fn( $p ) => (float) ( get_post_meta( $p->ID, 'sentiment_score', true ) ?: 0 ),
+    ] );
+    register_graphql_field( 'Article', 'tier', [
+        'type'    => 'Int',
+        'resolve' => fn( $p ) => (int) ( get_post_meta( $p->ID, 'tier', true ) ?: 3 ),
+    ] );
+    register_graphql_field( 'Article', 'publishedAt', [
+        'type'    => 'String',
+        'resolve' => fn( $p ) => get_post_meta( $p->ID, 'published_at', true ) ?: null,
+    ] );
+    register_graphql_field( 'Article', 'topics', [
+        'type'    => [ 'list_of' => 'String' ],
+        'resolve' => function ( $p ) {
+            $t = get_post_meta( $p->ID, 'topics', true );
+            return is_array( $t ) ? array_values( $t ) : [];
+        },
+    ] );
+    register_graphql_field( 'Article', 'keywords', [
+        'type'    => [ 'list_of' => 'String' ],
+        'resolve' => function ( $p ) {
+            $k = get_post_meta( $p->ID, 'keywords', true );
+            return is_array( $k ) ? array_values( $k ) : [];
+        },
+    ] );
+    register_graphql_field( 'Article', 'entitiesJson', [
+        'type'        => 'String',
+        'description' => 'JSON-encoded { persons, orgs, places }',
+        'resolve'     => fn( $p ) => get_post_meta( $p->ID, 'entities_json', true ) ?: '',
+    ] );
 
     // ── Social Post fields ────────────────────────────────────────────────
     register_graphql_field( 'SocialPost', 'platform', [

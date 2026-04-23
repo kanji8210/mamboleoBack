@@ -1,7 +1,7 @@
 <?php
 /**
  * Register post meta fields for all Mamboleo post types.
- * Uses register_post_meta() — no ACF dependency required.
+ * Uses register_post_meta() ï¿½ no ACF dependency required.
  */
 
 function mamboleo_register_meta(): void {
@@ -91,13 +91,47 @@ function mamboleo_register_meta(): void {
     ] ) );
     register_post_meta( 'article', 'bias_score', array_merge( $article, [
         'type'        => 'integer',
-        'description' => 'Bias score from -10 (left) to +10 (right)',
+        'description' => 'Bias score from -100 (left) to +100 (right)',
         'default'     => 0,
     ] ) );
     register_post_meta( 'article', 'sentiment', array_merge( $article, [
         'type'        => 'string',
         'description' => 'Sentiment: positive | neutral | negative',
         'default'     => 'neutral',
+    ] ) );
+    register_post_meta( 'article', 'sentiment_score', array_merge( $article, [
+        'type'        => 'number',
+        'description' => 'VADER compound sentiment score [-1, 1]',
+        'default'     => 0,
+    ] ) );
+    register_post_meta( 'article', 'tier', array_merge( $article, [
+        'type'        => 'integer',
+        'description' => 'Source trust tier (1 official .. 5 international)',
+        'default'     => 3,
+    ] ) );
+    register_post_meta( 'article', 'published_at', array_merge( $article, [
+        'type'        => 'string',
+        'description' => 'Original publication timestamp (ISO 8601)',
+        'default'     => '',
+    ] ) );
+    register_post_meta( 'article', 'topics', array_merge( $article, [
+        'type'         => 'array',
+        'single'       => true,
+        'show_in_rest' => [ 'schema' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ] ],
+        'description'  => 'Topic tags from the Mamboleo taxonomy',
+        'default'      => [],
+    ] ) );
+    register_post_meta( 'article', 'keywords', array_merge( $article, [
+        'type'         => 'array',
+        'single'       => true,
+        'show_in_rest' => [ 'schema' => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ] ],
+        'description'  => 'Top frequency keywords extracted from the body',
+        'default'      => [],
+    ] ) );
+    register_post_meta( 'article', 'entities_json', array_merge( $article, [
+        'type'        => 'string',
+        'description' => 'JSON-encoded named entities { persons, orgs, places }',
+        'default'     => '',
     ] ) );
 
     // -- Social Post meta --------------------------------------------------
