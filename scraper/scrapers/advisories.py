@@ -96,25 +96,93 @@ class AdvisoryScraper(BaseScraper):
             "source":       "UK FCDO",
         }
 
-    # ── US State Department (RSS) ─────────────────────────────────────────────
+    # ── US State Department ───────────────────────────────────────────────────
+    # Strategy: fetch the canonical Kenya page directly (always available,
+    # reflects current level) AND scan the RSS feed for recent reissues.
+    # Both may yield the same advisory under different URLs; the WordPress
+    # side dedupes by title + article_url.
     def _fetch_us_state_dept(self) -> Iterator[dict]:
-        import feedparser
-        
-        self.log.info("Fetching US State Dept advisories...")
+        # ── 1. Canonical Kenya advisory page (primary) ───────────────────────
+        canonical_url = (
+            "https://travel.state.gov/content/travel/en/traveladvisories/"
+            "traveladvisories/kenya-travel-advisory.html"
+        )
+        self.log.info("Fetching US State Dept canonical Kenya advisory...")
+        resp = self.get(canonical_url)
+        if resp:
+            soup = BeautifulSoup(resp.text, "lxml")
+
+            # Advisory level: badge near top, e.g. "Level 2: Exercise Increased Caution"
+            level_el = (
+                soup.select_one(".tsg-rwd-ta-level")
+                or soup.select_one(".tsg-rwd-emergency-alert-level")
+                or soup.find(attrs={"class": re.compile(r"level", re.I)})
+            )
+            level_text = level_el.get_text(" ", strip=True) if level_el else ""
+
+            # Main body
+            body_el = (
+                soup.select_one("div.tsg-rwd-content-page-passcontent")
+                or soup.select_one("article")
+                or soup.select_one("main")
+            )
+            content = body_el.get_text(" ", strip=True)[:5000] if body_el else ""
+
+            # Meta description for excerpt
+            meta_desc = soup.find("meta", attrs={"name": "description"})
+            excerpt = meta_desc["content"].strip() if meta_desc and meta_desc.get("content") else ""
+
+            # Last-updated date — State Dept prints "Reissued with updates …" or "Updated …"
+            published = datetime.now(timezone.utc).isoformat()
+            if content:
+                m = re.search(
+                    r"(?:Reissued|Updated|Issued)(?:\s+with\s+[\w\s]+)?[:\s]+"
+                    r"([A-Z][a-z]+\s+\d{1,2},\s*\d{4})",
+                    content,
+                )
+                if m:
+                    try:
+                        dt = datetime.strptime(m.group(1), "%B %d, %Y").replace(tzinfo=timezone.utc)
+                        published = dt.isoformat()
+                    except ValueError:
+                        pass
+
+            title = "US State Dept: Kenya Travel Advisory"
+            if level_text:
+                title += f" — {level_text[:80]}"
+
+            yield {
+                "url":          canonical_url,
+                "title":        title,
+                "excerpt":      excerpt or (content[:280] if content else ""),
+                "content":      content,
+                "published_at": published,
+                "source":       "US State Dept",
+            }
+        else:
+            self.log.warning("US State Dept canonical page unreachable, falling back to RSS only")
+
+        # ── 2. RSS feed (supplementary — catches reissue announcements) ──────
+        try:
+            import feedparser
+        except ImportError:
+            self.log.debug("feedparser not installed, skipping State Dept RSS")
+            return
+
         feed_url = "https://travel.state.gov/_res/rss/TAs.xml"
         feed = feedparser.parse(feed_url)
-
         for entry in feed.entries:
             title = entry.get("title", "")
-            # Filter for Kenya mentions
             summary = entry.get("summary", "")
             if "kenya" not in title.lower() and "kenya" not in summary.lower():
                 continue
 
             url = entry.get("link", "")
-            published = _parse_rss_date(entry)
+            # Skip if RSS just points back to the canonical page — already yielded above.
+            if url == canonical_url:
+                continue
 
-            # Try to fetch full content
+            published = _parse_rss_date(entry)
             content = ""
             resp = self.get(url)
             if resp:

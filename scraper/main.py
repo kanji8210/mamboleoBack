@@ -34,6 +34,13 @@ logging.basicConfig(
 )
 log = logging.getLogger("main")
 
+# ── Review thresholds ─────────────────────────────────────────────────────────
+# Below MIN: discard (not an incident).
+# Between MIN and REVIEW: auto-park for admin review.
+# At or above REVIEW: auto-publish (unless location is low-specificity fallback).
+CONFIDENCE_MIN     = 0.20
+CONFIDENCE_REVIEW  = 0.50
+
 # ── Scraper registry ──────────────────────────────────────────────────────────
 ALL_SCRAPERS = {
     "advisories":    AdvisoryScraper,
@@ -68,13 +75,14 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
     cls = classify.classify(raw["title"], raw.get("content", ""))
 
-    if cls is None or cls.confidence < 0.2:
+    if cls is None or cls.confidence < CONFIDENCE_MIN:
         log.debug("Not an incident (conf=%.2f): %s", cls.confidence if cls else 0, raw["title"][:80])
         db.mark_seen(url, DB_PATH)
         return False
 
     # ── Location ──────────────────────────────────────────────────────────────
     loc = locations.best_location(text)
+    location_fallback = False
 
     if loc is None:
         # Try Nominatim as fallback
@@ -86,6 +94,7 @@ def process_article(raw: dict, dry_run: bool) -> bool:
             if coords:
                 from processors.locations import Location
                 loc = Location(name=word, lat=coords[0], lng=coords[1], specificity=1)
+                location_fallback = True
                 break
 
     if loc is None:
@@ -93,13 +102,23 @@ def process_article(raw: dict, dry_run: bool) -> bool:
         db.mark_seen(url, DB_PATH)
         return False
 
+    # ── Decide whether this needs human review ────────────────────────────────
+    review_reasons: list[str] = []
+    if cls.confidence < CONFIDENCE_REVIEW:
+        review_reasons.append(f"low classification confidence ({cls.confidence:.2f})")
+    if location_fallback or loc.specificity <= 1:
+        review_reasons.append(f"imprecise location ({loc.name})")
+    needs_review = bool(review_reasons)
+    review_reason = "; ".join(review_reasons)
+
     log.info(
-        "[%s] %-12s  conf=%.2f  sev=%-6s  loc=%s",
+        "[%s] %-12s  conf=%.2f  sev=%-6s  loc=%s%s",
         raw["source"],
         cls.incident_type,
         cls.confidence,
         cls.severity,
         loc.name,
+        "  [REVIEW]" if needs_review else "",
     )
     log.info("  → %s", raw["title"][:100])
 
@@ -132,10 +151,18 @@ def process_article(raw: dict, dry_run: bool) -> bool:
             "incident_time": raw.get("published_at", datetime.now(timezone.utc).isoformat()),
             "location_name": loc.name,
             "reporter_name": raw["source"],
+            "article_url":   url,
+            "needs_review":  needs_review,
+            "review_reason": review_reason,
+            "confidence":    round(cls.confidence, 2),
         }
     )
     if incident_id:
-        log.info("  ✓ incident #%d  @ %.4f, %.4f", incident_id, loc.lat, loc.lng)
+        log.info(
+            "  %s incident #%d  @ %.4f, %.4f",
+            "⏸ pending" if needs_review else "✓",
+            incident_id, loc.lat, loc.lng,
+        )
 
     db.mark_seen(url, DB_PATH)
     return incident_id is not None

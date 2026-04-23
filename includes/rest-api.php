@@ -131,11 +131,15 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
         return new WP_Error( 'missing_params', __( 'Title is required.', 'mamboleo' ), [ 'status' => 400 ] );
     }
 
+    // Uncertain incidents are parked for admin review. Trusted ones publish immediately.
+    $needs_review = ! empty( $params['needs_review'] );
+    $post_status  = $needs_review ? 'pending' : 'publish';
+
     $post_id = wp_insert_post( [
         'post_title'   => sanitize_text_field( $params['title'] ),
         'post_content' => wp_kses_post( $params['content'] ?? '' ),
         'post_type'    => 'incident',
-        'post_status'  => 'publish',
+        'post_status'  => $post_status,
     ] );
     if ( is_wp_error( $post_id ) ) {
         return new WP_Error( 'insert_failed', $post_id->get_error_message(), [ 'status' => 500 ] );
@@ -149,13 +153,32 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     if ( isset( $params['incident_time'] ) ) update_post_meta( $post_id, 'incident_time',  sanitize_text_field( $params['incident_time'] ) );
     if ( isset( $params['video_url'] ) )     update_post_meta( $post_id, 'video_url',      esc_url_raw( $params['video_url'] ) );
     if ( isset( $params['location_name'] ) ) update_post_meta( $post_id, 'location_name',  sanitize_text_field( $params['location_name'] ) );
-    if ( isset( $params['is_verified'] ) )   update_post_meta( $post_id, 'is_verified',    (bool) $params['is_verified'] );
+    if ( isset( $params['reporter_name'] ) ) update_post_meta( $post_id, 'reporter_name',  sanitize_text_field( $params['reporter_name'] ) );
+    if ( isset( $params['article_url'] ) )   update_post_meta( $post_id, 'article_url',    esc_url_raw( $params['article_url'] ) );
+
+    // Verified iff auto-published AND caller didn't override.
+    $is_verified = isset( $params['is_verified'] ) ? (bool) $params['is_verified'] : ! $needs_review;
+    update_post_meta( $post_id, 'is_verified', $is_verified );
+
+    // Review-queue metadata — shown in the admin Review Queue screen.
+    if ( $needs_review ) {
+        update_post_meta( $post_id, 'needs_review',  1 );
+        update_post_meta( $post_id, 'review_reason', sanitize_text_field( $params['review_reason'] ?? '' ) );
+    }
+    if ( isset( $params['confidence'] ) ) {
+        update_post_meta( $post_id, 'classification_confidence', (float) $params['confidence'] );
+    }
 
     if ( ! empty( $params['county'] ) ) {
         wp_set_post_terms( $post_id, $params['county'], 'county' );
     }
 
-    return [ 'id' => $post_id, 'message' => 'Incident created successfully.' ];
+    return [
+        'id'           => $post_id,
+        'status'       => $post_status,
+        'needs_review' => $needs_review,
+        'message'      => $needs_review ? 'Incident parked for review.' : 'Incident created successfully.',
+    ];
 }
 
 // ── API-key ingestion: article ────────────────────────────────────────────────
