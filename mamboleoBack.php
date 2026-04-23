@@ -16,7 +16,12 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('MAMBOLEO_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MAMBOLEO_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('MAMBOLEO_API_KEY', 'mamboleo-dev-key-change-in-production');
+// Guard against double-definition (can happen if wp-config or another
+// plugin has already set it). Without this guard WordPress prints an
+// HTML warning before the REST body, breaking any strict JSON consumer.
+if (!defined('MAMBOLEO_API_KEY')) {
+    define('MAMBOLEO_API_KEY', 'mamboleo-dev-key-change-in-production');
+}
 
 // Include required files
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/post-types.php';
