@@ -47,7 +47,8 @@
     - https://www.kenyapolice.go.ke/news
     - https://www.kenyapolice.go.ke/2015-09-21-20-53-44/news.html
   link_pattern: "/news"
-  cadence: fast
+  timeout: 45          # gov host is slow, can stall past default 25s
+  cadence: slow        # too slow for 15-min cadence; hourly is plenty
   enabled: true
 
 - id: interior_ministry
@@ -59,7 +60,9 @@
   scrape_pages:
     - https://interior.go.ke/newsroom/
   link_pattern: "/newsroom/"
-  cadence: fast
+  verify_ssl: false    # hosts a self-signed cert chain (as of 2026)
+  timeout: 45
+  cadence: slow
   enabled: true
 
 - id: state_house
@@ -83,8 +86,8 @@
   scrape_pages:
     - https://www.redcross.or.ke/news-and-publications/news/
   link_pattern: "/news/"
-  cadence: fast
-  enabled: true
+  cadence: slow
+  enabled: false       # upstream returns 404 — URL to be updated when site refresh lands
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TIER 2 — Mainstream Kenyan media

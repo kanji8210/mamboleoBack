@@ -28,8 +28,13 @@ from urllib.parse import urljoin, urlparse
 
 import feedparser
 from bs4 import BeautifulSoup
+import urllib3
 
 from scrapers.base import BaseScraper
+
+# Suppress the noisy per-request warning for sources with verify_ssl: false.
+# We only flip that knob for known self-signed gov sites where it's the only option.
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Sensible defaults — most WP / Drupal news sites match these.
 _DEFAULT_LINK_SELECTORS = [
@@ -71,6 +76,21 @@ class GenericScraper(BaseScraper):
             config.get("content_selectors") or _DEFAULT_CONTENT_SELECTORS
         )
         self._base_url: str = self._compute_base(config)
+        # Per-source HTTP tuning
+        self._timeout: int = int(config.get("timeout", 25))
+        self._verify_ssl: bool = bool(config.get("verify_ssl", True))
+        # Some outlets (paywalls, bot-protected) need a browser-like UA
+        ua = config.get("user_agent")
+        if ua:
+            self.session.headers["User-Agent"] = ua
+
+    def get(self, url: str, timeout: int | None = None, **kwargs):  # noqa: D401
+        """Override BaseScraper.get to apply per-source timeout + SSL settings."""
+        if timeout is None:
+            timeout = self._timeout
+        if not self._verify_ssl and "verify" not in kwargs:
+            kwargs["verify"] = False
+        return super().get(url, timeout=timeout, **kwargs)
 
     @staticmethod
     def _compute_base(config: dict) -> str:
