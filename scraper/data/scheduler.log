@@ -73,4 +73,307 @@
 ==================================================================== 
 09:45:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
 09:45:04  INFO      main  --- FEED:KDF (limit=30) ---
-^C
+^C 
+==================================================================== 
+[24/04/2026 10:00:03.00] START cadence=fast 
+==================================================================== 
+10:00:07  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+10:00:07  INFO      main  --- FEED:KDF (limit=30) ---
+10:00:48  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/cadets-champion-social-reintegration-through-community-service-in-nakuru/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/cadets-champion-social-reintegration-through-community-service-in-nakuru/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+10:00:56  INFO      main    \u2713 article #82 [regional,health,education,security] TRANSFORMING LIVES THROUGH MEDICAL OUTREACH – Ministry of Defence – Kenya
+10:01:09  INFO      main    \u2713 article #85 [security,regional] BOLSTERING SPIRITUAL RESILIENCE AMONG KDF FAMILIES – Ministry of Defence – Kenya
+10:01:13  INFO      main    \u2713 article #86 [regional,security,health,politics] SECURITY AND CARE: KENYAN PEACEKEEPERS RESTORE HOPE IN MANTUMBI – Ministry of De
+10:01:16  INFO      main    \u2713 article #87 [environment,security,education,regional] EXCELLENCE IN OPERATIONAL READINESS – Ministry of Defence – Kenya
+10:01:20  INFO      main    \u2713 article #89 [security,regional,business] MILITARY SPORTS AS A CATALYST FOR REGIONAL COHESION – Ministry of Defence – Keny
+10:01:23  INFO      main    \u2713 article #90 [security,regional] A MILESTONE OF COMPASSION, UHSF’S COMMITMENT TO COMMUNITY OUTREACH – Ministry of
+10:01:24  INFO      main  --- FEED:KDF done: 0 incidents ---
+10:01:24  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+10:01:33  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+10:01:33  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+10:01:38  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+10:01:38  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+10:01:43  INFO      main    \u2713 article #91 [security,politics,economy,regional] US urges global investment in Haiti stability beyond security operations
+10:01:47  INFO      main    \u2713 article #92 [education,environment,tech,security] Ombudsman orders MoE to respond in 7 days over disputed TVET student relocation 
+10:01:51  INFO      main    \u2713 article #93 [security,politics,economy,environment] Why Your Charging Cables Keep Breaking — and What You Can Do About It
+10:01:53  INFO      main    \u2713 article #94 [politics,regional,health,environment] Huge chunk of glacier blocks Everest route in peak climbing season
+10:01:57  INFO      main  [capitalfm.co.ke] protest       conf=0.50  sev=low     loc=Everest  [REVIEW]
+10:01:57  INFO      main    \u2192 Huge chunk of glacier blocks Everest route in peak climbing season
+10:01:59  INFO      main    \u23f8 pending incident #95  @ -1.4368, 36.9774
+10:02:02  INFO      main    \u2713 article #96 [politics,security,business,economy] US soldier charged after winning $400,000 betting on removal of Maduro
+10:02:02  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=low     loc=Nairobi
+10:02:02  INFO      main    \u2192 US soldier charged after winning $400,000 betting on removal of Maduro
+10:02:03  INFO      main    \u2713 incident #97  @ -1.2921, 36.8219
+10:02:06  INFO      main    \u2713 article #98 [tech,environment,security,business] OPINION: Building the SAP Skills Base Needed for the Middle East’s Digital Ambit
+10:02:10  INFO      main    \u2713 article #99 [politics,security,economy,environment] OPINION: The Owan Renaissance, Blessing Agbebaku and the Politics of Grassroots 
+10:02:15  INFO      main    \u2713 article #100 [tech,economy,regional,security] Govt boosts prison reforms with digital learning push for inmates
+10:02:15  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Ruiru  [REVIEW]
+10:02:15  INFO      main    \u2192 Govt boosts prison reforms with digital learning push for inmates
+10:02:17  INFO      main    \u23f8 pending incident #101  @ -1.1445, 36.9621
+10:02:23  INFO      main    \u2713 article #102 [regional,education,business,security] MoH unveils new SHA-backed healthcare framework for teachers including IVF cover
+10:02:29  INFO      main    \u2713 article #103 [politics,security,regional,economy] Teacher couple held over Sh2.4mn fake land deal uncovered at Ardhi House
+10:02:35  INFO      main    \u2713 article #104 [economy,environment,business] OPINION: Fuel shocks and the EV shift: How China is driving the global transitio
+10:02:41  INFO      main    \u2713 article #105 [regional,business] OPINION: The Complete Reunification of China is Unstoppable
+10:02:44  INFO      main    \u2713 article #106 [environment,economy,business] OPINION: How Kenya–China Cooperation Can Redefine Urban Sustainability
+10:02:50  INFO      main    \u2713 article #107 [environment,politics,security,economy] Kenya calls for high-integrity climate financing mechanisms in Berlin talks
+10:02:59  INFO      main    \u2713 article #108 [environment,education,business,regional] Climate Experts, Policymakers Call for Africa-Led Solutions After ICJ ruling on 
+10:03:04  INFO      main    \u2713 article #109 [politics,environment,business,security] National Assembly to hold public hearing on forest management law
+10:03:11  INFO      main    \u2713 article #110 [environment,business,politics,security] Kenya Deepens UNDP Partnership to Drive Climate Action, Biodiversity Agenda
+10:03:20  INFO      main    \u2713 article #111 [environment,economy,politics,business] Kenya launches Sh520mn UN-backed Nairobi Green Cities Project to boost climate-r
+10:03:25  INFO      main    \u2713 article #112 [politics,security,economy,education] US forces to begin blockading ships entering or exiting Iranian ports on Monday 
+10:03:32  INFO      main    \u2713 article #113 [environment,politics,security,economy] Ban Ki-moon calls for stronger China-ROK climate cooperation
+10:03:35  INFO      main    \u2713 article #114 [regional,security,economy,politics] Chinese troops take on larger UN duties
+10:03:35  INFO      main  [capitalfm.co.ke] accident      conf=0.50  sev=low     loc=Nairobi  [REVIEW]
+10:03:35  INFO      main    \u2192 Chinese troops take on larger UN duties
+10:03:37  INFO      main    \u23f8 pending incident #115  @ -1.2921, 36.8219
+10:03:40  INFO      main    \u2713 article #116 [security,politics,economy,tech] China successfully launches new test satellite
+10:03:42  INFO      main    \u2713 article #117 [security,politics,education,environment] Confusion reigns over truce talks - China Daily
+10:03:47  INFO      main    \u2713 article #118 [politics,security,health,economy] UAE Assures Safety of 30,000 Kenyans as Middle East Tensions Persist
+10:03:50  INFO      main    \u2713 article #78 [tech,politics,security,economy] UAE pledges trade links as Red Sea delays hit Kenya exports
+10:03:55  INFO      main    \u2713 article #119 [politics,security,regional,economy] Pakistani FM emphasizes need for continued dialogue in call with Iranian FM
+10:03:58  INFO      main    \u2713 article #120 [politics,security,economy,tech] Ruto heads to Italy for a 3-day state visit
+10:04:02  INFO      main    \u2713 article #121 [regional,politics,environment,security] Ethiopian officials commend China-Ethiopia cooperation in language education, sk
+10:04:04  INFO      main    \u2713 article #122 [business,politics,environment,regional] OPINION: War or Wisdom: Why China’s Approach Outshines America’s Middle East Str
+10:04:08  INFO      main    \u2713 article #123 [politics,security,economy,environment] Capital FM Journalist Bruhan Makong elected to Kenya’s science journalists group
+10:04:08  INFO      main  --- FEED:CAPITAL_FM done: 4 incidents ---
+10:04:08  INFO      main  --- FEED:THE_STAR (limit=30) ---
+10:04:16  INFO      main    \u2713 article #124 [security] Kwale: Two women killed in separate attacks
+10:04:16  INFO      main  [the-star.co.ke] accident      conf=0.50  sev=medium  loc=Kwale  [REVIEW]
+10:04:16  INFO      main    \u2192 Kwale: Two women killed in separate attacks
+10:04:18  INFO      main    \u23f8 pending incident #125  @ -4.1730, 39.4573
+10:04:20  INFO      main    \u2713 article #126 [education] Panel opens applications for two TSC member posts
+10:04:23  INFO      main    \u2713 article #127 [-] Childcare services underfunded in Kenya, stakeholders lament
+10:04:26  INFO      main    \u2713 article #128 [-] KCAA seeks new director general, sets May 18 deadline
+10:04:30  INFO      main    \u2713 article #129 [politics] PSC opens applications for member position
+10:04:33  INFO      main    \u2713 article #130 [politics] Update: Trump says ceasefire between Israel, Lebanon to be extended by 3 weeks
+10:04:38  INFO      main    \u2713 article #131 [security] Narok: Man, 26, stabbed to death after motorcycle ride turns violent
+10:04:39  INFO      main  [the-star.co.ke] police        conf=0.50  sev=low     loc=Narok  [REVIEW]
+10:04:39  INFO      main    \u2192 Narok: Man, 26, stabbed to death after motorcycle ride turns violent
+10:04:40  INFO      main    \u23f8 pending incident #132  @ -1.2779, 35.4774
+10:04:43  INFO      main    \u2713 article #133 [politics] Ruto’s Murang’a tour Itinerary: Key stops and projects lined up
+10:04:48  INFO      main    \u2713 article #134 [politics] Museveni dismisses fuel complaints, says nightclub goers can ‘stay at home’
+10:04:51  INFO      main    \u2713 article #135 [tech] White House memo claims mass AI theft by Chinese firms
+10:04:51  INFO      main  --- FEED:THE_STAR done: 2 incidents ---
+10:04:51  INFO      main  --- FEED:NTV (limit=30) ---
+10:04:58  INFO      main    \u2713 article #136 [-] Arsenal face must-win clash with Newcastle as Premier League title race tightens
+10:05:03  INFO      main    \u2713 article #138 [business] Warning of higher condom prices goes viral in China, stokes stockpiling talk
+10:05:20  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+10:05:22  INFO      main    \u2713 article #141 [-] Fidel Dennis Ofung’o’s body was pulled from a river – but the autopsy says he di
+10:06:01  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+10:06:06  INFO      main    \u2713 article #144 [-] The trade management skill that can transform average forex entries into big win
+10:06:39  INFO      main    \u2713 article #145 [environment] Floundering Chelsea sack Rosenior amid worst scoring drought in 114 years
+10:06:44  INFO      main    \u2713 article #146 [-] US in talks to resettle 1,100 Afghans in Congo, group says
+10:06:50  INFO      main    \u2713 article #147 [business] Co-op Bank signals expansion and new CEO under holding company restructuring
+10:06:53  INFO      main    \u2713 article #148 [environment] FKE warns job losses and economic strain after KIM closure
+10:07:00  INFO      main    \u2713 article #149 [-] Nigeria charges six over alleged coup plot to overthrow Tinubu
+10:07:08  INFO      main    \u2713 article #150 [health] Gaucho’s appointment to public hospital board raises legal scrutiny
+10:07:17  INFO      main    \u2713 article #151 [environment] World’s top condom maker warns of price hikes as Iran war strains supply chain
+10:07:30  INFO      main    \u2713 article #152 [regional] Ugandan and Congolese troops free 200 captives from IS-affiliated militants
+10:07:35  INFO      main    \u2713 article #153 [-] Meta rolls out ads in WhatsApp status updates
+10:07:41  INFO      main    \u2713 article #154 [regional] Ethiopian Airlines buying six more Boeing 787-9 airplanes
+10:07:47  INFO      main    \u2713 article #155 [-] Chad to send 1,500 troops to Haiti, 400 already deployed
+10:07:52  INFO      main    \u2713 article #156 [-] Youths in Embu stage protests over rising fuel costs
+10:07:57  INFO      main    \u2713 article #157 [health] Backlash after Sakaja appoints Gaucho to public hospital board
+10:08:21  INFO      main    \u2713 article #79 [-] Arrests as protesters hit the streets over high fuel prices, cost of living
+10:08:30  INFO      main    \u2713 article #158 [-] Outrage after photo captures Israeli soldier destroying Jesus statue in Lebanon
+10:08:34  INFO      main    \u2713 article #159 [business] Apple names hardware boss John Ternus as CEO to succeed Tim Cook
+10:08:42  INFO      main    \u2713 article #160 [security] US military releases video of Navy firing on Iranian cargo ship
+10:08:54  INFO      main    \u2713 article #161 [-] Premier League title race starts now, says defiant Arsenal boss Arteta
+10:09:17  INFO      main    \u2713 article #162 [sports] Lokedi aims to repeat Boston Marathon win after record-breaking run
+10:09:17  INFO      main  --- FEED:NTV done: 0 incidents ---
+10:09:17  INFO      main  --- FEED:K24 (limit=30) ---
+10:09:48  WARNING   scraper.k24  Request failed \u2192 https://www.k24tv.co.ke/news/ : HTTPSConnectionPool(host='www.k24tv.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.k24tv.co.ke', port=443): Read timed out. (read timeout=10)"))
+10:09:48  INFO      main  --- FEED:K24 done: 0 incidents ---
+10:09:48  INFO      main  --- FEED:KENYANS_CO_KE (limit=30) ---
+10:10:16  INFO      main    \u2713 article #163 [regional,sports] Sofiya Nzau
+10:10:19  INFO      main    \u2713 article #164 [business,economy,education,environment] Tom Gitogo
+10:10:22  INFO      main    \u2713 article #165 [regional,education,environment,health] Jepkosgei Chemoiwa
+10:10:25  INFO      main    \u2713 article #166 [-] Idd Aziz
+10:10:28  INFO      main    \u2713 article #167 [business] Wandia Gichuru
+10:10:34  INFO      main    \u2713 article #168 [regional,politics,economy,education] How New National Address System Works
+10:10:34  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Ngong  [REVIEW]
+10:10:34  INFO      main    \u2192 How New National Address System Works
+10:10:37  INFO      main    \u23f8 pending incident #169  @ -1.3636, 36.6593
+10:10:40  INFO      main    \u2713 article #170 [environment,regional,economy,business] Govt Begins Talks for Electric Train in Kenya
+10:10:40  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:10:40  INFO      main    \u2192 Govt Begins Talks for Electric Train in Kenya
+10:10:42  INFO      main    \u23f8 pending incident #171  @ -1.2921, 36.8219
+10:10:44  INFO      main    \u2713 article #172 [economy,politics,education,environment] Setback for Kenya as IMF Suspends Loan Disbursement
+10:10:44  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:10:44  INFO      main    \u2192 Setback for Kenya as IMF Suspends Loan Disbursement
+10:10:48  INFO      main    \u23f8 pending incident #173  @ -1.2921, 36.8219
+10:10:51  INFO      main    \u2713 article #174 [education,regional,economy,environment] TSC Announces Vacancies for Top Positions
+10:10:51  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:10:51  INFO      main    \u2192 TSC Announces Vacancies for Top Positions
+10:10:54  INFO      main    \u23f8 pending incident #175  @ -1.2921, 36.8219
+10:10:57  INFO      main    \u2713 article #176 [politics,economy,tech,environment] Relief for Kenyans in Proposed Changes to Good Conduct Certificate Processing
+10:10:57  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Kisumu  [REVIEW]
+10:10:57  INFO      main    \u2192 Relief for Kenyans in Proposed Changes to Good Conduct Certificate Processing
+10:10:59  INFO      main    \u23f8 pending incident #177  @ -0.1022, 34.7617
+10:11:02  INFO      main    \u2713 article #178 [economy,politics,business,education] Documents Contradict CS’s Account on Substandard Fuel Shipment
+10:11:02  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Mombasa  [REVIEW]
+10:11:02  INFO      main    \u2192 Documents Contradict CS’s Account on Substandard Fuel Shipment
+10:11:06  INFO      main    \u23f8 pending incident #179  @ -4.0435, 39.6682
+10:11:15  INFO      main    \u2713 article #180 [health,economy,regional,security] Ministry Announces Immediate SHA Changes for Civil Servants
+10:11:21  INFO      main  [kenyans.co.ke] police        conf=1.00  sev=high    loc=Ministry  [REVIEW]
+10:11:21  INFO      main    \u2192 Ministry Announces Immediate SHA Changes for Civil Servants
+10:11:24  INFO      main    \u23f8 pending incident #181  @ 0.1813, 34.2835
+10:11:41  INFO      main    \u2713 article #182 [economy,security,environment,regional] Ukraine Intelligence Identifies Kenyans Killed Fighting for Russia
+10:11:41  INFO      main  [kenyans.co.ke] police        conf=1.00  sev=high    loc=Nairobi
+10:11:41  INFO      main    \u2192 Ukraine Intelligence Identifies Kenyans Killed Fighting for Russia
+10:11:43  INFO      main    \u2713 incident #183  @ -1.2921, 36.8219
+10:11:46  INFO      main    \u2713 article #184 [economy,business,regional,politics] Treasury Receives Ksh 103B From KPC Sale
+10:11:48  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Treasury  [REVIEW]
+10:11:48  INFO      main    \u2192 Treasury Receives Ksh 103B From KPC Sale
+10:11:50  INFO      main    \u23f8 pending incident #185  @ -1.2893, 36.8247
+10:11:55  INFO      main    \u2713 article #186 [regional,politics,economy,environment] Dangote to Build Nigeria-Style Oil Refinery in East Africa
+10:11:55  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:11:55  INFO      main    \u2192 Dangote to Build Nigeria-Style Oil Refinery in East Africa
+10:12:03  INFO      main    \u23f8 pending incident #187  @ -1.2921, 36.8219
+10:12:16  INFO      main    \u2713 article #188 [economy,education,regional,politics] CS Ogamba Responds to Circular on Delayed Payments to Teachers
+10:12:16  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nyeri  [REVIEW]
+10:12:16  INFO      main    \u2192 CS Ogamba Responds to Circular on Delayed Payments to Teachers
+10:12:34  ERROR     api.client  Incident POST connection error \u2192 https://mamboleole.com/wp-json/mamboleo/v1/incidents : ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))
+10:12:37  INFO      main    \u2713 article #189 [economy,business,education,environment] KRA Sends Notice to Businesses Ahead of April 30 Deadline
+10:12:50  WARNING   processors.geocoder  Nominatim error for 'Notice': HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=8)
+10:13:31  WARNING   processors.geocoder  Nominatim error for 'April': HTTPSConnectionPool(host='nominatim.openstreetmap.org', port=443): Read timed out. (read timeout=8)
+10:13:36  INFO      main  No Kenya location found, skipping incident: KRA Sends Notice to Businesses Ahead of April 30 Deadline
+10:13:42  INFO      main    \u2713 article #190 [economy,politics,regional,education] Concerns as Treasury Halts County Funds Threatening Salaries and Services
+10:13:42  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Mombasa  [REVIEW]
+10:13:42  INFO      main    \u2192 Concerns as Treasury Halts County Funds Threatening Salaries and Services
+10:13:57  INFO      main    \u23f8 pending incident #191  @ -4.0435, 39.6682
+10:14:02  INFO      main    \u2713 article #192 [economy,education,environment,regional] KCAA Announces Major Leadership Changes
+10:14:03  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Mombasa Road  [REVIEW]
+10:14:03  INFO      main    \u2192 KCAA Announces Major Leadership Changes
+10:14:10  INFO      main    \u23f8 pending incident #193  @ -1.3500, 36.8500
+10:14:17  INFO      main    \u2713 article #194 [politics,economy,education,environment] Motorists Stranded as Protesters Block Major Highway
+10:14:17  INFO      main  [kenyans.co.ke] protest       conf=1.00  sev=high    loc=Kakamega
+10:14:17  INFO      main    \u2192 Motorists Stranded as Protesters Block Major Highway
+10:14:19  INFO      main    \u2713 incident #195  @ 0.2820, 34.7519
+10:14:23  INFO      main    \u2713 article #196 [politics,economy,regional,education] Ruto, Oburu Unveil Broad-Based Committee After State House Meeting
+10:14:23  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:14:23  INFO      main    \u2192 Ruto, Oburu Unveil Broad-Based Committee After State House Meeting
+10:14:28  INFO      main    \u23f8 pending incident #197  @ -1.2921, 36.8219
+10:14:35  INFO      main    \u2713 article #198 [politics,economy,tech,security] DCI Releases Fresh Update on Assassination Attempt of Senator
+10:14:35  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:14:35  INFO      main    \u2192 DCI Releases Fresh Update on Assassination Attempt of Senator
+10:14:48  INFO      main    \u23f8 pending incident #199  @ -1.2921, 36.8219
+10:15:01  INFO      main    \u2713 article #200 [regional,politics,economy,business] Kenya to Invest in Ksh 500B Company in Uganda, Ruto Announces
+10:15:01  INFO      main  [kenyans.co.ke] protest       conf=0.50  sev=high    loc=Nairobi  [REVIEW]
+10:15:01  INFO      main    \u2192 Kenya to Invest in Ksh 500B Company in Uganda, Ruto Announces
+10:15:15  INFO      main    \u23f8 pending incident #201  @ -1.2921, 36.8219
+10:15:24  INFO      main    \u2713 article #210 [security,economy,politics,education] Notorious Goon Mobiliser Arrested Moments After High-Level Security Meeting
+10:15:24  INFO      main  [kenyans.co.ke] police        conf=1.00  sev=high    loc=Nairobi
+10:15:24  INFO      main    \u2192 Notorious Goon Mobiliser Arrested Moments After High-Level Security Meeting
+10:15:26  INFO      main    \u2713 incident #211  @ -1.2921, 36.8219
+10:15:33  INFO      main    \u2713 article #212 [economy,education,environment,regional] Nairobi Court Clears Extradition of Wanted Afghan Politician to the U.S.
+10:15:33  INFO      main  [kenyans.co.ke] police        conf=1.00  sev=high    loc=Nairobi
+10:15:33  INFO      main    \u2192 Nairobi Court Clears Extradition of Wanted Afghan Politician to the U.S.
+10:15:39  INFO      main    \u2713 incident #213  @ -1.2921, 36.8219
+10:15:39  INFO      main  --- FEED:KENYANS_CO_KE done: 18 incidents ---
+10:15:39  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
+10:15:56  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
+10:15:56  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+10:16:01  ERROR     api.client  Article POST failed \u2192 HTTP 503 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"wp_die","message":"Briefly unavailable for scheduled maintenance. Check back in a minute.","data":{"status":503},"additional_errors":[]}
+10:16:38  INFO      main    \u2713 article #214 [security,politics,regional] Nigeria's suspected coup plotters deny treason charges
+10:16:39  INFO      main  [bbc.com] police        conf=1.00  sev=medium  loc=Nigeria  [REVIEW]
+10:16:39  INFO      main    \u2192 Nigeria's suspected coup plotters deny treason charges
+10:16:42  INFO      main    \u23f8 pending incident #215  @ -1.2653, 36.8488
+10:16:45  INFO      main    \u2713 article #216 [education,regional,politics,economy] 'I cried so hard' - the Kenyan WNBA star who beat US visa heartbreak
+10:16:50  INFO      main    \u2713 article #217 [security,politics,education,environment] 'They told me he was dead': Children born near Kenyan army base learn truth abou
+10:16:56  INFO      main    \u2713 article #218 [regional] 'The weapons were loud, but there was always music': Sudanese band play on throu
+10:16:56  INFO      main  [bbc.com] fire          conf=1.00  sev=high    loc=Nairobi
+10:16:56  INFO      main    \u2192 'The weapons were loud, but there was always music': Sudanese band play on through the war
+10:16:58  INFO      main    \u2713 incident #219  @ -1.2921, 36.8219
+10:17:03  INFO      main    \u2713 article #220 [politics,security,education,tech] Zimbabwe's iconic stone birds were taken by colonialists. Finally, they're all b
+10:17:05  INFO      main  [bbc.com] protest       conf=1.00  sev=medium  loc=Zimbabwe  [REVIEW]
+10:17:05  INFO      main    \u2192 Zimbabwe's iconic stone birds were taken by colonialists. Finally, they're all back home
+10:17:07  INFO      main    \u23f8 pending incident #221  @ -1.2407, 36.8149
+10:17:11  INFO      main    \u2713 article #222 [politics,security,business] What next for South African opposition firebrand Malema after his five-year pris
+10:17:15  INFO      main    \u2713 article #223 [education,health,politics,security] 'I was tortured and lost my hand' - one student's struggle to get an education i
+10:17:18  INFO      main    \u2713 article #224 [security,sports,health] Guinea Bissau's Djabi seriously injured in stabbing
+10:17:26  INFO      main  No Kenya location found, skipping incident: Guinea Bissau's Djabi seriously injured in stabbing
+10:17:29  INFO      main    \u2713 article #225 [sports,tech] Korir defends Boston Marathon title with course record
+10:17:33  INFO      main    \u2713 article #226 [sports] Six African athletes blocked from transfers to Turkey
+10:17:42  INFO      main    \u2713 article #227 [sports,environment,politics,education] Nigerian with 'natural explosiveness' aiming for NFL spot
+10:17:45  INFO      main    \u2713 article #228 [sports,environment] Jepchirchir withdraws from London Marathon
+10:17:51  INFO      main    \u2713 article #229 [sports] Ghana appoint ex-Man Utd assistant Queiroz as coach
+10:17:56  INFO      main    \u2713 article #230 [security,sports,tech] Ghanaian footballer killed after armed attackers open fire at team bus
+10:18:02  INFO      main    \u2713 article #231 [-] The human cost of the war in Sudan, three years on
+10:18:07  INFO      main    \u2713 article #232 [-] DR Congo qualify for World Cup: 'Amidst pain and war, this victory makes us prou
+10:18:16  INFO      main    \u2713 article #233 [-] One house, two faiths, one fasting season
+10:18:21  INFO      main    \u2713 article #234 [security,regional] Inside Ethiopia's 'smart' police station
+10:18:24  INFO      main    \u2713 article #235 [security] At the scene: Muslims killed 'over rejection of extremist ideology' in Nigeria
+10:18:26  INFO      main  [bbc.com] police        conf=0.50  sev=medium  loc=Muslims  [REVIEW]
+10:18:26  INFO      main    \u2192 At the scene: Muslims killed 'over rejection of extremist ideology' in Nigeria
+10:18:27  INFO      main    \u23f8 pending incident #236  @ 1.7475, 40.0559
+10:18:27  INFO      main  --- FEED:BBC_AFRICA done: 4 incidents ---
+10:18:27  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+10:18:31  INFO      main    \u2713 article #237 [politics] Trump’s May 1 deadline: Can he continue war on Iran after that?
+10:18:34  INFO      main    \u2713 article #238 [politics] Iran war: What’s happening on day 56 after Trump extended ceasefire?
+10:18:39  INFO      main    \u2713 article #239 [security,tech] How fake AI victims are being used to provide rationale for attacking Iran
+10:18:44  INFO      main    \u2713 article #240 [tech] China’s DeepSeek unveils latest models a year after upending global tech
+10:18:56  INFO      main    \u2713 article #241 [politics] Oil rises above $106 per barrel as US, Iran deadlocked in Strait of Hormuz
+10:19:03  INFO      main    \u2713 article #242 [politics,regional] Iran war live: Lebanon truce extended; Trump says time not on Tehran’s side
+10:19:12  INFO      main    \u2713 article #243 [education] US professors sue university over arrest during pro-Palestine protest
+10:19:16  INFO      main    \u2713 article #244 [security] US soldier charged with using Polymarket to bet on Nicolas Maduro abduction
+10:19:19  INFO      main    \u2713 article #245 [-] Meta lines up layoffs while Microsoft offers buyouts
+10:19:24  INFO      main    \u2713 article #246 [-] Milei administration in Argentina blocks journalist access to Casa Rosada
+10:19:27  INFO      main    \u2713 article #247 [security] Funeral held for journalist killed in targeted Israeli strike
+10:19:30  INFO      main  [aljazeera.com] accident      conf=0.50  sev=medium  loc=Funeral  [REVIEW]
+10:19:30  INFO      main    \u2192 Funeral held for journalist killed in targeted Israeli strike
+10:19:34  INFO      main    \u23f8 pending incident #248  @ -4.0389, 39.6042
+10:19:38  INFO      main    \u2713 article #249 [economy,environment,politics] EU formally approves 90bn euro Ukraine loan and new sanctions on Russia
+10:19:41  INFO      main    \u2713 article #250 [-] Pope decries migrants and refugees being treated ‘worse than house pets’
+10:19:45  INFO      main    \u2713 article #251 [business] War-driven demand boosts profits for weapons and aircraft manufacturers
+10:19:48  INFO      main    \u2713 article #252 [-] Will complex EU loan deal intensify conflict?
+10:19:52  INFO      main    \u2713 article #253 [politics] Trump says he is keeping Strait of Hormuz closed, not Iran
+10:19:57  INFO      main    \u2713 article #254 [politics,economy] US sanctions Cambodian senator over purported scam network links
+10:20:01  INFO      main    \u2713 article #255 [-] Iran dismisses Trump’s claim of leadership rift, says nation is ‘one soul’
+10:20:07  INFO      main    \u2713 article #256 [-] Real Betis vs Real Madrid: La Liga – teams, start time, lineup
+10:20:11  INFO      main    \u2713 article #257 [security,education] How Trump’s Iran war is driving military dissent
+10:20:14  INFO      main    \u2713 article #258 [politics] US Department of Justice watchdog to probe release of Epstein files
+10:20:19  INFO      main    \u2713 article #259 [-] US Senate passes ICE funding resolution after ‘vote-a-rama’: What’s next?
+10:20:23  INFO      main    \u2713 article #260 [politics,security] South Africa president suspends police chief over $21m contract
+10:20:29  INFO      main    \u2713 article #261 [security,business] Mixed views in Lebanon ahead of controversial talks with Israel
+10:20:33  INFO      main    \u2713 article #262 [environment] More than 6 million Somalis face hunger amid climate shocks and conflict
+10:20:41  INFO      main    \u2713 article #263 [-] Strait of Hormuz: How a threat became a playbook
+10:20:41  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 1 incidents ---
+10:20:41  INFO      main  === Done. Total new incidents: 29 ===
+ 
+==================================================================== 
+[24/04/2026 10:30:02.54] START cadence=fast 
+==================================================================== 
+10:30:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+10:30:04  INFO      main  --- FEED:KDF (limit=30) ---
+10:30:58  INFO      main    \u2713 article #264 [security,environment,regional] CADETS CHAMPION SOCIAL REINTEGRATION THROUGH COMMUNITY SERVICE IN NAKURU – Minis
+10:30:58  INFO      main  [mod.go.ke] protest       conf=0.50  sev=low     loc=Nakuru  [REVIEW]
+10:30:58  INFO      main    \u2192 CADETS CHAMPION SOCIAL REINTEGRATION THROUGH COMMUNITY SERVICE IN NAKURU – Ministry of Defence – Ken
+10:30:59  INFO      main    \u23f8 pending incident #265  @ -0.3031, 36.0800
+10:31:53  INFO      main  --- FEED:KDF done: 1 incidents ---
+10:31:53  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+10:32:03  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+10:32:03  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+10:32:06  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+10:32:06  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+10:32:11  INFO      main    \u2713 article #266 [economy,politics,security,sports] KNCCI, Ministry of Youth Affairs partner in NYOTA programme to boost youth emplo
+10:32:11  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=low     loc=Nairobi
+10:32:11  INFO      main    \u2192 KNCCI, Ministry of Youth Affairs partner in NYOTA programme to boost youth employability
+10:32:12  INFO      main    \u2713 incident #267  @ -1.2921, 36.8219
+10:32:14  INFO      main    \u2713 article #268 [environment,security,politics,economy] Activist Charged Over Alleged KSh1.7M Extortion Bid Targeting KWS Boss
+10:32:14  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=low     loc=Karen
+10:32:14  INFO      main    \u2192 Activist Charged Over Alleged KSh1.7M Extortion Bid Targeting KWS Boss
+10:32:16  INFO      main    \u2713 incident #269  @ -1.3210, 36.7093
+10:32:18  INFO      main    \u2713 article #270 [security,economy,politics,health] UAE Says Diplomacy Fails if Iran Attacks Continue in Gulf Region
+10:32:18  INFO      main  [capitalfm.co.ke] medical       conf=0.50  sev=low     loc=Nairobi  [REVIEW]
+10:32:18  INFO      main    \u2192 UAE Says Diplomacy Fails if Iran Attacks Continue in Gulf Region
+10:32:22  INFO      main    \u23f8 pending incident #271  @ -1.2921, 36.8219
+10:32:25  INFO      main    \u2713 article #272 [security,politics,health] Can toxic politics trigger violence? Kenya’s rising risk of election-linked unre
+10:32:25  INFO      main  [capitalfm.co.ke] protest       conf=1.00  sev=low     loc=Kikuyu
+10:32:25  INFO      main    \u2192 Can toxic politics trigger violence? Kenya’s rising risk of election-linked unrest
+10:32:27  INFO      main    \u2713 incident #273  @ -1.2480, 36.6700
+10:33:49  INFO      main  --- FEED:CAPITAL_FM done: 4 incidents ---
+10:33:49  INFO      main  --- FEED:THE_STAR (limit=30) ---
+10:33:57  INFO      main    \u2713 article #274 [politics,regional] Dangote offers to build East Africa oil refinery, seeks Ruto, Museveni backing
+10:33:59  INFO      main    \u2713 article #275 [politics,regional] India condemns remarks shared by Trump calling it a 'hellhole'
+10:34:26  INFO      main  --- FEED:THE_STAR done: 0 incidents ---
+10:34:26  INFO      main  --- FEED:NTV (limit=30) ---

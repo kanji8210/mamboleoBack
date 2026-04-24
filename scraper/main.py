@@ -45,8 +45,13 @@ log = logging.getLogger("main")
 # Below MIN: discard (not an incident).
 # Between MIN and REVIEW: auto-park for admin review.
 # At or above REVIEW: auto-publish (unless location is low-specificity fallback).
-CONFIDENCE_MIN     = 0.20
-CONFIDENCE_REVIEW  = 0.50
+#
+# Tuned to the new classify.py scoring (topic*0.25 + verb*0.5, capped 1.0):
+#   0.30  = one event verb + one topic hit  → review
+#   0.50  = one verb + two topic hits, OR two verbs → strong
+#   0.60+ = multi-verb / multi-keyword match → auto-publish
+CONFIDENCE_MIN     = 0.30
+CONFIDENCE_REVIEW  = 0.60
 
 # ── Scraper registry ──────────────────────────────────────────────────────────
 ALL_SCRAPERS = {
