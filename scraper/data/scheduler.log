@@ -396,3 +396,67 @@
 10:41:03  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
 10:41:06  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
 10:41:06  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+10:42:09  INFO      main  --- FEED:BBC_AFRICA done: 0 incidents ---
+10:42:09  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+10:42:14  INFO      main    \u2713 article #283 [security,economy,environment] Ukrainian married couple aged 75 killed in Russian attack on Odesa
+10:42:18  INFO      main  [aljazeera.com] accident      conf=0.50  sev=medium  loc=Russian  [REVIEW]
+10:42:18  INFO      main    \u2192 Ukrainian married couple aged 75 killed in Russian attack on Odesa
+10:42:20  INFO      main    \u23f8 pending incident #284  @ -1.2910, 36.8006
+10:42:22  INFO      main    \u2713 article #285 [security,tech] Does Israel’s ‘Yellow Line’ violate the Lebanon ceasefire?
+10:43:33  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 1 incidents ---
+10:43:33  INFO      main  === Done. Total new incidents: 8 ===
+ 
+==================================================================== 
+[24/04/2026 10:45:02.52] START cadence=fast 
+==================================================================== 
+10:45:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+10:45:04  INFO      main  --- FEED:KDF (limit=30) ---
+10:45:45  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/fostering-unity-and-environmental-stewardship-through-community-service/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/fostering-unity-and-environmental-stewardship-through-community-service/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=25)"))
+10:48:05  INFO      main  --- FEED:KDF done: 0 incidents ---
+10:48:05  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+10:48:08  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+10:48:08  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+10:48:13  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+10:48:13  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+10:49:47  INFO      main  --- FEED:CAPITAL_FM done: 0 incidents ---
+10:49:47  INFO      main  --- FEED:THE_STAR (limit=30) ---
+10:49:59  INFO      main    \u2713 article #286 [politics,regional] Dangote offers to build East Africa oil refinery, seeks Ruto, Museveni backing
+10:50:04  INFO      main    \u2713 article #287 [politics,sports,tech] Letter from China: Humanoid robots shatter human record, showcase autonomy at Be
+10:51:06  WARNING   scraper.the_star  Request failed \u2192 https://www.the-star.co.ke/news/2026-04-24-psc-opens-applications-for-member-role : HTTPSConnectionPool(host='www.the-star.co.ke', port=443): Max retries exceeded with url: /news/2026-04-24-psc-opens-applications-for-member-role (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.the-star.co.ke', port=443): Read timed out. (read timeout=25)"))
+10:51:13  INFO      main  --- FEED:THE_STAR done: 0 incidents ---
+10:51:13  INFO      main  --- FEED:NTV (limit=30) ---
+10:52:04  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/arsenal-face-must-win-clash-with-newcastle-as-premier-league-title-race-tightens/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out.
+10:52:36  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/us-to-loosen-marijuana-rules-in-major-shift-for-47-billion-industry/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Max retries exceeded with url: /news/us-to-loosen-marijuana-rules-in-major-shift-for-47-billion-industry/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out. (read timeout=25)"))
+10:52:47  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/newsfeatures/fidel-dennis-ofungos-body-was-pulled-from-a-river-but-the-autopsy-says-he-did-not-drown-last-seen-at-3am-murder-tapes-sn3-ep-11/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Max retries exceeded with url: /newsfeatures/fidel-dennis-ofungos-body-was-pulled-from-a-river-but-the-autopsy-says-he-did-not-drown-last-seen-at-3am-murder-tapes-sn3-ep-11/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out. (read timeout=10)"))
+10:53:28  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/ngara-affordable-housing-stalls-for-8-years/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out.
+10:55:15  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/chad-to-send-1500-troops-to-haiti-400-already-deployed/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out.
+10:55:48  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/youths-in-embu-stage-protests-over-rising-fuel-costs/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Max retries exceeded with url: /news/youths-in-embu-stage-protests-over-rising-fuel-costs/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out. (read timeout=25)"))
+10:56:21  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/backlash-after-sakaja-appoints-gaucho-to-public-hospital-board/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Max retries exceeded with url: /news/backlash-after-sakaja-appoints-gaucho-to-public-hospital-board/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Read timed out. (read timeout=25)"))
+10:57:48  INFO      main    \u2713 article #288 [-] Pope Leo downplays feud with Trump, says ‘not in my interest’ to debate him
+10:58:05  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+10:58:12  INFO      main    \u2713 article #290 [politics] Unfair to compare Kenya’s fuel needs with less developed neighbours, Ruto says
+10:58:16  INFO      main    \u2713 article #291 [-] NTSA tightens rules on KD plates amid misuse concerns
+10:58:21  INFO      main    \u2713 article #292 [-] Kanye West concert in Poland will be cancelled, venue says
+10:58:28  INFO      main    \u2713 article #293 [economy] Kenya requests emergency World Bank funds to cushion Iran war shocks
+10:58:35  INFO      main    \u2713 article #294 [-] Iran says Strait of Hormuz open after Lebanon deal
+10:58:35  INFO      main  --- FEED:NTV done: 0 incidents ---
+10:58:35  INFO      main  --- FEED:K24 (limit=30) ---
+10:58:49  INFO      main    \u2713 article #295 [-] 5 fun facts about tortoises
+10:58:51  INFO      main  --- FEED:K24 done: 0 incidents ---
+10:58:51  INFO      main  --- FEED:KENYANS_CO_KE (limit=30) ---
+10:59:25  INFO      main    \u2713 article #296 [economy,environment,security,education] Sakaja Reshuffles County Executives
+10:59:25  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=medium  loc=Nairobi  [REVIEW]
+10:59:25  INFO      main    \u2192 Sakaja Reshuffles County Executives
+10:59:28  INFO      main    \u23f8 pending incident #297  @ -1.2921, 36.8219
+11:00:25  INFO      main  --- FEED:KENYANS_CO_KE done: 1 incidents ---
+11:00:25  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
+11:00:27  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
+11:00:27  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+11:01:48  INFO      main  --- FEED:BBC_AFRICA done: 0 incidents ---
+11:01:48  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+11:01:53  INFO      main    \u2713 article #298 [-] The story Tehran wants you to read
+11:01:56  INFO      main    \u2713 article #299 [-] Japan builds up its ‘southern shield’ as faith in US security cover falters
+11:01:58  INFO      main    \u2713 article #300 [-] UK rights groups slam ‘authoritarian’ conviction of pro-Palestine activists
+11:02:01  INFO      main    \u2713 article #301 [-] Timberwolves take 2-1 NBA playoff lead over Nuggets, Hawks down Knicks
+11:03:05  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 0 incidents ---
+11:03:05  INFO      main  === Done. Total new incidents: 1 ===
