@@ -11,7 +11,7 @@
   </RegistrationInfo>
   <Triggers>
     <CalendarTrigger>
-      <StartBoundary>2026-01-01T06:00:00</StartBoundary>
+      <StartBoundary>2026-04-23T18:30:00</StartBoundary>
       <Enabled>true</Enabled>
       <ScheduleByDay>
         <DaysInterval>1</DaysInterval>
@@ -50,8 +50,8 @@
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>C:\Path\To\python.exe</Command>
-      <Arguments>run_all_scrapers.py --cadence fast</Arguments>
+      <Command>C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_scheduled.bat</Command>
+      <Arguments>fast</Arguments>
       <WorkingDirectory>C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper</WorkingDirectory>
     </Exec>
   </Actions>
