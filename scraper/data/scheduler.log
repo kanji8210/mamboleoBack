@@ -460,3 +460,15 @@
 11:02:01  INFO      main    \u2713 article #301 [-] Timberwolves take 2-1 NBA playoff lead over Nuggets, Hawks down Knicks
 11:03:05  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 0 incidents ---
 11:03:05  INFO      main  === Done. Total new incidents: 1 ===
+ 
+==================================================================== 
+[24/04/2026 11:15:05.26] START cadence=fast 
+==================================================================== 
+11:15:16  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+11:15:16  INFO      main  --- FEED:KDF (limit=30) ---
+11:15:40  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strengthening-leadership-bonds-through-sport/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/strengthening-leadership-bonds-through-sport/ (Caused by ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))
+11:15:54  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/transforming-lives-through-medical-outreach/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/transforming-lives-through-medical-outreach/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+11:17:14  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/military-sports-as-a-catalyst-for-regional-cohesion/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/military-sports-as-a-catalyst-for-regional-cohesion/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=25)"))
+11:17:26  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/a-milestone-of-compassion-uhsfs-commitment-to-community-outreach/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/a-milestone-of-compassion-uhsfs-commitment-to-community-outreach/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+11:17:26  INFO      main  --- FEED:KDF done: 0 incidents ---
+11:17:26  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
