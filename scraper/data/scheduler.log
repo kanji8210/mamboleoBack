@@ -36,3 +36,34 @@
 ==================================================================== 
 09:30:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
 09:30:04  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+==================================================================== 
+[24/04/2026  9:35:02.27] START cadence=slow 
+==================================================================== 
+09:35:03  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+09:35:03  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+09:35:04  INFO      main  --- FEED:STATE_HOUSE done: 0 incidents ---
+09:35:04  INFO      main  --- FEED:BUSINESS_DAILY (limit=30) ---
+09:35:06  WARNING   scraper.business_daily  HTTP 403 \u2192 https://www.businessdailyafrica.com/bd/news
+09:35:06  INFO      main  --- FEED:BUSINESS_DAILY done: 0 incidents ---
+09:35:06  INFO      main  --- FEED:PEOPLE_DAILY (limit=30) ---
+09:35:22  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:35:24  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:35:26  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:35:37  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:35:37  INFO      main  --- FEED:PEOPLE_DAILY done: 0 incidents ---
+09:35:37  INFO      main  --- FEED:GHAFLA (limit=30) ---
+09:36:31  WARNING   scraper.ghafla  Timeout (>25s) \u2192 https://www.ghafla.com/ke/news/
+09:36:31  INFO      main  --- FEED:GHAFLA done: 0 incidents ---
+09:36:31  INFO      main  --- FEED:HIVISASA (limit=30) ---
+09:36:32  WARNING   scraper.hivisasa  HTTP 404 \u2192 https://hivisasa.com/posts/news
+09:36:32  INFO      main  --- FEED:HIVISASA done: 0 incidents ---
+09:36:32  INFO      main  --- FEED:THE_ELEPHANT (limit=30) ---
+09:36:34  INFO      main  --- FEED:THE_ELEPHANT done: 0 incidents ---
+09:36:34  INFO      main  --- FEED:KENYAN_WALL_STREET (limit=30) ---
+09:36:35  INFO      main  --- FEED:KENYAN_WALL_STREET done: 0 incidents ---
+09:36:35  INFO      main  --- FEED:MPASHO (limit=30) ---
+09:36:41  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:36:44  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:36:46  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+09:36:49  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
