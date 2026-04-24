@@ -67,3 +67,10 @@
 09:36:44  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
 09:36:46  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
 09:36:49  ERROR     api.client  Article POST failed \u2192 HTTP 401 (server=cloudflare, content-type=application/json; charset=UTF-8): {"code":"rest_forbidden","message":"Sorry, you are not allowed to do that.","data":{"status":401}}
+ 
+==================================================================== 
+[24/04/2026  9:45:02.45] START cadence=fast 
+==================================================================== 
+09:45:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+09:45:04  INFO      main  --- FEED:KDF (limit=30) ---
+^C
