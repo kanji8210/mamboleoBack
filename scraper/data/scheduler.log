@@ -579,4 +579,9 @@
 ==================================================================== 
 [24/04/2026 15:15:04.36] START cadence=fast 
 ==================================================================== 
-^C
+^C 
+==================================================================== 
+[24/04/2026 15:30:03.59] START cadence=fast 
+==================================================================== 
+15:30:11  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+15:30:11  INFO      main  --- FEED:KDF (limit=30) ---
