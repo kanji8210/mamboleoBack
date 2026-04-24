@@ -120,8 +120,9 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     loc = locations.best_location(text)
     location_fallback = False
 
-    if loc is None:
-        # Try Nominatim as fallback
+    if loc is None or loc.name == "Kenya":
+        # No specific place matched — try Nominatim on capitalised words so
+        # we can still pin it to a real town/city when possible.
         import re
         words = re.findall(r"[A-Z][a-z]{3,}", raw["title"])
         for word in words:
@@ -133,10 +134,10 @@ def process_article(raw: dict, dry_run: bool) -> bool:
                 break
 
     if loc is None:
-        log.info("No Kenya location found, skipping incident: %s", raw["title"][:80])
-        if not dry_run:
-            db.mark_seen(url, DB_PATH)
-        return False
+        # Last-resort: country-level centre. Item goes on the map roughly
+        # over Kenya and is flagged for manual review.
+        loc = locations.KENYA_FALLBACK
+        location_fallback = True
 
     # ── Decide whether this needs human review ────────────────────────────────
     review_reasons: list[str] = []

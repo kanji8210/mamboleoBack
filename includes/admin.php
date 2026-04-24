@@ -37,7 +37,7 @@ function mamboleo_meta_box_cb( WP_Post $post ): void {
         <div>
             <label for="mamboleo_type"><?php esc_html_e( 'Type', 'mamboleo' ); ?></label>
             <select id="mamboleo_type" name="mamboleo_type">
-                <?php foreach ( [ 'fire', 'accident', 'police', 'weather' ] as $opt ) : ?>
+                <?php foreach ( [ 'fire', 'accident', 'police', 'weather', 'protest', 'flood', 'medical', 'military', 'info', 'health', 'environmental' ] as $opt ) : ?>
                     <option value="<?php echo esc_attr( $opt ); ?>" <?php selected( $type, $opt ); ?>>
                         <?php echo esc_html( ucfirst( $opt ) ); ?>
                     </option>
@@ -114,7 +114,7 @@ function mamboleo_save_meta( int $post_id ): void {
         return;
     }
 
-    $allowed_types    = [ 'fire', 'accident', 'police', 'weather' ];
+    $allowed_types    = [ 'fire', 'accident', 'police', 'weather', 'protest', 'flood', 'medical', 'military', 'info', 'health', 'environmental' ];
     $allowed_severities = [ 'low', 'medium', 'high' ];
     $allowed_statuses = [ 'unsafe', 'all_clear', 'police_operating', 'police_aggressive', 'unknown' ];
 

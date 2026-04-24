@@ -15,7 +15,12 @@ class Location:
     name: str
     lat: float
     lng: float
-    specificity: int  # 3 = neighbourhood, 2 = town/city, 1 = county
+    specificity: int  # 3 = neighbourhood, 2 = town/city, 1 = county, 0 = country
+
+
+# Country-level fallback — used when no specific Kenyan place is mentioned.
+# Coordinates are the approximate geographic centre of Kenya.
+KENYA_FALLBACK = Location(name="Kenya", lat=0.0236, lng=37.9062, specificity=0)
 
 
 # (name, lat, lng, specificity)
@@ -193,6 +198,18 @@ def extract_locations(text: str) -> list[Location]:
 
 
 def best_location(text: str) -> Location | None:
-    """Return the single most-specific Kenya location found in text."""
+    """Return the single most-specific Kenya location found in text.
+
+    When no neighbourhood / town / county is mentioned, falls back to the
+    country-level centre ("Kenya") so callers always receive usable
+    coordinates. Returns None only for empty input.
+    """
+    if not text or not text.strip():
+        return None
     results = extract_locations(text)
-    return results[0] if results else None
+    if results:
+        return results[0]
+    # Country-level default — lets downstream consumers place the item on the
+    # map (centred on Kenya) and flag it for manual review rather than drop
+    # it entirely.
+    return KENYA_FALLBACK

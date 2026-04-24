@@ -75,6 +75,26 @@ function mamboleo_register_meta(): void {
         'description' => 'Human-readable location label (street, area)',
         'default'     => '',
     ] ) );
+    register_post_meta( 'incident', 'location_county', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'County slug (e.g. nairobi, mombasa)',
+        'default'     => '',
+    ] ) );
+    register_post_meta( 'incident', 'location_subcounty', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'Subcounty slug (e.g. westlands)',
+        'default'     => '',
+    ] ) );
+    register_post_meta( 'incident', 'location_precision', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'exact | subcounty | county | country',
+        'default'     => 'exact',
+    ] ) );
+    register_post_meta( 'incident', 'needs_review', array_merge( $incident, [
+        'type'        => 'boolean',
+        'description' => 'Flagged for admin review (e.g. imprecise location)',
+        'default'     => false,
+    ] ) );
 
     // -- Article meta ------------------------------------------------------
     $article = array_merge( $shared, [ 'object_subtype' => 'article' ] );

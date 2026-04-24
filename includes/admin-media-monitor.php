@@ -243,29 +243,39 @@ function mamboleo_media_monitor_page(): void {
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Articles over time</h2>
-                <canvas id="mm-timeline" height="80"></canvas>
+                <div class="mm-chart-box" style="position:relative;height:240px;width:100%;">
+                    <canvas id="mm-timeline"></canvas>
+                </div>
             </div>
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Sentiment</h2>
-                <canvas id="mm-sentiment" height="180"></canvas>
+                <div class="mm-chart-box" style="position:relative;height:240px;width:100%;">
+                    <canvas id="mm-sentiment"></canvas>
+                </div>
             </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Top sources</h2>
-                <canvas id="mm-sources" height="140"></canvas>
+                <div class="mm-chart-box" style="position:relative;height:320px;width:100%;">
+                    <canvas id="mm-sources"></canvas>
+                </div>
             </div>
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Source tier</h2>
-                <canvas id="mm-tier" height="180"></canvas>
+                <div class="mm-chart-box" style="position:relative;height:320px;width:100%;">
+                    <canvas id="mm-tier"></canvas>
+                </div>
             </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Trending topics</h2>
-                <canvas id="mm-topics" height="180"></canvas>
+                <div class="mm-chart-box" style="position:relative;height:320px;width:100%;">
+                    <canvas id="mm-topics"></canvas>
+                </div>
             </div>
             <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);">
                 <h2 style="margin-top:0;">Top entities</h2>
