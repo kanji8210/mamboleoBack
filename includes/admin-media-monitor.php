@@ -51,6 +51,95 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
     );
 } );
 
+// ── Data helpers ──────────────────────────────────────────────────────────────
+/**
+ * Map window key → cutoff timestamp.
+ */
+function mamboleo_mm_window_cutoff( string $window ): int {
+    switch ( $window ) {
+        case '1h':  return time() - 3600;
+        case '7d':  return time() - 7 * DAY_IN_SECONDS;
+        case '30d': return time() - 30 * DAY_IN_SECONDS;
+        case '24h':
+        default:    return time() - DAY_IN_SECONDS;
+    }
+}
+
+/**
+ * Per-source health: last-ingested timestamp + article count in given window.
+ * Returns list of rows sorted by most-recently-seen descending.
+ */
+function mamboleo_mm_source_health( string $window ): array {
+    global $wpdb;
+    $cutoff_sql = gmdate( 'Y-m-d H:i:s', mamboleo_mm_window_cutoff( $window ) );
+
+    // Join posts with their `source` meta; aggregate count + MAX(post_date_gmt) per source.
+    $sql = $wpdb->prepare(
+        "SELECT pm.meta_value AS source,
+                COUNT(p.ID)     AS total,
+                SUM(CASE WHEN p.post_date_gmt >= %s THEN 1 ELSE 0 END) AS in_window,
+                MAX(p.post_date_gmt) AS last_seen
+         FROM {$wpdb->posts} p
+         INNER JOIN {$wpdb->postmeta} pm
+                 ON pm.post_id = p.ID AND pm.meta_key = 'source'
+         WHERE p.post_type   = 'article'
+           AND p.post_status = 'publish'
+         GROUP BY pm.meta_value
+         ORDER BY last_seen DESC
+         LIMIT 60",
+        $cutoff_sql
+    );
+    $rows = $wpdb->get_results( $sql, ARRAY_A ) ?: [];
+
+    $now = time();
+    foreach ( $rows as &$r ) {
+        $ts            = strtotime( $r['last_seen'] . ' UTC' ) ?: 0;
+        $age_seconds   = max( 0, $now - $ts );
+        $r['last_ts']  = $ts;
+        $r['age_sec']  = $age_seconds;
+        $r['status']   = $age_seconds < 7200   ? 'fresh'   // <2h
+                       : ( $age_seconds < 86400 ? 'stale'  // <24h
+                       : 'down' );                          // ≥24h
+    }
+    return $rows;
+}
+
+/**
+ * Fetch recent article rows with optional source/topic filter.
+ */
+function mamboleo_mm_recent_articles( string $source = '', string $topic = '', int $limit = 25 ): array {
+    $args = [
+        'post_type'      => 'article',
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [],
+    ];
+    if ( $source !== '' ) {
+        $args['meta_query'][] = [ 'key' => 'source', 'value' => $source, 'compare' => '=' ];
+    }
+    if ( $topic !== '' ) {
+        $args['meta_query'][] = [ 'key' => 'topics', 'value' => $topic, 'compare' => 'LIKE' ];
+    }
+
+    $q = new WP_Query( $args );
+    $out = [];
+    foreach ( $q->posts as $p ) {
+        $out[] = [
+            'id'        => $p->ID,
+            'title'     => get_the_title( $p ),
+            'permalink' => get_permalink( $p ),
+            'source'    => (string) get_post_meta( $p->ID, 'source', true ),
+            'sentiment' => (string) get_post_meta( $p->ID, 'sentiment', true ),
+            'topics'    => (array)  get_post_meta( $p->ID, 'topics', true ),
+            'tier'      => (int)    get_post_meta( $p->ID, 'source_tier', true ),
+            'date_ts'   => get_post_time( 'U', true, $p ),
+        ];
+    }
+    return $out;
+}
+
 // ── Page renderer ─────────────────────────────────────────────────────────────
 function mamboleo_media_monitor_page(): void {
     if ( ! current_user_can( 'manage_options' ) ) {
@@ -62,11 +151,17 @@ function mamboleo_media_monitor_page(): void {
         $window = '24h';
     }
 
+    $filter_source = isset( $_GET['source'] ) ? sanitize_text_field( wp_unslash( $_GET['source'] ) ) : '';
+    $filter_topic  = isset( $_GET['topic'] )  ? sanitize_text_field( wp_unslash( $_GET['topic'] ) )  : '';
+
     // Call the REST handler directly — avoids an HTTP round-trip and the
     // host's WAF/proxy chain while rendering admin UI.
     $req   = new WP_REST_Request( 'GET', '/mamboleo/v1/trends' );
     $req->set_param( 'window', $window );
     $trends = mamboleo_get_trends( $req );
+
+    $source_health = mamboleo_mm_source_health( $window );
+    $recent        = mamboleo_mm_recent_articles( $filter_source, $filter_topic, 25 );
 
     ?>
     <div class="wrap">
@@ -89,6 +184,37 @@ function mamboleo_media_monitor_page(): void {
                 </li>
             <?php endforeach; ?>
         </ul>
+
+        <!-- Filters (apply to Recent articles + Source health) -->
+        <form method="get" style="display:flex;gap:10px;align-items:center;margin:0 0 16px;padding:10px;background:#f6f7f7;border:1px solid #dcdcde;border-radius:4px;flex-wrap:wrap;">
+            <input type="hidden" name="page"   value="mamboleo-media-monitor">
+            <input type="hidden" name="window" value="<?php echo esc_attr( $window ); ?>">
+            <label style="font-weight:600;">Filter:</label>
+            <select name="source" style="min-width:180px;">
+                <option value="">All sources</option>
+                <?php foreach ( $trends['by_source'] as $s ):
+                    $name = (string) ( $s['name'] ?? '' );
+                    if ( $name === '' ) continue; ?>
+                    <option value="<?php echo esc_attr( $name ); ?>" <?php selected( $filter_source, $name ); ?>>
+                        <?php echo esc_html( $name ); ?> (<?php echo (int) $s['count']; ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <select name="topic" style="min-width:160px;">
+                <option value="">All topics</option>
+                <?php foreach ( $trends['by_topic'] as $t ):
+                    $name = (string) ( $t['name'] ?? '' );
+                    if ( $name === '' ) continue; ?>
+                    <option value="<?php echo esc_attr( $name ); ?>" <?php selected( $filter_topic, $name ); ?>>
+                        <?php echo esc_html( $name ); ?> (<?php echo (int) $t['count']; ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" class="button button-primary">Apply</button>
+            <?php if ( $filter_source || $filter_topic ): ?>
+                <a class="button" href="<?php echo esc_url( add_query_arg( [ 'window' => $window, 'source' => false, 'topic' => false ] ) ); ?>">Clear</a>
+            <?php endif; ?>
+        </form>
 
         <!-- Stat strip -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px;">
@@ -164,6 +290,99 @@ function mamboleo_media_monitor_page(): void {
                 $render_list( 'Places', $trends['top_entities']['places'] ?? [] );
                 ?>
             </div>
+        </div>
+
+        <!-- ── Source health ─────────────────────────────────────────────── -->
+        <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-top:20px;">
+            <h2 style="margin-top:0;">Source health
+                <span style="font-weight:400;font-size:13px;color:#666;">(last-ingested per source · <?php echo count( $source_health ); ?> tracked)</span>
+            </h2>
+            <?php if ( empty( $source_health ) ): ?>
+                <p style="color:#999;">No sources tracked yet. Run the scraper to populate this panel.</p>
+            <?php else: ?>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;">
+                    <?php foreach ( $source_health as $s ):
+                        $color = $s['status'] === 'fresh' ? '#22c55e' : ( $s['status'] === 'stale' ? '#eab308' : '#ef4444' );
+                        $label = $s['status'] === 'fresh' ? 'FRESH'  : ( $s['status'] === 'stale' ? 'STALE'  : 'DOWN' );
+                        $ago   = $s['last_ts'] ? human_time_diff( $s['last_ts'], time() ) . ' ago' : '—';
+                        $link  = add_query_arg( [ 'window' => $window, 'source' => $s['source'], 'topic' => $filter_topic ?: false ] );
+                    ?>
+                        <a href="<?php echo esc_url( $link ); ?>" style="display:block;text-decoration:none;color:inherit;padding:10px 12px;background:#fafafa;border-left:4px solid <?php echo esc_attr( $color ); ?>;border-radius:2px;transition:background .15s;"
+                           onmouseover="this.style.background='#f0f0f1'" onmouseout="this.style.background='#fafafa'">
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                                <strong style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?php echo esc_html( $s['source'] ?: '(unknown)' ); ?></strong>
+                                <span style="font-size:10px;font-weight:700;color:<?php echo esc_attr( $color ); ?>;letter-spacing:.05em;"><?php echo esc_html( $label ); ?></span>
+                            </div>
+                            <div style="font-size:12px;color:#666;margin-top:4px;">
+                                <?php echo esc_html( $ago ); ?> · <?php echo (int) $s['in_window']; ?> in window · <?php echo (int) $s['total']; ?> total
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- ── Recent articles ───────────────────────────────────────────── -->
+        <div style="background:#fff;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-top:20px;">
+            <h2 style="margin-top:0;">Recent articles
+                <?php if ( $filter_source || $filter_topic ): ?>
+                    <span style="font-weight:400;font-size:13px;color:#666;">
+                        — filtered by
+                        <?php if ( $filter_source ): ?><code><?php echo esc_html( $filter_source ); ?></code><?php endif; ?>
+                        <?php if ( $filter_source && $filter_topic ): ?> + <?php endif; ?>
+                        <?php if ( $filter_topic ): ?><code><?php echo esc_html( $filter_topic ); ?></code><?php endif; ?>
+                    </span>
+                <?php endif; ?>
+            </h2>
+            <?php if ( empty( $recent ) ): ?>
+                <p style="color:#999;">No articles match this filter.</p>
+            <?php else: ?>
+                <table class="widefat striped" style="margin-top:8px;">
+                    <thead>
+                        <tr>
+                            <th style="width:42%;">Title</th>
+                            <th style="width:14%;">Source</th>
+                            <th style="width:18%;">Topics</th>
+                            <th style="width:10%;">Sentiment</th>
+                            <th style="width:8%;">Tier</th>
+                            <th style="width:8%;">When</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ( $recent as $a ):
+                        $sent_color = $a['sentiment'] === 'positive' ? '#22c55e' : ( $a['sentiment'] === 'negative' ? '#ef4444' : '#94a3b8' );
+                        $ago        = $a['date_ts'] ? human_time_diff( $a['date_ts'], time() ) . ' ago' : '—';
+                        $edit_url   = get_edit_post_link( $a['id'] );
+                    ?>
+                        <tr>
+                            <td>
+                                <strong><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( $a['title'] ?: '(untitled)' ); ?></a></strong>
+                                <?php if ( $a['permalink'] ): ?>
+                                    <br><a href="<?php echo esc_url( $a['permalink'] ); ?>" target="_blank" rel="noopener" style="font-size:11px;color:#2271b1;">view ↗</a>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <a href="<?php echo esc_url( add_query_arg( [ 'window' => $window, 'source' => $a['source'], 'topic' => $filter_topic ?: false ] ) ); ?>">
+                                    <?php echo esc_html( $a['source'] ?: '—' ); ?>
+                                </a>
+                            </td>
+                            <td>
+                                <?php foreach ( array_slice( $a['topics'], 0, 4 ) as $t ):
+                                    $t_link = add_query_arg( [ 'window' => $window, 'topic' => $t, 'source' => $filter_source ?: false ] ); ?>
+                                    <a href="<?php echo esc_url( $t_link ); ?>" style="display:inline-block;padding:1px 6px;margin:1px 2px 1px 0;background:#eef2ff;color:#4338ca;border-radius:3px;font-size:11px;text-decoration:none;"><?php echo esc_html( $t ); ?></a>
+                                <?php endforeach; ?>
+                            </td>
+                            <td>
+                                <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:<?php echo esc_attr( $sent_color ); ?>;margin-right:4px;vertical-align:middle;"></span>
+                                <?php echo esc_html( $a['sentiment'] ?: '—' ); ?>
+                            </td>
+                            <td>T<?php echo (int) ( $a['tier'] ?: 0 ) ?: '—'; ?></td>
+                            <td style="color:#666;font-size:12px;"><?php echo esc_html( $ago ); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
 

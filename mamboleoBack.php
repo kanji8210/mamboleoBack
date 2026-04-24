@@ -20,7 +20,7 @@ define('MAMBOLEO_PLUGIN_URL', plugin_dir_url(__FILE__));
 // plugin has already set it). Without this guard WordPress prints an
 // HTML warning before the REST body, breaking any strict JSON consumer.
 if (!defined('MAMBOLEO_API_KEY')) {
-    define('MAMBOLEO_API_KEY', 'mamboleo-dev-key-change-in-production');
+    define('MAMBOLEO_API_KEY', 'mk_live_7b58ac5e36ae0aa8d14608770440baafba42902464525a5b');
 }
 
 // Include required files
