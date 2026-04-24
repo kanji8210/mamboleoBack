@@ -472,3 +472,111 @@
 11:17:26  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/a-milestone-of-compassion-uhsfs-commitment-to-community-outreach/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/a-milestone-of-compassion-uhsfs-commitment-to-community-outreach/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
 11:17:26  INFO      main  --- FEED:KDF done: 0 incidents ---
 11:17:26  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+15:00:23  WARNING   scraper.citizen_digital  RSS parse failed https://citizen.digital/feed : [WinError 10053] An established connection was aborted by the software in your host machine
+15:00:33  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+15:00:33  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+15:00:50  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+15:00:50  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+15:01:22  INFO      main    \u2713 article #308 [politics,security,environment,economy] KeNHA Announces Temporary Closure of Nairobi Southern Bypass at Ole Sereni Bound
+15:01:22  INFO      main  [capitalfm.co.ke] accident      conf=1.00  sev=medium  loc=Kikuyu
+15:01:22  INFO      main    \u2192 KeNHA Announces Temporary Closure of Nairobi Southern Bypass at Ole Sereni Bound After Accident
+15:01:25  INFO      main    \u2713 incident #309  @ -1.2480, 36.6700
+15:01:29  INFO      main    \u2713 article #310 [politics,security,education,environment] Kenya Records 9 Fatal Road Accidents in 12 Hours, Police Traffic Report Reveals
+15:01:30  INFO      main  [capitalfm.co.ke] accident      conf=1.00  sev=high    loc=Huruma
+15:01:30  INFO      main    \u2192 Kenya Records 9 Fatal Road Accidents in 12 Hours, Police Traffic Report Reveals
+15:01:32  INFO      main    \u2713 incident #311  @ -1.2574, 36.8540
+15:01:38  INFO      main    \u2713 article #312 [security,politics,economy,regional] High Court Upholds Conviction of 3 Suspects in Sh17mn narcotics Trafficking Case
+15:01:38  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Embakasi
+15:01:38  INFO      main    \u2192 High Court Upholds Conviction of 3 Suspects in Sh17mn narcotics Trafficking Case
+15:01:42  INFO      main    \u2713 incident #313  @ -1.3236, 36.9022
+15:01:47  INFO      main    \u2713 article #314 [regional,environment,politics,security] Two Tanzanians Rescued at Mombasa’s Bamburi Beach After Drifting from Pemba Isla
+15:01:47  INFO      main  [capitalfm.co.ke] flood         conf=1.00  sev=medium  loc=Nyali
+15:01:47  INFO      main    \u2192 Two Tanzanians Rescued at Mombasa’s Bamburi Beach After Drifting from Pemba Island Amid Strong Winds
+15:01:51  INFO      main    \u2713 incident #315  @ -4.0470, 39.6900
+15:01:55  INFO      main    \u2713 article #316 [politics,regional,security,economy] Amnesty Urges Tanzanian President Suluhu to Publish Inquiry Report on Deadly Ele
+15:01:58  INFO      main    \u2713 article #317 [education,politics,regional,environment] Kisumu Students Urge Boycott of Linda Mwanainchi Rally Over Safety and Academic 
+15:01:58  INFO      main  [capitalfm.co.ke] weather       conf=1.00  sev=medium  loc=Nyali
+15:01:58  INFO      main    \u2192 Kisumu Students Urge Boycott of Linda Mwanainchi Rally Over Safety and Academic Concerns
+15:02:04  INFO      main    \u2713 incident #318  @ -4.0470, 39.6900
+15:02:09  INFO      main    \u2713 article #319 [environment,regional,politics,security] Coast RC’s Office Among Buildings Damaged as Floods, Strong Winds Wreak Havoc in
+15:02:09  INFO      main  [capitalfm.co.ke] flood         conf=1.00  sev=medium  loc=Nyali
+15:02:09  INFO      main    \u2192 Coast RC’s Office Among Buildings Damaged as Floods, Strong Winds Wreak Havoc in Mombasa, 390 Displa
+15:02:13  INFO      main    \u2713 incident #320  @ -4.0470, 39.6900
+15:02:17  INFO      main    \u2713 article #321 [regional,politics,security,economy] Dangote targets East Africa with 650,000 bpd mega refinery plan
+15:02:21  INFO      main    \u2713 article #322 [politics,security,environment,economy] President Ruto Commits Sh2bn to Complete Mau Mau Roads in Mt Kenya
+15:02:21  INFO      main  [capitalfm.co.ke] weather       conf=1.00  sev=medium  loc=Nyali
+15:02:21  INFO      main    \u2192 President Ruto Commits Sh2bn to Complete Mau Mau Roads in Mt Kenya
+15:02:23  INFO      main    \u2713 incident #323  @ -4.0470, 39.6900
+15:02:27  INFO      main    \u2713 article #324 [politics,business,economy,regional] Kenyan leader sparks uproar after mocking Nigerians’ spoken English
+15:02:37  INFO      main    \u2713 article #325 [tech,economy,regional,environment] Africa’s youth are online, but locked out of the digital economy’s real value
+15:02:49  INFO      main    \u2713 article #326 [tech] OPINION: China’s AI surge: What it means for Africa’s digital future
+15:03:48  INFO      main  --- FEED:CAPITAL_FM done: 7 incidents ---
+15:03:48  INFO      main  --- FEED:THE_STAR (limit=30) ---
+15:04:00  INFO      main    \u2713 article #327 [politics] ‘Kasongo’ jibes won’t build Kenya, Ruto tells critics
+15:04:05  INFO      main    \u2713 article #328 [security] Elderly man dies in Embu house fire
+15:04:10  INFO      main    \u2713 article #329 [-] KeNHA closes Southern Bypass carriageway after accident
+15:04:17  INFO      main    \u2713 article #330 [business] El Niño likely in Kenya from May–July 2026
+15:04:22  INFO      main    \u2713 article #331 [-] Meta to cut one in 10 jobs after spending billions on AI
+15:04:27  INFO      main    \u2713 article #332 [-] Where people save the most
+15:04:32  INFO      main    \u2713 article #333 [-] Fuel price change since start of Iran war
+15:04:37  INFO      main    \u2713 article #334 [-] Kenya's exports to the US ($m)
+15:04:42  INFO      main    \u2713 article #335 [politics] Ruto urges unity, warns against tribal politics
+15:04:49  INFO      main    \u2713 article #336 [-] Why you should keep your KUCCPS payment reference number
+15:04:49  INFO      main  --- FEED:THE_STAR done: 0 incidents ---
+15:04:49  INFO      main  --- FEED:NTV (limit=30) ---
+15:06:40  INFO      main  --- FEED:NTV done: 0 incidents ---
+15:06:40  INFO      main  --- FEED:K24 (limit=30) ---
+15:06:52  INFO      main    \u2713 article #337 [-] Mkamburi Chigogo: Njugush is not my type even on a bad day
+15:06:55  INFO      main    \u2713 article #338 [-] Matatu etiquette rules many people learn the hard way
+15:06:58  INFO      main    \u2713 article #339 [business] How mutura, roasted goat and cow heads make profitable business
+15:07:06  INFO      main    \u2713 article #340 [-] Woman trapped in poo for 3 hours after outback toilet collapses
+15:07:06  INFO      main  --- FEED:K24 done: 0 incidents ---
+15:07:06  INFO      main  --- FEED:KENYANS_CO_KE (limit=30) ---
+15:07:43  INFO      main    \u2713 article #341 [environment,economy,security,politics] Kenyan Man Captured in Ukraine Sends Emotional Appeal
+15:07:46  INFO      main  [kenyans.co.ke] police        conf=0.75  sev=high    loc=Kenyan  [REVIEW]
+15:07:46  INFO      main    \u2192 Kenyan Man Captured in Ukraine Sends Emotional Appeal
+15:07:49  INFO      main    \u23f8 pending incident #342  @ 1.4420, 38.4314
+15:07:53  INFO      main    \u2713 article #343 [environment,politics,economy,tech] Kenyans.co.ke Weekly Quiz: 10 Questions to Test Your News Knowledge
+15:07:56  INFO      main    \u2713 article #344 [environment,politics,tech,economy] KeNHA Closes Southern Bypass After Grisly Accident
+15:07:56  INFO      main  [kenyans.co.ke] accident      conf=1.00  sev=low     loc=Gitaru
+15:07:56  INFO      main    \u2192 KeNHA Closes Southern Bypass After Grisly Accident
+15:07:58  INFO      main    \u2713 incident #345  @ -1.2500, 36.7200
+15:08:02  INFO      main    \u2713 article #346 [politics,environment,regional,economy] Famous Nigerian Prophet Warns Ruto Against Secret Opposition Plots & Upcoming Cr
+15:08:09  INFO      main    \u2713 article #347 [education,environment,politics,economy] NTSA Issues Fresh Directives to All Drivers Starting Next Week
+15:08:18  INFO      main    \u2713 article #348 [environment,politics,economy,tech] Kenya Met Issues Weekend Heavy Rainfall Advisory for 5 Regions
+15:08:18  INFO      main  [kenyans.co.ke] flood         conf=1.00  sev=low     loc=Parklands
+15:08:18  INFO      main    \u2192 Kenya Met Issues Weekend Heavy Rainfall Advisory for 5 Regions
+15:08:24  INFO      main    \u2713 incident #349  @ -1.2567, 36.8130
+15:08:31  INFO      main    \u2713 article #350 [tech,health,environment,business] County Responds After Reports of Detention of International Tourists in Maasai M
+15:08:55  INFO      main  [kenyans.co.ke] police        conf=0.50  sev=low     loc=County  [REVIEW]
+15:08:55  INFO      main    \u2192 County Responds After Reports of Detention of International Tourists in Maasai Mara
+15:08:57  INFO      main    \u23f8 pending incident #351  @ 0.7140, 36.0173
+15:09:35  INFO      main  --- FEED:KENYANS_CO_KE done: 4 incidents ---
+15:09:35  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
+15:09:44  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
+15:09:44  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+15:09:52  INFO      main    \u2713 article #352 [security,politics] South Africa's top envoy to Ghana summoned over attacks on foreigners
+15:11:05  INFO      main  --- FEED:BBC_AFRICA done: 0 incidents ---
+15:11:05  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+15:11:12  INFO      main    \u2713 article #353 [sports] Boston marathoner reflects on helping collapsed runner as video goes viral
+15:11:17  INFO      main    \u2713 article #354 [-] With 3,000 containers stuck in Pakistan, Iran explores more land routes
+15:11:21  INFO      main    \u2713 article #355 [regional,security] Russian troops, warships in India soon? Why their new military pact matters
+15:11:26  INFO      main    \u2713 article #356 [-] Turkiye’s Istanbul to host F1 Grand Prix for at least five years from 2027
+15:11:30  INFO      main    \u2713 article #357 [-] How long can Iran survive the US’s Hormuz blockade?
+15:11:35  INFO      main    \u2713 article #358 [-] Number of amputees set to rise in Gaza as Israel blocks aid, NGO warns
+15:11:40  INFO      main    \u2713 article #359 [-] US considers suspending Spain from NATO, reported internal email suggests
+15:11:44  INFO      main    \u2713 article #360 [security] Explosions by Israeli forces in south Lebanon despite ceasefire
+15:11:48  INFO      main    \u2713 article #361 [security] Environmental crisis in Russian city after drone attack on refinery
+15:11:52  INFO      main    \u2713 article #362 [-] India denounces ‘hellhole’ remark shared by Trump
+15:11:57  INFO      main    \u2713 article #363 [-] Global hunger report warns of rising malnutrition and famine risks
+15:12:00  INFO      main    \u2713 article #364 [-] Why is there a political deadlock in Lebanon?
+15:12:03  INFO      main    \u2713 article #365 [security] Baby twins attend their father’s funeral after Israeli settler attack
+15:12:09  INFO      main    \u2713 article #366 [regional] Gold is unaffordable so South Asian brides turn to one gram substitutes
+15:12:14  INFO      main    \u2713 article #367 [-] US says Iran can play at 2026 World Cup but bars those with ‘IRGC ties’
+15:12:47  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 0 incidents ---
+15:12:47  INFO      main  === Done. Total new incidents: 11 ===
+ 
+==================================================================== 
+[24/04/2026 15:15:04.36] START cadence=fast 
+==================================================================== 
+^C
