@@ -1644,3 +1644,372 @@
 ==================================================================== 
 23:18:24  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
 23:18:24  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+ 
+==================================================================== 
+[25/04/2026 23:20:18.91] START cadence=slow 
+==================================================================== 
+23:20:24  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+23:20:24  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+23:20:27  WARNING   scraper.state_house  Request failed \u2192 https://www.president.go.ke/category/news/ : HTTPSConnectionPool(host='www.president.go.ke', port=443): Max retries exceeded with url: /category/news/ (Caused by NameResolutionError("HTTPSConnection(host='www.president.go.ke', port=443): Failed to resolve 'www.president.go.ke' ([Errno 11001] getaddrinfo failed)"))
+23:20:27  INFO      main  --- FEED:STATE_HOUSE done: 0 incidents ---
+23:20:27  INFO      main  --- FEED:BUSINESS_DAILY (limit=30) ---
+23:20:31  WARNING   scraper.business_daily  Request failed \u2192 https://www.businessdailyafrica.com/bd/news : HTTPSConnectionPool(host='www.businessdailyafrica.com', port=443): Max retries exceeded with url: /bd/news (Caused by NameResolutionError("HTTPSConnection(host='www.businessdailyafrica.com', port=443): Failed to resolve 'www.businessdailyafrica.com' ([Errno 11001] getaddrinfo failed)"))
+23:20:31  INFO      main  --- FEED:BUSINESS_DAILY done: 0 incidents ---
+23:20:31  INFO      main  --- FEED:PEOPLE_DAILY (limit=30) ---
+23:20:34  WARNING   scraper.people_daily  Request failed \u2192 https://www.pd.co.ke/news/ : HTTPSConnectionPool(host='www.pd.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='www.pd.co.ke', port=443): Failed to resolve 'www.pd.co.ke' ([Errno 11001] getaddrinfo failed)"))
+23:20:34  INFO      main  --- FEED:PEOPLE_DAILY done: 0 incidents ---
+23:20:34  INFO      main  --- FEED:GHAFLA (limit=30) ---
+23:20:37  WARNING   scraper.ghafla  Request failed \u2192 https://www.ghafla.com/ke/news/ : HTTPSConnectionPool(host='www.ghafla.com', port=443): Max retries exceeded with url: /ke/news/ (Caused by NameResolutionError("HTTPSConnection(host='www.ghafla.com', port=443): Failed to resolve 'www.ghafla.com' ([Errno 11001] getaddrinfo failed)"))
+23:20:37  INFO      main  --- FEED:GHAFLA done: 0 incidents ---
+23:20:37  INFO      main  --- FEED:HIVISASA (limit=30) ---
+23:20:51  WARNING   scraper.hivisasa  Request failed \u2192 https://hivisasa.com/posts/news : HTTPSConnectionPool(host='hivisasa.com', port=443): Max retries exceeded with url: /posts/news (Caused by NameResolutionError("HTTPSConnection(host='hivisasa.com', port=443): Failed to resolve 'hivisasa.com' ([Errno 11001] getaddrinfo failed)"))
+23:20:51  INFO      main  --- FEED:HIVISASA done: 0 incidents ---
+23:20:51  INFO      main  --- FEED:THE_ELEPHANT (limit=30) ---
+23:21:05  WARNING   scraper.the_elephant  Request failed \u2192 https://www.theelephant.info/op-eds/ : HTTPSConnectionPool(host='www.theelephant.info', port=443): Max retries exceeded with url: /op-eds/ (Caused by NameResolutionError("HTTPSConnection(host='www.theelephant.info', port=443): Failed to resolve 'www.theelephant.info' ([Errno 11001] getaddrinfo failed)"))
+23:21:05  INFO      main  --- FEED:THE_ELEPHANT done: 0 incidents ---
+23:21:05  INFO      main  --- FEED:KENYAN_WALL_STREET (limit=30) ---
+23:21:08  WARNING   scraper.kenyan_wall_street  Request failed \u2192 https://kenyanwallstreet.com/category/news/ : HTTPSConnectionPool(host='kenyanwallstreet.com', port=443): Max retries exceeded with url: /category/news/ (Caused by NameResolutionError("HTTPSConnection(host='kenyanwallstreet.com', port=443): Failed to resolve 'kenyanwallstreet.com' ([Errno 11001] getaddrinfo failed)"))
+23:21:08  INFO      main  --- FEED:KENYAN_WALL_STREET done: 0 incidents ---
+23:21:08  INFO      main  --- FEED:MPASHO (limit=30) ---
+23:21:11  WARNING   scraper.mpasho  Request failed \u2192 https://mpasho.co.ke/news/ : HTTPSConnectionPool(host='mpasho.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='mpasho.co.ke', port=443): Failed to resolve 'mpasho.co.ke' ([Errno 11001] getaddrinfo failed)"))
+23:21:11  INFO      main  --- FEED:MPASHO done: 0 incidents ---
+23:21:11  INFO      main  --- FEED:EAST_AFRICAN (limit=30) ---
+23:21:15  WARNING   scraper.east_african  Request failed \u2192 https://www.theeastafrican.co.ke/tea/news/east-africa : HTTPSConnectionPool(host='www.theeastafrican.co.ke', port=443): Max retries exceeded with url: /tea/news/east-africa (Caused by NameResolutionError("HTTPSConnection(host='www.theeastafrican.co.ke', port=443): Failed to resolve 'www.theeastafrican.co.ke' ([Errno 11001] getaddrinfo failed)"))
+23:21:15  INFO      main  --- FEED:EAST_AFRICAN done: 0 incidents ---
+23:21:15  INFO      main  --- FEED:MONITOR_UG (limit=30) ---
+23:21:18  WARNING   scraper.monitor_ug  Request failed \u2192 https://www.monitor.co.ug/uganda/news/national : HTTPSConnectionPool(host='www.monitor.co.ug', port=443): Max retries exceeded with url: /uganda/news/national (Caused by NameResolutionError("HTTPSConnection(host='www.monitor.co.ug', port=443): Failed to resolve 'www.monitor.co.ug' ([Errno 11001] getaddrinfo failed)"))
+23:21:18  INFO      main  --- FEED:MONITOR_UG done: 0 incidents ---
+23:21:18  INFO      main  --- FEED:THE_CITIZEN_TZ (limit=30) ---
+23:21:32  WARNING   scraper.the_citizen_tz  Request failed \u2192 https://www.thecitizen.co.tz/tanzania/news/national : HTTPSConnectionPool(host='www.thecitizen.co.tz', port=443): Max retries exceeded with url: /tanzania/news/national (Caused by NameResolutionError("HTTPSConnection(host='www.thecitizen.co.tz', port=443): Failed to resolve 'www.thecitizen.co.tz' ([Errno 11001] getaddrinfo failed)"))
+23:21:32  INFO      main  --- FEED:THE_CITIZEN_TZ done: 0 incidents ---
+23:21:32  INFO      main  --- FEED:NEW_TIMES_RW (limit=30) ---
+23:21:42  WARNING   scraper.new_times_rw  Request failed \u2192 https://www.newtimes.co.rw/rwanda : HTTPSConnectionPool(host='www.newtimes.co.rw', port=443): Max retries exceeded with url: /rwanda (Caused by NameResolutionError("HTTPSConnection(host='www.newtimes.co.rw', port=443): Failed to resolve 'www.newtimes.co.rw' ([Errno 11001] getaddrinfo failed)"))
+23:21:42  INFO      main  --- FEED:NEW_TIMES_RW done: 0 incidents ---
+23:21:42  INFO      main  --- FEED:ADDIS_STANDARD (limit=30) ---
+23:21:45  WARNING   scraper.addis_standard  Request failed \u2192 https://addisstandard.com/category/news/ : HTTPSConnectionPool(host='addisstandard.com', port=443): Max retries exceeded with url: /category/news/ (Caused by NameResolutionError("HTTPSConnection(host='addisstandard.com', port=443): Failed to resolve 'addisstandard.com' ([Errno 11001] getaddrinfo failed)"))
+23:21:45  INFO      main  --- FEED:ADDIS_STANDARD done: 0 incidents ---
+23:21:45  INFO      main  --- FEED:GAROWE_ONLINE (limit=30) ---
+23:22:00  WARNING   scraper.garowe_online  Request failed \u2192 https://www.garoweonline.com/en/news : HTTPSConnectionPool(host='www.garoweonline.com', port=443): Max retries exceeded with url: /en/news (Caused by NameResolutionError("HTTPSConnection(host='www.garoweonline.com', port=443): Failed to resolve 'www.garoweonline.com' ([Errno 11001] getaddrinfo failed)"))
+23:22:00  INFO      main  --- FEED:GAROWE_ONLINE done: 0 incidents ---
+23:22:00  INFO      main  --- FEED:SUDAN_TRIBUNE (limit=30) ---
+23:22:14  WARNING   scraper.sudan_tribune  Request failed \u2192 https://sudantribune.com/category/news/ : HTTPSConnectionPool(host='sudantribune.com', port=443): Max retries exceeded with url: /category/news/ (Caused by NameResolutionError("HTTPSConnection(host='sudantribune.com', port=443): Failed to resolve 'sudantribune.com' ([Errno 11001] getaddrinfo failed)"))
+23:22:14  INFO      main  --- FEED:SUDAN_TRIBUNE done: 0 incidents ---
+23:22:14  INFO      main  --- FEED:AP_AFRICA (limit=30) ---
+23:22:17  WARNING   scraper.ap_africa  Request failed \u2192 https://apnews.com/hub/africa : HTTPSConnectionPool(host='apnews.com', port=443): Max retries exceeded with url: /hub/africa (Caused by NameResolutionError("HTTPSConnection(host='apnews.com', port=443): Failed to resolve 'apnews.com' ([Errno 11001] getaddrinfo failed)"))
+23:22:17  INFO      main  --- FEED:AP_AFRICA done: 0 incidents ---
+23:22:17  INFO      main  --- FEED:CNN_AFRICA (limit=30) ---
+23:22:17  INFO      main  --- FEED:CNN_AFRICA done: 0 incidents ---
+23:22:17  INFO      main  --- FEED:FRANCE24_AFRICA (limit=30) ---
+23:22:17  INFO      main  --- FEED:FRANCE24_AFRICA done: 0 incidents ---
+23:22:17  INFO      main  --- FEED:DW_AFRICA (limit=30) ---
+23:22:17  INFO      main  --- FEED:DW_AFRICA done: 0 incidents ---
+23:22:17  INFO      main  --- FEED:VOA_AFRICA (limit=30) ---
+23:22:20  WARNING   scraper.voa_africa  Request failed \u2192 https://www.voaafrica.com/ : HTTPSConnectionPool(host='www.voaafrica.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='www.voaafrica.com', port=443): Failed to resolve 'www.voaafrica.com' ([Errno 11001] getaddrinfo failed)"))
+23:22:20  INFO      main  --- FEED:VOA_AFRICA done: 0 incidents ---
+23:22:20  INFO      main  --- FEED:GUARDIAN_AFRICA (limit=30) ---
+23:22:21  INFO      main  --- FEED:GUARDIAN_AFRICA done: 0 incidents ---
+23:22:21  INFO      main  --- FEED:NYT_AFRICA (limit=30) ---
+23:22:21  INFO      main  --- FEED:NYT_AFRICA done: 0 incidents ---
+23:22:21  INFO      main  --- FEED:ECONOMIST_MEA (limit=30) ---
+23:22:21  INFO      main  --- FEED:ECONOMIST_MEA done: 0 incidents ---
+23:22:21  INFO      main  --- FEED:WSJ_AFRICA (limit=30) ---
+23:22:21  INFO      main  --- FEED:WSJ_AFRICA done: 0 incidents ---
+23:22:21  INFO      main  --- FEED:XINHUA_AFRICA (limit=30) ---
+23:22:21  INFO      main  --- FEED:XINHUA_AFRICA done: 0 incidents ---
+23:22:21  INFO      main  === Done. Total new incidents: 0 ===
+ 
+==================================================================== 
+[25/04/2026 23:24:00.03] START cadence=fast 
+==================================================================== 
+23:24:01  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+23:24:01  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+ 
+[26/04/2026 19:06:47.53] START cadence=slow 
+[26/04/2026 19:06:48.01] START cadence=fast 
+==================================================================== 
+19:07:29  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+19:07:29  INFO      main  --- FEED:KDF (limit=30) ---
+19:07:51  INFO      main    \u2713 article #733 [security] TRANSFORMING HEALTH CARE FOR MISSION READINESS – Ministry of Defence – Kenya
+19:07:54  INFO      main    \u2713 article #734 [security,regional,environment,business] MENTAL RESILIENCE FOR OPERATIONAL EFFECTIVENESS – Ministry of Defence – Kenya
+19:08:05  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/driving-african-led-ai-solutions-for-peace-and-security/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/driving-african-led-ai-solutions-for-peace-and-security/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:08:10  INFO      main    \u2713 article #735 [politics,security] STRATEGIC INFRASTRUCTURE PROJECTS GAIN MOMENTUM – Ministry of Defence – Kenya
+19:08:22  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/shaping-a-smarter-fighting-force/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/shaping-a-smarter-fighting-force/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:08:41  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/greening-the-coast-kenya-navy-drives-ecosystem-restoration-effort/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/greening-the-coast-kenya-navy-drives-ecosystem-restoration-effort/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:09:05  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/cadets-champion-social-reintegration-through-community-service-in-nakuru/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/cadets-champion-social-reintegration-through-community-service-in-nakuru/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:09:05  INFO      main  --- FEED:KDF done: 0 incidents ---
+19:09:05  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+19:09:09  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+19:09:09  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+19:09:16  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+19:09:16  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+19:09:23  INFO      main    \u2713 article #736 [politics,security,education,regional] Muturi Opposes Kenya–France Defence Pact Over Sovereignty, Legal Immunity Concer
+19:09:23  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Mombasa  [REVIEW]
+19:09:23  INFO      main    \u2192 Muturi Opposes Kenya–France Defence Pact Over Sovereignty, Legal Immunity Concerns
+19:09:26  INFO      main    \u23f8 pending incident #737  @ -4.0435, 39.6682
+19:09:31  INFO      main    \u2713 article #738 [sports,politics,regional,security] HISTORY WRITTEN! Sawe Does The Impossible Breaking World Record in Sub-2
+19:09:31  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Nairobi  [REVIEW]
+19:09:31  INFO      main    \u2192 HISTORY WRITTEN! Sawe Does The Impossible Breaking World Record in Sub-2
+19:09:34  INFO      main    \u23f8 pending incident #739  @ -1.2921, 36.8219
+19:09:40  INFO      main    \u2713 article #740 [education,politics,security,business] KCA University Launches Bold Alumni Plan to Drive Jobs and Mentorship Growth
+19:09:40  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Nairobi  [REVIEW]
+19:09:40  INFO      main    \u2192 KCA University Launches Bold Alumni Plan to Drive Jobs and Mentorship Growth
+19:09:43  INFO      main    \u23f8 pending incident #741  @ -1.2921, 36.8219
+19:09:47  INFO      main    \u2713 article #742 [security,environment,politics,education] India defence chief visits UK for high-level military talks
+19:09:50  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=India  [REVIEW]
+19:09:50  INFO      main    \u2192 India defence chief visits UK for high-level military talks
+19:09:53  INFO      main    \u23f8 pending incident #743  @ -1.2840, 36.8217
+19:09:58  INFO      main    \u2713 article #744 [politics,education,environment,security] Wetang’ula Leads Unity Push in Vihiga as Kenya Leaders Call for Political Cooper
+19:10:03  INFO      main    \u2713 article #745 [politics,regional,security,education] Ruto Urges National Unity in Fight Against Rising Youth Drug and Alcohol Crisis
+19:10:09  INFO      main    \u2713 article #746 [politics,regional,security,education] Gachagua Vows Fresh Court Battle Over Impeachment, Claims Process Was Illegal
+19:10:09  INFO      main  [capitalfm.co.ke] accident      conf=1.00  sev=low     loc=Bamburi
+19:10:09  INFO      main    \u2192 Gachagua Vows Fresh Court Battle Over Impeachment, Claims Process Was Illegal
+19:10:13  INFO      main    \u2713 incident #747  @ -3.9780, 39.7230
+19:10:18  INFO      main    \u2713 article #748 [security,business,politics,education] 16 wounded in coordinated attacks across Mali
+19:10:20  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Mali  [REVIEW]
+19:10:20  INFO      main    \u2192 16 wounded in coordinated attacks across Mali
+19:10:23  INFO      main    \u23f8 pending incident #749  @ -1.1565, 36.6548
+19:10:28  INFO      main    \u2713 article #750 [security,politics,business,education] Explainer: What lies behind dismissal of top military leaders in Trump administr
+19:10:36  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Kenya  [REVIEW]
+19:10:36  INFO      main    \u2192 Explainer: What lies behind dismissal of top military leaders in Trump administration?
+19:10:39  INFO      main    \u23f8 pending incident #751  @ 0.0236, 37.9062
+19:10:44  INFO      main    \u2713 article #752 [economy,tech,environment,business] China-Kenya partnership unlocks geothermal potential of Great Rift Valley
+19:10:52  INFO      main    \u2713 article #753 [health,business,environment,economy] Q&A: Dr Chris van Straten on why malaria remains Africa’s biggest health and eco
+19:10:57  INFO      main    \u2713 article #754 [health,regional,security,business] Global “Big Catch-Up” delivers over 100 million vaccines to children after COVID
+19:10:57  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=low     loc=Nairobi  [REVIEW]
+19:10:57  INFO      main    \u2192 Global “Big Catch-Up” delivers over 100 million vaccines to children after COVID-19 disruptions
+19:11:00  INFO      main    \u23f8 pending incident #755  @ -1.2921, 36.8219
+19:11:05  INFO      main    \u2713 article #756 [health,business,security,tech] Kenya Intensifies Malaria Fight as New Strategy Targets Elimination by 2027
+19:11:05  INFO      main  [capitalfm.co.ke] police        conf=0.50  sev=medium  loc=Mombasa  [REVIEW]
+19:11:05  INFO      main    \u2192 Kenya Intensifies Malaria Fight as New Strategy Targets Elimination by 2027
+19:11:08  INFO      main    \u23f8 pending incident #757  @ -4.0435, 39.6682
+19:11:58  INFO      main  --- FEED:CAPITAL_FM done: 9 incidents ---
+19:11:58  INFO      main  --- FEED:THE_STAR (limit=30) ---
+19:12:09  INFO      main    \u2713 article #758 [politics] Babu Owino declares 2032 presidential bid after one-term Nairobi governorship
+19:12:14  INFO      main    \u2713 article #759 [sports] Guinness World Records ratifies Sabastian Sawe’s historic marathon feat
+19:12:19  INFO      main    \u2713 article #760 [education] [PHOTOS] Last-minute rush as parents prepare for school reopening
+19:12:24  INFO      main    \u2713 article #761 [security] One arrested over alleged incitement after Tseikuru attack
+19:12:26  INFO      main  [the-star.co.ke] police        conf=0.50  sev=low     loc=Tseikuru  [REVIEW]
+19:12:26  INFO      main    \u2192 One arrested over alleged incitement after Tseikuru attack
+19:12:30  INFO      main    \u23f8 pending incident #762  @ -0.3122, 38.2191
+19:12:34  INFO      main    \u2713 article #763 [-] Onyango's late strike sinks Leopards as K’Ogalo go six points clear
+19:12:39  INFO      main    \u2713 article #764 [politics,sports] Ruto hails Sebastian Sawe for historic London Marathon victory
+19:12:44  INFO      main    \u2713 article #765 [security] Palace holding talks over plans for King's US visit after DC shooting
+19:12:53  INFO      main    \u2713 article #766 [regional] Linda Mwananchi leaders storm Kisumu as leaders preach peace amid tension
+19:12:58  INFO      main    \u2713 article #767 [education] [PHOTOS] Low customer numbers hit Gikomba Market ahead of school reopening
+19:13:03  INFO      main    \u2713 article #768 [-] Don’t make Sifuna a hero through mistreatment, Millie warns ODM
+19:13:03  INFO      main  --- FEED:THE_STAR done: 1 incidents ---
+19:13:03  INFO      main  --- FEED:NTV (limit=30) ---
+19:14:52  INFO      main  --- FEED:NTV done: 0 incidents ---
+19:14:52  INFO      main  --- FEED:K24 (limit=30) ---
+19:15:04  INFO      main    \u2713 article #769 [-] ‘Will be breaking news’ – Peter Kioi claims he is sure he is dying this year
+19:15:08  INFO      main    \u2713 article #770 [sports] In the books! Guinness World Records officially recognises Sawe and Assefa as ma
+19:15:13  INFO      main    \u2713 article #771 [-] FKF power plays intensify as Mariga responds to FIFA and Hussein declares contro
+19:15:14  INFO      main  --- FEED:K24 done: 0 incidents ---
+19:15:14  INFO      main  --- FEED:KENYANS_CO_KE (limit=30) ---
+19:15:51  INFO      main    \u2713 article #772 [security,politics,regional,sports] Murkomen Declares Parts of Marsabit County Disturbed and Dangerous
+19:15:55  INFO      main    \u2713 article #773 [politics,security,sports,economy] Gladys Wanga Reveals ODM's Plan for DP Slot in Ruto Coalition Talks
+19:16:00  INFO      main    \u2713 article #774 [economy,politics,security,sports] KHRC To Take Ruto's UDA to Court
+19:16:04  INFO      main    \u2713 article #775 [politics,security,economy,sports] Ruto Announces Construction of Multi-Billion Dual Carriageway Linking Four Count
+19:16:08  INFO      main    \u2713 article #776 [politics,security,sports,economy] EPRA Reveals New Electricity Charges for April Power Bills
+19:16:13  INFO      main    \u2713 article #777 [economy,politics,security,sports] KRA Announces New VAT Changes Affecting Exporters
+19:16:17  INFO      main    \u2713 article #778 [sports,politics,regional,security] Kenyan Marathoner Sebastian Sawe Breaks World Marathon Record
+19:16:21  INFO      main    \u2713 article #779 [security,politics,regional,sports] IG Kanja Issues Orders After 7 Killed in Kitui in Retaliatory Attacks
+19:16:26  INFO      main    \u2713 article #780 [politics,security,sports,economy] Ruto Makes Over 30 Fresh Government Appointments
+19:16:30  INFO      main    \u2713 article #781 [economy,sports,politics,security] KPLC Begins Crackdown on Debt Through Token Purchases
+19:16:34  INFO      main    \u2713 article #782 [sports,politics,regional] FIFA Intervenes After Suspension of Hussein Mohammed, Issues Notice to FKF
+19:16:39  INFO      main    \u2713 article #783 [security,politics,sports,economy] Scores Killed as Attackers Open Fire At Civilians in Kitui
+19:16:43  INFO      main    \u2713 article #784 [politics,security,economy,sports] Ruto on the Spot After ‘Relaunching’ MP’s Project
+19:16:47  INFO      main    \u2713 article #785 [politics,security,sports,economy] State Reveals Timeline for First Crude Shipment After Revival of Lokichar Oil Pr
+19:16:51  INFO      main    \u2713 article #786 [politics,security,sports,economy] IEBC Sets Date for Ol Kalou By-Election After Seat is Declared Vacant
+19:16:55  INFO      main    \u2713 article #787 [security,politics,sports,tech] 7 Killed on The Spot After Voxy and Trailer Collide
+19:16:59  INFO      main    \u2713 article #788 [education,regional,politics,security] Wetang’ula to Mediate Teachers’ SHA Dispute as KNUT Issues Two Week Strike Notic
+19:17:03  INFO      main    \u2713 article #789 [security,politics,sports,economy] Police Warn of Heavy Traffic Along Nakuru-Eldoret Highway
+19:17:08  INFO      main    \u2713 article #790 [politics,security,sports,economy] Broad-Based CS Hits Out at Oburu Odinga Amid Tensions in ODM
+19:17:12  INFO      main    \u2713 article #791 [education,regional,politics,security] TSC Explains Step-by-Step Guide to Recovering Misdirected Teacher Salaries
+19:17:12  INFO      main  --- FEED:KENYANS_CO_KE done: 0 incidents ---
+19:17:12  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
+19:17:18  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
+19:17:18  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+19:17:28  INFO      main    \u2713 article #792 [security,regional,business] Russian mercenaries to withdraw from Mali city after attacks
+19:17:30  INFO      main  [bbc.com] accident      conf=1.00  sev=medium  loc=Russian  [REVIEW]
+19:17:30  INFO      main    \u2192 Russian mercenaries to withdraw from Mali city after attacks
+19:17:33  INFO      main    \u23f8 pending incident #793  @ -1.2910, 36.8006
+19:17:38  INFO      main    \u2713 article #794 [sports,regional] Kenya's Sawe smashes two-hour barrier to make history at London Marathon
+19:17:43  INFO      main    \u2713 article #795 [politics,security,economy] The detained anti-colonial activist grabbing attention in West Africa: Who is Ke
+19:17:47  INFO      main    \u2713 article #796 [politics,business,security,health] A nation built on pan-African principles faces questions about racism
+19:17:52  INFO      main    \u2713 article #797 [regional,security] Pirates hijack oil tanker off the coast of Somalia
+19:18:02  INFO      main    \u2713 article #798 [security,politics] Behind Nigeria's murky coup plot - the money, the prayers and a Nollywood arrest
+19:18:23  INFO      main    \u2713 article #799 [sports,security,regional] Former Nigeria striker Eneramo dies during match
+19:18:56  INFO      main  --- FEED:BBC_AFRICA done: 1 incidents ---
+19:18:56  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+19:19:02  INFO      main    \u2713 article #800 [economy,environment] New footage shows moment of deadly bus bombing in Colombia
+19:19:07  INFO      main    \u2713 article #801 [security] ‘State of war’: Why Israel has escalated attacks in Gaza
+19:19:11  INFO      main    \u2713 article #802 [-] Will Yamal, Salah and Ekitike miss the World Cup 2026 due to injury?
+19:19:17  INFO      main    \u2713 article #803 [sports] War, the Gulf & Rethinking Money in Sport
+19:19:21  INFO      main    \u2713 article #804 [-] US-Iran conflict: What’s the latest as the Islamabad talks stall?
+19:19:25  INFO      main    \u2713 article #805 [security] Mali rattled by ongoing armed attacks: What to know
+19:19:31  INFO      main    \u2713 article #806 [economy,environment] 40 years since the world’s worst nuclear disaster in Ukraine
+19:19:36  INFO      main    \u2713 article #807 [security] Israel feared Amal Khalil, just as it did Shireen Abu Akleh
+19:19:40  INFO      main    \u2713 article #808 [security] Mali defence minister killed after coordinated attacks
+19:19:42  INFO      main  [aljazeera.com] police        conf=0.50  sev=high    loc=Mali  [REVIEW]
+19:19:42  INFO      main    \u2192 Mali defence minister killed after coordinated attacks
+19:19:45  INFO      main    \u23f8 pending incident #809  @ -1.1605, 36.6315
+19:19:49  INFO      main    \u2713 article #810 [-] What lies ahead for Gaza after ceasefires in Iran and Lebanon?
+19:19:53  INFO      main    \u2713 article #811 [-] Syria puts first Assad-era official on trial in Damascus
+19:19:56  INFO      main    \u2713 article #812 [sports,regional] Sebastian Sawe breaks London marathon record with first run under two hours
+19:20:00  INFO      main    \u2713 article #813 [politics] Timeline: Trump assassination attempts and security incidents
+19:20:04  INFO      main    \u2713 article #814 [security] Mali’s Defence Minister Sadio Camara killed during coordinated attacks
+19:20:06  INFO      main  [aljazeera.com] police        conf=0.50  sev=medium  loc=Mali  [REVIEW]
+19:20:06  INFO      main    \u2192 Mali’s Defence Minister Sadio Camara killed during coordinated attacks
+19:20:09  INFO      main    \u23f8 pending incident #815  @ -1.1605, 36.6315
+19:20:13  INFO      main    \u2713 article #816 [-] What we know about the suspected ‘assassination attempt’ on Donald Trump
+19:20:17  INFO      main    \u2713 article #817 [security] At least four people killed in Israeli attacks in Gaza despite ‘ceasefire’
+19:20:22  INFO      main  [aljazeera.com] accident      conf=0.50  sev=medium  loc=Gaza  [REVIEW]
+19:20:22  INFO      main    \u2192 At least four people killed in Israeli attacks in Gaza despite ‘ceasefire’
+19:20:25  INFO      main    \u23f8 pending incident #818  @ -1.3096, 36.7869
+19:20:30  INFO      main    \u2713 article #819 [-] Israel destroys solar panels in south Lebanon
+19:20:34  INFO      main    \u2713 article #820 [-] Yemen’s landmine crisis endures despite truce and de-mining efforts
+19:20:39  INFO      main    \u2713 article #821 [-] Raghu Rai, legendary Indian photographer, dies at 83
+19:20:42  INFO      main    \u2713 article #822 [politics] What to know about Cole Allen, alleged WH correspondents’ dinner shooter
+19:20:46  INFO      main    \u2713 article #823 [-] Chornobyl’s surviving ‘liquidators’ return 40 years after nuclear disaster
+19:20:51  INFO      main    \u2713 article #824 [security,economy,environment] Russian attacks on Ukraine kill at least five, damage ship in port
+19:20:55  INFO      main    \u2713 article #825 [-] Aljamain Sterling calls for featherweight title shot after UFC 116 win
+19:21:00  INFO      main  [aljazeera.com] police        conf=0.50  sev=low     loc=Kenya  [REVIEW]
+19:21:00  INFO      main    \u2192 Aljamain Sterling calls for featherweight title shot after UFC 116 win
+19:21:03  INFO      main    \u23f8 pending incident #826  @ 0.0236, 37.9062
+19:21:07  INFO      main    \u2713 article #827 [security,economy] How American taxpayers fund Trump’s wars
+19:21:11  INFO      main    \u2713 article #828 [security,politics,regional] World reacts to shooting at White House correspondents’ dinner
+19:21:18  INFO      main    \u2713 article #829 [politics] Pope Leo ends Africa tour with prison visit
+19:21:27  INFO      main    \u2713 article #830 [-] Africa’s abandoned workers in Lebanon
+19:21:31  INFO      main    \u2713 article #831 [-] Pope Leo visits prison in Equatorial Guinea
+19:21:31  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 4 incidents ---
+19:21:31  INFO      main  === Done. Total new incidents: 15 ===
+ 
+==================================================================== 
+[26/04/2026 19:27:29.13] START cadence=fast 
+==================================================================== 
+19:27:36  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+19:27:36  INFO      main  --- FEED:KDF (limit=30) ---
+19:28:16  INFO      main    \u2713 article #832 [tech,regional,security,education] DRIVING AFRICAN-LED AI SOLUTIONS FOR PEACE AND SECURITY – Ministry of Defence – 
+19:28:27  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strategic-infrastructure-projects-gain-momentum/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/strategic-infrastructure-projects-gain-momentum/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:28:42  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strengthening-leadership-and-statesmanship-in-africas-strategic-future/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/strengthening-leadership-and-statesmanship-in-africas-strategic-future/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+19:29:07  INFO      main  --- FEED:KDF done: 0 incidents ---
+19:29:07  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+19:29:12  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+19:29:12  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+19:29:19  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+19:29:19  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+ 
+==================================================================== 
+[27/04/2026 16:35:58.43] START cadence=slow 
+==================================================================== 
+16:36:18  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+16:36:18  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+16:36:21  INFO      main  --- FEED:STATE_HOUSE done: 0 incidents ---
+16:36:21  INFO      main  --- FEED:BUSINESS_DAILY (limit=30) ---
+16:36:41  WARNING   scraper.business_daily  HTTP 403 \u2192 https://www.businessdailyafrica.com/bd/news
+16:36:41  INFO      main  --- FEED:BUSINESS_DAILY done: 0 incidents ---
+16:36:41  INFO      main  --- FEED:PEOPLE_DAILY (limit=30) ---
+16:37:12  INFO      main    \u2713 article #833 [education,politics,regional] Karua faults govt over delayed capitation as schools reopen
+16:37:23  INFO      main    \u2713 article #834 [politics] Are senators using new bill to settle scores with governors before 2027?
+ 
+==================================================================== 
+[27/04/2026 16:42:29.99] START cadence=fast 
+==================================================================== 
+16:42:38  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+16:42:38  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+==================================================================== 
+[27/04/2026 16:45:02.41] START cadence=fast 
+==================================================================== 
+16:45:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+16:45:04  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+==================================================================== 
+[27/04/2026 16:57:28.01] START cadence=fast 
+==================================================================== 
+16:57:29  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+16:57:29  INFO      main  --- FEED:KDF (limit=30) ---
+16:59:43  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strengthening-regional-naval-partnerships/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out.
+16:59:55  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strengthening-leadership-bonds-through-sport/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/strengthening-leadership-bonds-through-sport/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+17:00:06  INFO      main  --- FEED:KDF done: 0 incidents ---
+17:00:06  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+17:00:15  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+17:00:15  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+17:00:28  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+17:00:28  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+17:01:03  INFO      main    \u2713 article #835 [politics,regional,security,tech] Court orders 10-Day Detention of Hate Speech Suspect in viral video
+17:01:03  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Nairobi
+17:01:03  INFO      main    \u2192 Court orders 10-Day Detention of Hate Speech Suspect in viral video
+17:01:17  INFO      main    \u2713 incident #836  @ -1.2921, 36.8219
+17:01:41  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+17:01:41  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Nairobi
+17:01:41  INFO      main    \u2192 Court Hands 60 year Sentence to suspect in Al-Shabaab-Linked Case
+17:02:03  INFO      main    \u2713 incident #837  @ -1.2921, 36.8219
+17:02:22  INFO      main    \u2713 article #838 [politics,regional,security,economy] Senate Commitee inquires into Kisumu Municipal Board Operations
+17:02:22  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Nairobi
+17:02:22  INFO      main    \u2192 Senate Commitee inquires into Kisumu Municipal Board Operations
+17:02:37  INFO      main    \u2713 incident #839  @ -1.2921, 36.8219
+17:03:02  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+17:03:02  INFO      main  [capitalfm.co.ke] police        conf=1.00  sev=medium  loc=Diani
+17:03:02  INFO      main    \u2192 Ruto Blames Cartels for Attempts to Derail SHA Rollout
+^C 
+==================================================================== 
+[27/04/2026 17:12:28.38] START cadence=slow 
+==================================================================== 
+17:12:30  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+17:12:30  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+^C 
+==================================================================== 
+[27/04/2026 17:15:02.65] START cadence=fast 
+==================================================================== 
+17:15:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+17:15:04  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+==================================================================== 
+[27/04/2026 17:42:28.10] START cadence=fast 
+==================================================================== 
+^C 
+==================================================================== 
+[27/04/2026 17:45:03.96] START cadence=fast 
+==================================================================== 
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 22, in <module>
+    from main import main as run_main
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 18, in <module>
+    from api import client as api
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\api\client.py", line 12, in <module>
+    import requests
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\requests\__init__.py", line 45, in <module>
+    from .exceptions import RequestsDependencyWarning
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\requests\exceptions.py", line 10, in <module>
+    from .compat import JSONDecodeError as CompatJSONDecodeError
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\requests\compat.py", line 42, in <module>
+    chardet = _resolve_char_detection()
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\requests\compat.py", line 36, in _resolve_char_detection
+    chardet = importlib.import_module(lib)
+  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\__init__.py", line 26, in <module>
+    from .api import from_bytes, from_fp, from_path, is_binary
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\api.py", line 47, in <module>
+    if is_multi_byte_encoding(_supported_enc):
+       ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\utils.py", line 281, in is_multi_byte_encoding
+    importlib.import_module(f"encodings.{name}").IncrementalDecoder,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1022, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1159, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1217, in get_data
+KeyboardInterrupt
+^C
