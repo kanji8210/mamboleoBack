@@ -1,14 +1,15 @@
 """Classify article text → incident type + severity via keyword matching.
 
 Design:
-    1. Exclusion filter — if the text is clearly sports / entertainment /
+    1. Metaphor stripping — phrases like "erupted in cheers",
+       "broke out in laughter", "sparked debate", "fire of hope" are removed
+       before scoring so they don't trigger fire/protest categories.
+    2. Exclusion filter — if the text is clearly sports / entertainment /
        policy-talk / religious / opinion, return None immediately.
-    2. Event-verb requirement — incidents need a concrete past-tense event
-       verb (killed, crashed, arrested, looted, burned, flooded…). A topic
-       keyword alone ("police", "fire", "storm") in a headline without an
-       event verb is ignored — that rejects "police chief suspended",
-       "fire back at critics", "weather forecast", etc.
-    3. Score = topic hits * 0.25 + event-verb hits * 0.5, capped at 1.0.
+    3. Co-occurrence requirement — a category only matches when BOTH a topic
+       keyword AND an event verb appear (or 3+ topic keywords). Title hits
+       are weighted 2× because headlines are the strongest signal.
+    4. Score = topic hits * 0.20 + event-verb hits * 0.40, capped at 1.0.
        Below MIN_CONFIDENCE (0.30) → treated as non-incident by the caller.
 
 No ML dependencies — works offline.
@@ -35,8 +36,12 @@ EXCLUSION_PHRASES: list[str] = [
     "gold digger", "influencer", "beauty queen", "miss world",
     "hollywood", "nollywood", "netflix", "tv show", "reality show",
     # Religion / opinion / speeches
-    "pope leo", "pope francis", "pontiff", "bishop", "archbishop",
-    "sermon", "holy mass", "christmas message", "easter message",
+    "pope leo", "pope francis", "pope benedict", "pontiff",
+    "papal visit", "papal", "vatican", "his holiness", "holy father",
+    "pilgrimage", "canonization", "canonisation", "beatification",
+    "bishop", "archbishop", "cardinal",
+    "sermon", "homily", "holy mass", "christmas message", "easter message",
+    "prayer rally", "crusade meeting", "church service",
     "opinion:", "editorial:", "op-ed", "column:",
     # Politics-as-policy / governance talk (not events)
     "sworn in", "swearing-in ceremony", "takes oath", "appointed",
@@ -60,6 +65,25 @@ EXCLUSION_PHRASES: list[str] = [
 EXCLUSION_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(urges|calls on|criticises|criticizes|praises|condemns|warns against)\b", re.I),
     re.compile(r"\b(launches|unveils|announces)\b.*\b(programme|program|initiative|campaign)\b", re.I),
+    # Religious / dignitary visits — "Pope visits …", "Pope arrives in …"
+    re.compile(r"\bpope\b.*\b(visit|visits|arrives|arrival|tour|meets|blesses|prays)\b", re.I),
+    re.compile(r"\b(pope|pontiff|papal)\b", re.I),
+]
+
+# Metaphorical / idiomatic phrases that look like event verbs but are not.
+# Stripped from text before topic/verb scoring.
+METAPHOR_PHRASES: list[str] = [
+    "erupted in cheers", "erupted in applause", "erupted in joy",
+    "erupted in laughter", "erupted in celebration", "erupted in song",
+    "broke out in cheers", "broke out in applause", "broke out in song",
+    "broke out in laughter", "broke out in smiles",
+    "caught fire on social media", "caught fire online",
+    "set the internet ablaze", "set social media ablaze",
+    "fire of hope", "fire of faith", "fire in the belly",
+    "sparked debate", "sparked outrage", "sparked controversy",
+    "sparked reactions", "sparked discussion",
+    "trial by fire", "under fire from", "come under fire",
+    "firing on all cylinders", "fired up the crowd",
 ]
 
 
@@ -185,33 +209,51 @@ def _count_word_hits(text: str, words: list[str]) -> int:
 
 def classify(title: str, body: str = "") -> Classification | None:
     """Return Classification or None if the text isn't an incident."""
-    text = (title + " " + body).lower()
+    title_l = title.lower()
+    body_l  = body.lower()
 
     # ── 1. Hard-exclusion filter ──────────────────────────────────────────────
     # Title alone is the strongest signal — if the title screams "sports" we
     # reject outright even if the body mentions police/fire metaphorically.
-    if _is_excluded(title.lower()):
+    if _is_excluded(title_l):
         return None
     # Two exclusion hits anywhere in the text → reject.
-    body_excl_hits = sum(1 for p in EXCLUSION_PHRASES if p in text)
+    full = title_l + " " + body_l
+    body_excl_hits = sum(1 for p in EXCLUSION_PHRASES if p in full)
     if body_excl_hits >= 2:
         return None
 
-    # ── 2. Score each incident category ───────────────────────────────────────
+    # ── 2. Strip metaphors so they don't fire topic/verb hits ────────────────
+    title_clean = title_l
+    body_clean  = body_l
+    for phrase in METAPHOR_PHRASES:
+        title_clean = title_clean.replace(phrase, " ")
+        body_clean  = body_clean.replace(phrase, " ")
+
+    # ── 3. Score each incident category ───────────────────────────────────────
     best_type: str | None = None
     best_score: float = 0.0
 
     for itype, topic_kws in INCIDENT_KEYWORDS.items():
-        topic_hits = _count_word_hits(text, topic_kws)
-        verb_hits  = _count_word_hits(text, EVENT_VERBS.get(itype, []))
+        title_topic = _count_word_hits(title_clean, topic_kws)
+        body_topic  = _count_word_hits(body_clean,  topic_kws)
+        # Title weighted 2× because headlines are the strongest signal.
+        topic_hits  = title_topic * 2 + body_topic
+        verb_hits   = (
+            _count_word_hits(title_clean, EVENT_VERBS.get(itype, [])) * 2
+            + _count_word_hits(body_clean, EVENT_VERBS.get(itype, []))
+        )
 
-        # REQUIRE an event verb OR at least two topic keyword hits.
-        # Rejects "police chief suspended", "fire back at critics",
-        # "weather forecast", etc.
-        if verb_hits == 0 and topic_hits < 2:
+        # REQUIRE at least one topic keyword. A bare verb ("erupted",
+        # "broke out", "destroyed") is too ambiguous on its own.
+        if topic_hits == 0:
+            continue
+        # And require either a verb OR strong topic presence (3+ weighted).
+        # Rejects "police chief suspended", "fire back at critics", etc.
+        if verb_hits == 0 and topic_hits < 3:
             continue
 
-        score = topic_hits * 0.25 + verb_hits * 0.50
+        score = topic_hits * 0.20 + verb_hits * 0.40
         score = min(score, 1.0)
 
         if score > best_score:
@@ -221,9 +263,9 @@ def classify(title: str, body: str = "") -> Classification | None:
     if best_type is None or best_score < MIN_CONFIDENCE:
         return None
 
-    # ── 3. Severity ───────────────────────────────────────────────────────────
-    high = sum(1 for w in SEVERITY_HIGH_WORDS if w in text)
-    med  = sum(1 for w in SEVERITY_MED_WORDS  if w in text)
+    # ── 4. Severity ───────────────────────────────────────────────────────────
+    high = sum(1 for w in SEVERITY_HIGH_WORDS if w in full)
+    med  = sum(1 for w in SEVERITY_MED_WORDS  if w in full)
 
     if high >= 2:
         severity = "high"

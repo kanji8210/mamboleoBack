@@ -22,6 +22,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 require_once MAMBOLEO_PLUGIN_DIR . 'data/counties.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'data/countries.php';
 
 // ──────────────────────────────────────────────────────────────────────────
 // Core helpers
@@ -62,29 +63,67 @@ function mamboleo_nearest_county( float $lat, float $lng ): ?array {
 }
 
 /**
- * Core snap: given admin-selected county/subcounty slugs, decide the
- * final (lat, lng, name, precision) tuple for the incident.
+ * Core snap: given admin-selected country/county/subcounty slugs, decide
+ * the final (lat, lng, name, precision) tuple for the incident.
  *
- * Rules (per product decision):
- *   1. Subcounty chosen → always snap to subcounty centroid, precision=subcounty.
- *   2. County chosen, point inside county bbox → keep original, precision=exact.
- *   3. County chosen, point outside county bbox → REJECT (return null). The
- *      admin is asked to pick a subcounty. The only exception is when no
- *      subcounties are defined — then fall back to county centroid
- *      (precision=county).
+ * Country-aware rules:
+ *   - country !== 'kenya' (or empty county) → snap to country centroid,
+ *     precision='country'. The pin lives inside the mentioned country's
+ *     bbox; the admin can still narrow to a county once Kenya is chosen.
+ *   - country === 'kenya' + subcounty → subcounty centroid, precision='subcounty'.
+ *   - country === 'kenya' + county, point inside county bbox → keep coords,
+ *     precision='exact'.
+ *   - country === 'kenya' + county, outside bbox, no subs available →
+ *     county centroid, precision='county'.
+ *   - country === 'kenya' + county, outside bbox, subs available →
+ *     null (admin must pick a subcounty).
  *
- * Returns: [ 'lat'=>float, 'lng'=>float, 'name'=>string,
- *            'precision'=>string, 'county'=>slug, 'subcounty'=>slug|'',
- *            'in_bounds'=>bool ]
- *          or null when a subcounty pick is required.
+ * Returns null only when a subcounty pick is required.
  */
 function mamboleo_snap_location(
-    float $lat, float $lng, string $county_slug, string $subcounty_slug = ''
+    float $lat, float $lng,
+    string $county_slug, string $subcounty_slug = '',
+    string $country_slug = 'kenya'
 ): ?array {
+    $country_slug = $country_slug !== '' ? $country_slug : 'kenya';
+
+    // Non-Kenya country → country-level pin.
+    if ( $country_slug !== 'kenya' ) {
+        $country = mamboleo_country_by_slug( $country_slug );
+        if ( ! $country ) return null;
+        $in = mamboleo_point_in_country( $lat, $lng, $country );
+        return [
+            'lat'       => $in ? $lat : (float) $country['center'][0],
+            'lng'       => $in ? $lng : (float) $country['center'][1],
+            'name'      => $country['name'],
+            'precision' => 'country',
+            'country'   => $country['slug'],
+            'county'    => '',
+            'subcounty' => '',
+            'in_bounds' => $in,
+        ];
+    }
+
+    // Kenya path needs a county slug to do anything useful.
+    if ( $county_slug === '' ) {
+        $kenya = mamboleo_country_by_slug( 'kenya' );
+        $in    = $kenya ? mamboleo_point_in_country( $lat, $lng, $kenya ) : false;
+        return [
+            'lat'       => $in ? $lat : (float) $kenya['center'][0],
+            'lng'       => $in ? $lng : (float) $kenya['center'][1],
+            'name'      => 'Kenya',
+            'precision' => 'country',
+            'country'   => 'kenya',
+            'county'    => '',
+            'subcounty' => '',
+            'in_bounds' => $in,
+        ];
+    }
+
     $county = mamboleo_county_by_slug( $county_slug );
     if ( ! $county ) return null;
 
-    // Case 1: subcounty given → authoritative snap.
+    // Subcounty given → authoritative snap.
     if ( $subcounty_slug !== '' ) {
         $sub = mamboleo_subcounty_by_slug( $county, $subcounty_slug );
         if ( $sub ) {
@@ -93,6 +132,7 @@ function mamboleo_snap_location(
                 'lng'       => (float) $sub['center'][1],
                 'name'      => $sub['name'] . ', ' . $county['name'],
                 'precision' => 'subcounty',
+                'country'   => 'kenya',
                 'county'    => $county['slug'],
                 'subcounty' => $sub['slug'],
                 'in_bounds' => true,
@@ -100,27 +140,28 @@ function mamboleo_snap_location(
         }
     }
 
-    // Case 2: point already inside county bbox → keep it.
+    // Point already inside county bbox → keep it.
     if ( mamboleo_point_in_county( $lat, $lng, $county ) ) {
         return [
             'lat'       => $lat,
             'lng'       => $lng,
             'name'      => $county['name'],
             'precision' => 'exact',
+            'country'   => 'kenya',
             'county'    => $county['slug'],
             'subcounty' => '',
             'in_bounds' => true,
         ];
     }
 
-    // Case 3: outside county bbox.
+    // Outside county bbox.
     if ( empty( $county['subs'] ) ) {
-        // No subcounties defined → fall back to county centroid.
         return [
             'lat'       => (float) $county['center'][0],
             'lng'       => (float) $county['center'][1],
             'name'      => $county['name'],
             'precision' => 'county',
+            'country'   => 'kenya',
             'county'    => $county['slug'],
             'subcounty' => '',
             'in_bounds' => false,
@@ -140,6 +181,7 @@ function mamboleo_apply_snap_to_incident( int $post_id, array $snap ): array {
     update_post_meta( $post_id, 'latitude',  $snap['lat'] );
     update_post_meta( $post_id, 'longitude', $snap['lng'] );
     update_post_meta( $post_id, 'location_name',      $snap['name'] );
+    update_post_meta( $post_id, 'location_country',   $snap['country'] ?? 'kenya' );
     update_post_meta( $post_id, 'location_county',    $snap['county'] );
     update_post_meta( $post_id, 'location_subcounty', $snap['subcounty'] );
     update_post_meta( $post_id, 'location_precision', $snap['precision'] );
@@ -163,18 +205,28 @@ add_action( 'save_post_incident', function ( $post_id, $post, $update ) {
 
     $lat = (float) get_post_meta( $post_id, 'latitude', true );
     $lng = (float) get_post_meta( $post_id, 'longitude', true );
-
-    // Both zero → not-yet-set, skip.
     if ( $lat === 0.0 && $lng === 0.0 ) return;
 
-    if ( mamboleo_point_in_kenya( $lat, $lng ) ) return; // already inside → nothing to do
+    $country = (string) get_post_meta( $post_id, 'location_country', true ) ?: 'kenya';
 
-    // Outside Kenya → snap to nearest county centroid, flag for review.
+    // Country-tagged outside Kenya → leave coords alone, only ensure a label.
+    if ( $country !== 'kenya' ) {
+        if ( ! get_post_meta( $post_id, 'location_precision', true ) ) {
+            $c = mamboleo_country_by_slug( $country );
+            if ( $c ) update_post_meta( $post_id, 'location_precision', 'country' );
+        }
+        return;
+    }
+
+    if ( mamboleo_point_in_kenya( $lat, $lng ) ) return;
+
+    // Outside Kenya but tagged kenya → snap to nearest county centroid + flag.
     $nearest = mamboleo_nearest_county( $lat, $lng );
     if ( ! $nearest ) return;
     update_post_meta( $post_id, 'latitude',  $nearest['center'][0] );
     update_post_meta( $post_id, 'longitude', $nearest['center'][1] );
     update_post_meta( $post_id, 'location_name',      $nearest['name'] );
+    update_post_meta( $post_id, 'location_country',   'kenya' );
     update_post_meta( $post_id, 'location_county',    $nearest['slug'] );
     update_post_meta( $post_id, 'location_precision', 'county' );
     update_post_meta( $post_id, 'needs_review',       true );
@@ -189,7 +241,6 @@ add_action( 'rest_api_init', function () {
         'methods'             => 'GET',
         'permission_callback' => function () { return current_user_can( 'manage_options' ); },
         'callback'            => function () {
-            // Strip bbox for UI payload — UI only needs name/slug/center/subs.
             $out = [];
             foreach ( mamboleo_counties_data() as $c ) {
                 $out[] = [
@@ -203,11 +254,22 @@ add_action( 'rest_api_init', function () {
         },
     ] );
 
+    register_rest_route( 'mamboleo/v1', '/admin/countries', [
+        'methods'             => 'GET',
+        'permission_callback' => function () { return current_user_can( 'manage_options' ); },
+        'callback'            => function () {
+            return array_map( function ( $c ) {
+                return [ 'name' => $c['name'], 'slug' => $c['slug'], 'center' => $c['center'] ];
+            }, mamboleo_countries_data() );
+        },
+    ] );
+
     register_rest_route( 'mamboleo/v1', '/admin/incidents/(?P<id>\d+)/fix-location', [
         'methods'             => 'POST',
         'permission_callback' => function () { return current_user_can( 'manage_options' ); },
         'args'                => [
-            'county'    => [ 'required' => true, 'type' => 'string' ],
+            'country'   => [ 'required' => false, 'type' => 'string', 'default' => 'kenya' ],
+            'county'    => [ 'required' => false, 'type' => 'string', 'default' => '' ],
             'subcounty' => [ 'required' => false, 'type' => 'string', 'default' => '' ],
         ],
         'callback'            => function ( WP_REST_Request $req ) {
@@ -220,8 +282,9 @@ add_action( 'rest_api_init', function () {
             $lng = (float) get_post_meta( $id, 'longitude', true );
             $snap = mamboleo_snap_location(
                 $lat, $lng,
-                sanitize_title( $req->get_param( 'county' ) ),
-                sanitize_title( $req->get_param( 'subcounty' ) ?: '' )
+                sanitize_title( $req->get_param( 'county' ) ?: '' ),
+                sanitize_title( $req->get_param( 'subcounty' ) ?: '' ),
+                sanitize_title( $req->get_param( 'country' ) ?: 'kenya' )
             );
             if ( ! $snap ) {
                 return new WP_Error(

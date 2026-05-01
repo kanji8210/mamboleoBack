@@ -75,6 +75,11 @@ function mamboleo_register_meta(): void {
         'description' => 'Human-readable location label (street, area)',
         'default'     => '',
     ] ) );
+    register_post_meta( 'incident', 'location_country', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'Country slug (kenya | uganda | tanzania | ...)',
+        'default'     => 'kenya',
+    ] ) );
     register_post_meta( 'incident', 'location_county', array_merge( $incident, [
         'type'        => 'string',
         'description' => 'County slug (e.g. nairobi, mombasa)',
