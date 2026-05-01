@@ -36,6 +36,8 @@ require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-scraper.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-review.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-media-monitor.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-location-tools.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-quick-edit.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-lifecycle.php';
 
 // Activation/Deactivation hooks
 function mamboleo_activate() {

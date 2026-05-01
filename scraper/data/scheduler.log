@@ -4106,3 +4106,36 @@ KeyboardInterrupt
 17:24:58  INFO      main  --- FEED:HIVISASA (limit=30) ---
 17:25:00  INFO      main  Interrupted by user.
 17:25:00  INFO      main  === Done. Total new incidents: 0 ===
+ 
+==================================================================== 
+[01/05/2026 17:30:02.33] START cadence=fast 
+==================================================================== 
+17:30:03  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+17:30:03  INFO      main  --- FEED:KDF (limit=30) ---
+17:30:23  INFO      main  Interrupted by user.
+17:30:23  INFO      main  === Done. Total new incidents: 0 ===
+[01/05/2026 17:30:38.86] END cadence=fast exit=0 
+ 
+==================================================================== 
+[01/05/2026 17:35:02.33] START cadence=slow 
+==================================================================== 
+17:35:03  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+17:35:03  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+17:35:04  INFO      main  --- FEED:STATE_HOUSE done: 0 incidents ---
+17:35:04  INFO      main  --- FEED:BUSINESS_DAILY (limit=30) ---
+^C 
+==================================================================== 
+[01/05/2026 17:45:02.71] START cadence=fast 
+==================================================================== 
+17:45:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+17:45:04  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+==================================================================== 
+[01/05/2026 18:00:02.73] START cadence=fast 
+==================================================================== 
+18:00:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+18:00:04  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+==================================================================== 
+[01/05/2026 18:15:02.94] START cadence=fast 
+==================================================================== 

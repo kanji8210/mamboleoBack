@@ -344,6 +344,7 @@ function mamboleo_fix_locations_query( int $page = 1, int $per_page = 25 ): arra
             'lat'       => (float) get_post_meta( $p->ID, 'latitude', true ),
             'lng'       => (float) get_post_meta( $p->ID, 'longitude', true ),
             'name'      => (string) get_post_meta( $p->ID, 'location_name', true ),
+            'country'   => (string) get_post_meta( $p->ID, 'location_country', true ) ?: 'kenya',
             'county'    => (string) get_post_meta( $p->ID, 'location_county', true ),
             'subcounty' => (string) get_post_meta( $p->ID, 'location_subcounty', true ),
             'precision' => (string) get_post_meta( $p->ID, 'location_precision', true ) ?: 'exact',
@@ -360,9 +361,10 @@ function mamboleo_fix_locations_page(): void {
 
     $page = max( 1, (int) ( $_GET['paged'] ?? 1 ) );
     $data = mamboleo_fix_locations_query( $page, 25 );
-    $counties = mamboleo_counties_data();
+    $counties  = mamboleo_counties_data();
+    $countries = mamboleo_countries_data();
 
-    // Build a JSON payload for the JS subcounty dropdown.
+    // JSON map for the JS subcounty dropdown.
     $counties_js = [];
     foreach ( $counties as $c ) {
         $counties_js[ $c['slug'] ] = array_map(
@@ -388,12 +390,13 @@ function mamboleo_fix_locations_page(): void {
         <table class="widefat striped" id="mm-fix-table">
             <thead>
                 <tr>
-                    <th style="width:30%;">Title</th>
-                    <th style="width:13%;">Current coords</th>
-                    <th style="width:15%;">Location</th>
-                    <th style="width:10%;">Precision</th>
-                    <th style="width:14%;">County</th>
-                    <th style="width:14%;">Subcounty</th>
+                    <th style="width:24%;">Title</th>
+                    <th style="width:12%;">Current coords</th>
+                    <th style="width:13%;">Location</th>
+                    <th style="width:9%;">Precision</th>
+                    <th style="width:11%;">Country</th>
+                    <th style="width:11%;">County</th>
+                    <th style="width:11%;">Subcounty</th>
                     <th style="width:auto;">Apply</th>
                 </tr>
             </thead>
@@ -419,6 +422,15 @@ function mamboleo_fix_locations_page(): void {
                         ?>
                     </td>
                     <td>
+                        <select class="mm-country" style="width:100%;">
+                            <?php foreach ( $countries as $cc ): ?>
+                                <option value="<?php echo esc_attr( $cc['slug'] ); ?>" <?php selected( $r['country'], $cc['slug'] ); ?>>
+                                    <?php echo esc_html( $cc['name'] ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                    <td>
                         <select class="mm-county" style="width:100%;">
                             <option value="">— county —</option>
                             <?php foreach ( $counties as $c ): ?>
@@ -434,7 +446,7 @@ function mamboleo_fix_locations_page(): void {
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="button button-primary mm-apply" disabled>Apply</button>
+                        <button type="button" class="button button-primary mm-apply">Apply</button>
                         <span class="mm-status" style="margin-left:8px;font-size:12px;"></span>
                     </td>
                 </tr>
@@ -466,31 +478,33 @@ function mamboleo_fix_locations_page(): void {
         const NONCE   = <?php echo wp_json_encode( wp_create_nonce( 'wp_rest' ) ); ?>;
 
         document.querySelectorAll('#mm-fix-table tr[data-id]').forEach(row => {
-            const id       = row.dataset.id;
-            const countyEl = row.querySelector('.mm-county');
-            const subEl    = row.querySelector('.mm-subcounty');
-            const applyEl  = row.querySelector('.mm-apply');
-            const statusEl = row.querySelector('.mm-status');
+            const id        = row.dataset.id;
+            const countryEl = row.querySelector('.mm-country');
+            const countyEl  = row.querySelector('.mm-county');
+            const subEl     = row.querySelector('.mm-subcounty');
+            const applyEl   = row.querySelector('.mm-apply');
+            const statusEl  = row.querySelector('.mm-status');
 
+            function refreshState() {
+                const isKenya = countryEl.value === 'kenya';
+                countyEl.disabled = !isKenya;
+                if (!isKenya) { countyEl.value = ''; subEl.disabled = true; subEl.innerHTML = '<option value="">—</option>'; return; }
+                refreshSubs();
+            }
             function refreshSubs() {
                 const slug = countyEl.value;
                 subEl.innerHTML = '<option value="">—</option>';
-                if (!slug) { subEl.disabled = true; applyEl.disabled = true; return; }
+                if (!slug) { subEl.disabled = true; return; }
                 const list = SUBS[slug] || [];
-                if (list.length === 0) {
-                    subEl.disabled = true;
-                } else {
-                    subEl.disabled = false;
-                    list.forEach(s => {
-                        const opt = document.createElement('option');
-                        opt.value = s.slug;
-                        opt.textContent = s.name;
-                        subEl.appendChild(opt);
-                    });
-                }
-                applyEl.disabled = false;
+                subEl.disabled = list.length === 0;
+                list.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.slug; opt.textContent = s.name;
+                    subEl.appendChild(opt);
+                });
             }
-            refreshSubs();
+            refreshState();
+            countryEl.addEventListener('change', refreshState);
             countyEl.addEventListener('change', refreshSubs);
 
             applyEl.addEventListener('click', async () => {
@@ -506,7 +520,8 @@ function mamboleo_fix_locations_page(): void {
                         },
                         credentials: 'same-origin',
                         body: JSON.stringify({
-                            county:    countyEl.value,
+                            country:   countryEl.value,
+                            county:    countyEl.value || '',
                             subcounty: subEl.value || '',
                         }),
                     });
@@ -515,13 +530,11 @@ function mamboleo_fix_locations_page(): void {
                         statusEl.textContent = body.message || ('Error ' + res.status);
                         statusEl.style.color = '#b91c1c';
                         applyEl.disabled = false;
-                        // Hint admin to pick subcounty on 422.
                         if (res.status === 422 && subEl.options.length > 1) subEl.focus();
                         return;
                     }
                     statusEl.textContent = '✓ ' + body.precision + ' → ' + body.name;
                     statusEl.style.color = '#15803d';
-                    // Fade out the row so admin sees progress on long lists.
                     row.style.transition = 'opacity .4s ease';
                     row.style.opacity = '0.45';
                 } catch ( e ) {
@@ -554,11 +567,13 @@ add_action( 'add_meta_boxes', function () {
 function mamboleo_location_meta_box( WP_Post $post ): void {
     $lat  = (float) get_post_meta( $post->ID, 'latitude', true );
     $lng  = (float) get_post_meta( $post->ID, 'longitude', true );
-    $cur_county = (string) get_post_meta( $post->ID, 'location_county', true );
-    $cur_sub    = (string) get_post_meta( $post->ID, 'location_subcounty', true );
-    $precision  = (string) get_post_meta( $post->ID, 'location_precision', true ) ?: 'exact';
-    $counties   = mamboleo_counties_data();
-    $in_kenya   = mamboleo_point_in_kenya( $lat, $lng );
+    $cur_country = (string) get_post_meta( $post->ID, 'location_country', true ) ?: 'kenya';
+    $cur_county  = (string) get_post_meta( $post->ID, 'location_county', true );
+    $cur_sub     = (string) get_post_meta( $post->ID, 'location_subcounty', true );
+    $precision   = (string) get_post_meta( $post->ID, 'location_precision', true ) ?: 'exact';
+    $counties    = mamboleo_counties_data();
+    $countries   = mamboleo_countries_data();
+    $in_kenya    = mamboleo_point_in_kenya( $lat, $lng );
 
     $counties_js = [];
     foreach ( $counties as $c ) {
@@ -580,7 +595,16 @@ function mamboleo_location_meta_box( WP_Post $post ): void {
         </small>
     </p>
 
-    <p style="margin:10px 0 4px;"><label for="mm-mb-county"><strong>County</strong></label></p>
+    <p style="margin:10px 0 4px;"><label for="mm-mb-country"><strong>Country</strong></label></p>
+    <select id="mm-mb-country" style="width:100%;">
+        <?php foreach ( $countries as $cc ): ?>
+            <option value="<?php echo esc_attr( $cc['slug'] ); ?>" <?php selected( $cur_country, $cc['slug'] ); ?>>
+                <?php echo esc_html( $cc['name'] ); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <p style="margin:10px 0 4px;"><label for="mm-mb-county"><strong>County</strong> <small>(Kenya only)</small></label></p>
     <select id="mm-mb-county" style="width:100%;">
         <option value="">— county —</option>
         <?php foreach ( $counties as $c ): ?>
@@ -596,26 +620,33 @@ function mamboleo_location_meta_box( WP_Post $post ): void {
     </select>
 
     <p style="margin-top:10px;">
-        <button type="button" class="button button-primary" id="mm-mb-apply" disabled>Snap to boundary</button>
+        <button type="button" class="button button-primary" id="mm-mb-apply">Snap to boundary</button>
     </p>
     <p id="mm-mb-status" style="margin:6px 0 0;font-size:12px;min-height:16px;"></p>
 
     <script>
     (function () {
-        const SUBS  = <?php echo wp_json_encode( $counties_js ); ?>;
+        const SUBS    = <?php echo wp_json_encode( $counties_js ); ?>;
         const CUR_SUB = <?php echo wp_json_encode( $cur_sub ); ?>;
-        const REST  = <?php echo wp_json_encode( esc_url_raw( rest_url( 'mamboleo/v1/admin/incidents/' . $post->ID . '/fix-location' ) ) ); ?>;
-        const NONCE = <?php echo wp_json_encode( wp_create_nonce( 'wp_rest' ) ); ?>;
+        const REST    = <?php echo wp_json_encode( esc_url_raw( rest_url( 'mamboleo/v1/admin/incidents/' . $post->ID . '/fix-location' ) ) ); ?>;
+        const NONCE   = <?php echo wp_json_encode( wp_create_nonce( 'wp_rest' ) ); ?>;
 
-        const countyEl = document.getElementById('mm-mb-county');
-        const subEl    = document.getElementById('mm-mb-sub');
-        const applyEl  = document.getElementById('mm-mb-apply');
-        const statusEl = document.getElementById('mm-mb-status');
+        const countryEl = document.getElementById('mm-mb-country');
+        const countyEl  = document.getElementById('mm-mb-county');
+        const subEl     = document.getElementById('mm-mb-sub');
+        const applyEl   = document.getElementById('mm-mb-apply');
+        const statusEl  = document.getElementById('mm-mb-status');
 
+        function refreshState() {
+            const isKenya = countryEl.value === 'kenya';
+            countyEl.disabled = !isKenya;
+            if (!isKenya) { countyEl.value = ''; subEl.disabled = true; subEl.innerHTML = '<option value="">—</option>'; return; }
+            refreshSubs();
+        }
         function refreshSubs() {
             const slug = countyEl.value;
             subEl.innerHTML = '<option value="">—</option>';
-            if (!slug) { subEl.disabled = true; applyEl.disabled = true; return; }
+            if (!slug) { subEl.disabled = true; return; }
             const list = SUBS[slug] || [];
             subEl.disabled = list.length === 0;
             list.forEach(s => {
@@ -624,9 +655,9 @@ function mamboleo_location_meta_box( WP_Post $post ): void {
                 if (s.slug === CUR_SUB) opt.selected = true;
                 subEl.appendChild(opt);
             });
-            applyEl.disabled = false;
         }
-        refreshSubs();
+        refreshState();
+        countryEl.addEventListener('change', refreshState);
         countyEl.addEventListener('change', refreshSubs);
 
         applyEl.addEventListener('click', async () => {
@@ -638,7 +669,11 @@ function mamboleo_location_meta_box( WP_Post $post ): void {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ county: countyEl.value, subcounty: subEl.value || '' }),
+                    body: JSON.stringify({
+                        country:   countryEl.value,
+                        county:    countyEl.value || '',
+                        subcounty: subEl.value || '',
+                    }),
                 });
                 const body = await res.json();
                 if (!res.ok) {
@@ -650,7 +685,6 @@ function mamboleo_location_meta_box( WP_Post $post ): void {
                 statusEl.innerHTML = '✓ ' + body.precision + ' → ' + body.name
                     + '<br><code style="font-size:10px;">' + body.lat.toFixed(4) + ', ' + body.lng.toFixed(4) + '</code>';
                 statusEl.style.color = '#15803d';
-                // Nudge admin to reload to see updated meta in other boxes.
                 setTimeout(() => { window.location.reload(); }, 1200);
             } catch ( e ) {
                 statusEl.textContent = 'Network error';
@@ -718,3 +752,167 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
         ) );
     } );
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Inline-editable Location column on the incident admin list
+// ──────────────────────────────────────────────────────────────────────────
+
+add_filter( 'manage_incident_posts_columns', function ( $cols ) {
+    $new = [];
+    foreach ( $cols as $k => $v ) {
+        $new[ $k ] = $v;
+        if ( $k === 'title' ) {
+            $new['mamboleo_loc'] = 'Location';
+        }
+    }
+    if ( ! isset( $new['mamboleo_loc'] ) ) {
+        $new['mamboleo_loc'] = 'Location';
+    }
+    return $new;
+} );
+
+add_action( 'manage_incident_posts_custom_column', function ( $col, $post_id ) {
+    if ( $col !== 'mamboleo_loc' ) return;
+    $country   = (string) get_post_meta( $post_id, 'location_country', true ) ?: 'kenya';
+    $county    = (string) get_post_meta( $post_id, 'location_county', true );
+    $sub       = (string) get_post_meta( $post_id, 'location_subcounty', true );
+    $precision = (string) get_post_meta( $post_id, 'location_precision', true ) ?: 'exact';
+    $countries = mamboleo_countries_data();
+    $counties  = mamboleo_counties_data();
+    $pcol = [ 'exact' => '#22c55e', 'subcounty' => '#0ea5e9', 'county' => '#eab308', 'country' => '#ef4444' ][ $precision ] ?? '#94a3b8';
+
+    // Build a human-readable label so admins can see the chosen location at a
+    // glance without expanding the dropdowns. Worldwide-aware: country always
+    // shown, county/subcounty only when set.
+    $country_obj = mamboleo_country_by_slug( $country );
+    $county_obj  = $county ? mamboleo_county_by_slug( $county ) : null;
+    $sub_obj     = ( $county_obj && $sub ) ? mamboleo_subcounty_by_slug( $county_obj, $sub ) : null;
+    $label_bits = [];
+    if ( $sub_obj )    $label_bits[] = $sub_obj['name'];
+    if ( $county_obj ) $label_bits[] = $county_obj['name'];
+    if ( $country_obj ) $label_bits[] = $country_obj['name'];
+    $label = implode( ', ', $label_bits ) ?: '—';
+    ?>
+    <div class="mm-loc-cell" data-id="<?php echo (int) $post_id; ?>" data-cur-sub="<?php echo esc_attr( $sub ); ?>" style="min-width:240px;">
+        <div style="margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="display:inline-block;padding:1px 5px;border-radius:3px;background:<?php echo esc_attr( $pcol ); ?>;color:#fff;font-size:10px;font-weight:600;"><?php echo esc_html( $precision ); ?></span>
+            <strong style="font-size:12px;color:#1f2937;"><?php echo esc_html( $label ); ?></strong>
+        </div>
+        <select class="mm-country" style="width:100%;margin-bottom:3px;font-size:12px;">
+            <?php foreach ( $countries as $cc ): ?>
+                <option value="<?php echo esc_attr( $cc['slug'] ); ?>" <?php selected( $country, $cc['slug'] ); ?>><?php echo esc_html( $cc['name'] ); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select class="mm-county" style="width:100%;margin-bottom:3px;font-size:12px;">
+            <option value="">— county —</option>
+            <?php foreach ( $counties as $c ): ?>
+                <option value="<?php echo esc_attr( $c['slug'] ); ?>" <?php selected( $county, $c['slug'] ); ?>><?php echo esc_html( $c['name'] ); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <select class="mm-subcounty" style="width:100%;margin-bottom:3px;font-size:12px;" disabled>
+            <option value="">— subcounty —</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" class="button button-small mm-apply">Apply</button>
+            <span class="mm-status" style="font-size:11px;"></span>
+        </div>
+    </div>
+    <?php
+}, 10, 2 );
+
+add_action( 'admin_enqueue_scripts', function ( $hook ) {
+    if ( $hook !== 'edit.php' ) return;
+    $screen = get_current_screen();
+    if ( ! $screen || $screen->post_type !== 'incident' ) return;
+
+    $counties_js = [];
+    foreach ( mamboleo_counties_data() as $c ) {
+        $counties_js[ $c['slug'] ] = array_map(
+            function ( $s ) { return [ 'name' => $s['name'], 'slug' => $s['slug'] ]; },
+            $c['subs']
+        );
+    }
+    $rest  = esc_url_raw( rest_url( 'mamboleo/v1/admin/incidents/' ) );
+    $nonce = wp_create_nonce( 'wp_rest' );
+
+    add_action( 'admin_footer-edit.php', function () use ( $counties_js, $rest, $nonce ) {
+        ?>
+        <script>
+        (function () {
+            const SUBS  = <?php echo wp_json_encode( $counties_js ); ?>;
+            const REST  = <?php echo wp_json_encode( $rest ); ?>;
+            const NONCE = <?php echo wp_json_encode( $nonce ); ?>;
+
+            document.querySelectorAll('.mm-loc-cell').forEach(cell => {
+                const id        = cell.dataset.id;
+                const curSub    = cell.dataset.curSub || '';
+                const countryEl = cell.querySelector('.mm-country');
+                const countyEl  = cell.querySelector('.mm-county');
+                const subEl     = cell.querySelector('.mm-subcounty');
+                const applyEl   = cell.querySelector('.mm-apply');
+                const statusEl  = cell.querySelector('.mm-status');
+
+                function refreshState() {
+                    const isKenya = countryEl.value === 'kenya';
+                    countyEl.disabled = !isKenya;
+                    if (!isKenya) { subEl.disabled = true; subEl.innerHTML = '<option value="">—</option>'; return; }
+                    refreshSubs();
+                }
+                function refreshSubs() {
+                    const slug = countyEl.value;
+                    subEl.innerHTML = '<option value="">— subcounty —</option>';
+                    if (!slug) { subEl.disabled = true; return; }
+                    const list = SUBS[slug] || [];
+                    subEl.disabled = list.length === 0;
+                    list.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.slug; opt.textContent = s.name;
+                        if (s.slug === curSub) opt.selected = true;
+                        subEl.appendChild(opt);
+                    });
+                }
+                refreshState();
+                countryEl.addEventListener('change', refreshState);
+                countyEl.addEventListener('change', refreshSubs);
+
+                applyEl.addEventListener('click', async () => {
+                    applyEl.disabled = true;
+                    statusEl.textContent = '…';
+                    statusEl.style.color = '#666';
+                    try {
+                        const res = await fetch(REST + id + '/fix-location', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': NONCE },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                country:   countryEl.value,
+                                county:    countyEl.value || '',
+                                subcounty: subEl.value || '',
+                            }),
+                        });
+                        const body = await res.json();
+                        if (!res.ok) {
+                            statusEl.textContent = body.message || ('Err ' + res.status);
+                            statusEl.style.color = '#b91c1c';
+                            applyEl.disabled = false;
+                            return;
+                        }
+                        statusEl.textContent = '✓ ' + body.precision;
+                        statusEl.style.color = '#15803d';
+                        applyEl.disabled = false;
+                    } catch ( e ) {
+                        statusEl.textContent = 'Net err';
+                        statusEl.style.color = '#b91c1c';
+                        applyEl.disabled = false;
+                    }
+                });
+            });
+        })();
+        </script>
+        <style>
+            .column-mamboleo_loc { width: 260px; }
+            .mm-loc-cell select { padding: 2px 4px; }
+        </style>
+        <?php
+    } );
+} );

@@ -23,6 +23,9 @@ function mamboleo_register_graphql_types(): void {
             'isVerified'         => [ 'type' => 'Boolean', 'description' => 'Verified by moderator?' ],
             'corroborationCount' => [ 'type' => 'Int',     'description' => 'Number of corroborations' ],
             'locationName'       => [ 'type' => 'String',  'description' => 'Human-readable location label' ],
+            'lifecycle'          => [ 'type' => 'String',  'description' => 'Lifecycle stage: active | developing | resolved | archived' ],
+            'lastUpdateAt'       => [ 'type' => 'String',  'description' => 'ISO timestamp of latest activity' ],
+            'updateCount'        => [ 'type' => 'Int',     'description' => 'Number of follow-up updates' ],
         ],
     ] );
 
@@ -46,6 +49,9 @@ function mamboleo_register_graphql_types(): void {
                 'isVerified'         => $is_verified === '' ? true : (bool) $is_verified,
                 'corroborationCount' => (int) ( get_post_meta( $id, 'corroboration_count', true ) ?: 0 ),
                 'locationName'       => get_post_meta( $id, 'location_name',     true ) ?: null,
+                'lifecycle'          => get_post_meta( $id, 'lifecycle',         true ) ?: 'active',
+                'lastUpdateAt'       => get_post_meta( $id, 'last_update_at',    true ) ?: null,
+                'updateCount'        => (int) ( get_post_meta( $id, 'update_count', true ) ?: 0 ),
             ];
         },
     ] );

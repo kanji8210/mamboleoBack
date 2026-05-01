@@ -101,6 +101,27 @@ function mamboleo_register_meta(): void {
         'default'     => false,
     ] ) );
 
+    // Lifecycle — keeps incidents fresh and lets admins pin developing stories.
+    // active     → recent / default
+    // developing → admin-pinned, never auto-aged, surfaced at top of feeds
+    // resolved   → no fresh activity for 7 days OR admin-marked
+    // archived   → no fresh activity for 30 days; hidden from default map view
+    register_post_meta( 'incident', 'lifecycle', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'Lifecycle stage: active | developing | resolved | archived',
+        'default'     => 'active',
+    ] ) );
+    register_post_meta( 'incident', 'last_update_at', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'ISO timestamp of the latest activity on this incident',
+        'default'     => '',
+    ] ) );
+    register_post_meta( 'incident', 'update_count', array_merge( $incident, [
+        'type'        => 'integer',
+        'description' => 'Number of follow-up updates / corroborations',
+        'default'     => 0,
+    ] ) );
+
     // -- Article meta ------------------------------------------------------
     $article = array_merge( $shared, [ 'object_subtype' => 'article' ] );
 
