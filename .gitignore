@@ -1,8 +1,7 @@
-# Secrets — NEVER commit. Keys live in WP admin (Mamboleo → AI Intelligence)
-# and are fetched by the scraper at runtime via /wp-json/mamboleo/v1/llm-config.
-scraper/.env
-scraper/.env.*
-!scraper/.env.example
+# scraper/.env is intentionally tracked so prod can `git pull` runtime config.
+# REMINDER: rotate MAMBOLEO_API_KEY and OPENAI_API_KEY before making this
+# repo public, before adding contributors, or after any laptop is lost.
+!scraper/.env
 
 # Python build artefacts
 __pycache__/
