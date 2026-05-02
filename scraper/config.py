@@ -29,3 +29,9 @@ OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False",
 OLLAMA_HOST    = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
 OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "45"))
+
+# ── Social handles ─────────────────────────────────────────────────────────
+# Optional self-hosted RSSHub bridge for Facebook pages. When unset, Facebook
+# entries in social_sources.yaml are silently skipped.
+# Example: RSSHUB_HOST=https://rsshub.mydomain.com
+RSSHUB_HOST    = os.getenv("RSSHUB_HOST", "").rstrip("/")

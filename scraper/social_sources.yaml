@@ -1,0 +1,246 @@
+# Mamboleo — High-value Kenyan social handles registry
+#
+# These are accounts with proven breaking-news velocity for security,
+# politics, accidents and weather events. Consumed by scrapers/social.py.
+#
+# Strategy by platform:
+#   • twitter / x  → tweepy.get_users_tweets via existing TWITTER_BEARER_TOKEN.
+#                    Free Basic tier = 100 reads/month → keep limits low and
+#                    target only the highest-velocity handles. Set
+#                    `enabled: false` on the rest until tier upgrade.
+#   • facebook     → uses RSSHub bridge (env RSSHUB_HOST). If not configured,
+#                    the entry is silently skipped.
+#                    Pattern: {RSSHUB_HOST}/facebook/page/{id_or_handle}
+#   • youtube      → standard YouTube channel RSS:
+#                    https://www.youtube.com/feeds/videos.xml?channel_id=…
+#
+# Fields:
+#   id              — short machine identifier (logs + DB)
+#   name            — display label
+#   platform        — twitter | facebook | youtube
+#   handle          — username (no @) for twitter; numeric/handle for facebook;
+#                     channel_id for youtube
+#   tier            — 1 mainstream | 2 journalists | 3 influencers
+#   bias_baseline   — -100 (left) .. +100 (right)
+#   max_per_run     — cap per scraper pass (keeps API quota predictable)
+#   cadence         — fast | slow
+#   enabled         — toggle without deleting
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 1 — Mainstream Kenyan media
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: x_citizentvkenya
+  name: Citizen TV Kenya (X)
+  platform: twitter
+  handle: citizentvkenya
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_ntvkenya
+  name: NTV Kenya (X)
+  platform: twitter
+  handle: ntvkenya
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_tuko
+  name: Tuko (X)
+  platform: twitter
+  handle: Tuko_co_ke
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_standardkenya
+  name: The Standard (X)
+  platform: twitter
+  handle: StandardKenya
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_ktnnewske
+  name: KTN News (X)
+  platform: twitter
+  handle: KTNNewsKE
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_kbcchannel1
+  name: KBC Channel 1 (X)
+  platform: twitter
+  handle: KBCChannel1
+  tier: 1
+  bias_baseline: 15
+  max_per_run: 5
+  cadence: slow
+  enabled: true
+
+- id: x_k24tv
+  name: K24 TV (X)
+  platform: twitter
+  handle: K24Tv
+  tier: 1
+  bias_baseline: 10
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_bdafrica
+  name: Business Daily Africa (X)
+  platform: twitter
+  handle: BD_Africa
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 4
+  cadence: slow
+  enabled: true
+
+- id: x_thestarkenya
+  name: The Star Kenya (X)
+  platform: twitter
+  handle: TheStarKenya
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_kenyanscoke
+  name: Kenyans.co.ke (X)
+  platform: twitter
+  handle: kenyans
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 2 — Influential journalists & bloggers
+# (Free-tier quota sensitive — leave most disabled by default; flip on per need.)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: x_robertalai
+  name: Robert Alai
+  platform: twitter
+  handle: RobertAlai
+  tier: 2
+  bias_baseline: -10
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: x_nyakundi
+  name: Cyprian Nyakundi
+  platform: twitter
+  handle: C_NyakundiH
+  tier: 2
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: false
+
+- id: x_gabrieloguda
+  name: Gabriel Oguda
+  platform: twitter
+  handle: gabrieloguda
+  tier: 2
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: slow
+  enabled: false
+
+- id: x_oleitumbi
+  name: Dennis Itumbi
+  platform: twitter
+  handle: OleItumbi
+  tier: 2
+  bias_baseline: 30
+  max_per_run: 5
+  cadence: slow
+  enabled: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TIER 3 — Entertainment / lifestyle (low-priority for security signal,
+# but useful for amplification & trending topics). All disabled by default.
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: x_ericomondi
+  name: Eric Omondi
+  platform: twitter
+  handle: ericomondi
+  tier: 3
+  bias_baseline: 0
+  max_per_run: 3
+  cadence: slow
+  enabled: false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Facebook pages — require RSSHUB_HOST env var (self-hosted RSSHub bridge)
+# Without it, these entries are silently skipped at runtime.
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: fb_citizentvkenya
+  name: Citizen TV Kenya (Facebook)
+  platform: facebook
+  handle: citizentvkenya
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_ntvkenya
+  name: NTV Kenya (Facebook)
+  platform: facebook
+  handle: NTVKenya
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_tukocoke
+  name: Tuko (Facebook)
+  platform: facebook
+  handle: Tuko.co.ke
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_jeffkoinange
+  name: Jeff Koinange
+  platform: facebook
+  handle: JeffKoinangeOfficial
+  tier: 2
+  bias_baseline: 0
+  max_per_run: 3
+  cadence: slow
+  enabled: false
+
+- id: fb_mamboleo
+  name: Mamboleo Media
+  platform: facebook
+  handle: "100072147501060"
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 10
+  cadence: fast
+  enabled: true

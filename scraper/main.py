@@ -23,6 +23,7 @@ from scrapers.generic import GenericScraper
 from scrapers.googlenews import GoogleNewsScraper
 from scrapers.international import InternationalScraper
 from scrapers.nation import NationScraper
+from scrapers.social import SocialHandlesScraper
 from scrapers.sources_loader import load_sources
 from scrapers.standard import StandardScraper
 from scrapers.tuko import TukoScraper
@@ -62,6 +63,7 @@ ALL_SCRAPERS = {
     "nation":        NationScraper,
     "standard":      StandardScraper,
     "twitter":       TwitterScraper,
+    "social":        SocialHandlesScraper,
 }
 
 
