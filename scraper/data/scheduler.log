@@ -4768,3 +4768,8 @@ Traceback (most recent call last):
            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
 [02/05/2026 22:45:15.39] END cadence=fast exit=1 
+ 
+==================================================================== 
+[02/05/2026 23:00:03.32] START cadence=fast 
+==================================================================== 
+^C
