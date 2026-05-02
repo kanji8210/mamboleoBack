@@ -4654,3 +4654,23 @@ KeyboardInterrupt
 20:01:08  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 0 incidents ---
 20:01:08  INFO      main  === Done. Total new incidents: 0 ===
 [02/05/2026 20:01:08.28] END cadence=fast exit=0 
+ 
+==================================================================== 
+[02/05/2026 20:15:04.03] START cadence=fast 
+==================================================================== 
+20:15:13  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+20:15:13  INFO      main  --- FEED:KDF (limit=30) ---
+20:16:20  INFO      main  --- FEED:KDF done: 0 incidents ---
+20:16:20  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+20:16:23  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+20:16:23  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+20:16:42  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+20:16:42  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+20:16:48  ERROR     api.client  Article POST failed \u2192 HTTP 403 (server=cloudflare, content-type=text/html; charset=UTF-8): [HTML error page] <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scal
+20:16:52  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
+ 
+==================================================================== 
+[02/05/2026 20:30:04.64] START cadence=fast 
+==================================================================== 
+20:30:10  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+20:30:10  INFO      main  --- FEED:KDF (limit=30) ---
