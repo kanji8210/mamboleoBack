@@ -49,6 +49,26 @@ function mamboleo_register_rest_routes(): void {
         'permission_callback' => 'mamboleo_verify_api_key',
     ] );
 
+    // API-key protected: backfill helpers — list incidents missing AI metadata
+    // and patch AI fields onto an existing incident. Used by backfill_ai.py.
+    register_rest_route( 'mamboleo/v1', '/incidents/needs-ai', [
+        'methods'             => 'GET',
+        'callback'            => 'mamboleo_list_incidents_needing_ai',
+        'permission_callback' => 'mamboleo_verify_api_key',
+        'args'                => [
+            'limit'  => [ 'required' => false, 'type' => 'integer', 'default' => 50 ],
+            'offset' => [ 'required' => false, 'type' => 'integer', 'default' => 0 ],
+        ],
+    ] );
+    register_rest_route( 'mamboleo/v1', '/incidents/(?P<id>\d+)/ai', [
+        'methods'             => 'POST',
+        'callback'            => 'mamboleo_update_incident_ai',
+        'permission_callback' => 'mamboleo_verify_api_key',
+        'args'                => [
+            'id' => [ 'validate_callback' => fn( $v ) => is_numeric( $v ) ],
+        ],
+    ] );
+
     // Public: Media Monitor trend snapshot
     register_rest_route( 'mamboleo/v1', '/trends', [
         'methods'             => 'GET',
@@ -182,6 +202,28 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     }
     if ( isset( $params['confidence'] ) ) {
         update_post_meta( $post_id, 'classification_confidence', (float) $params['confidence'] );
+    }
+
+    // ── Intelligence layer (Ollama / LLM) metadata ────────────────────────────
+    // These are written by the scraper after a successful local-LLM analysis.
+    // Surfaced in the admin Review Queue so editors can see model reasoning.
+    if ( isset( $params['ai_summary'] ) ) {
+        update_post_meta( $post_id, 'ai_summary', sanitize_textarea_field( $params['ai_summary'] ) );
+    }
+    if ( isset( $params['ai_severity_reasoning'] ) ) {
+        update_post_meta( $post_id, 'ai_severity_reasoning', sanitize_textarea_field( $params['ai_severity_reasoning'] ) );
+    }
+    if ( isset( $params['ai_flags'] ) ) {
+        update_post_meta( $post_id, 'ai_flags', sanitize_text_field( $params['ai_flags'] ) );
+    }
+    if ( isset( $params['ai_model'] ) ) {
+        update_post_meta( $post_id, 'ai_model', sanitize_text_field( $params['ai_model'] ) );
+    }
+    if ( isset( $params['ai_is_followup'] ) ) {
+        update_post_meta( $post_id, 'ai_is_followup', (bool) $params['ai_is_followup'] ? 1 : 0 );
+    }
+    if ( isset( $params['ai_processed_at'] ) ) {
+        update_post_meta( $post_id, 'ai_processed_at', sanitize_text_field( $params['ai_processed_at'] ) );
     }
 
     if ( ! empty( $params['county'] ) ) {
@@ -420,4 +462,96 @@ function mamboleo_get_trends( WP_REST_Request $request ): array {
     set_transient( $cache_key, $result, 5 * MINUTE_IN_SECONDS );
     return $result;
 }
+
+// ── Backfill: list incidents missing AI metadata ──────────────────────────────
+// Returns id / title / content / article_url for incidents that have not yet
+// been processed by the intelligence layer. Used by scraper/backfill_ai.py.
+function mamboleo_list_incidents_needing_ai( WP_REST_Request $request ): array {
+    $limit  = max( 1, min( 200, (int) $request->get_param( 'limit' ) ) );
+    $offset = max( 0, (int) $request->get_param( 'offset' ) );
+
+    $q = new WP_Query( [
+        'post_type'      => 'incident',
+        'post_status'    => [ 'publish', 'pending', 'draft' ],
+        'posts_per_page' => $limit,
+        'offset'         => $offset,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [
+            'relation' => 'OR',
+            [ 'key' => 'ai_model', 'compare' => 'NOT EXISTS' ],
+            [ 'key' => 'ai_model', 'value' => '', 'compare' => '=' ],
+        ],
+        'no_found_rows'  => false,
+    ] );
+
+    $items = [];
+    foreach ( $q->posts as $p ) {
+        $items[] = [
+            'id'          => $p->ID,
+            'title'       => $p->post_title,
+            'content'     => wp_strip_all_tags( $p->post_content ),
+            'article_url' => get_post_meta( $p->ID, 'article_url',  true ),
+            'severity'    => get_post_meta( $p->ID, 'severity',     true ),
+            'type'        => get_post_meta( $p->ID, 'type',         true ),
+            'status'      => $p->post_status,
+        ];
+    }
+
+    return [
+        'items'  => $items,
+        'total'  => (int) $q->found_posts,
+        'limit'  => $limit,
+        'offset' => $offset,
+    ];
+}
+
+// ── Backfill: patch AI metadata onto an existing incident ─────────────────────
+function mamboleo_update_incident_ai( WP_REST_Request $request ): array|WP_Error {
+    $id = (int) $request->get_param( 'id' );
+    if ( get_post_type( $id ) !== 'incident' ) {
+        return new WP_Error( 'not_found', __( 'Incident not found.', 'mamboleo' ), [ 'status' => 404 ] );
+    }
+    $params = $request->get_json_params() ?: [];
+
+    $written = [];
+    $map = [
+        'ai_summary'            => 'sanitize_textarea_field',
+        'ai_severity_reasoning' => 'sanitize_textarea_field',
+        'ai_flags'              => 'sanitize_text_field',
+        'ai_model'              => 'sanitize_text_field',
+        'ai_processed_at'       => 'sanitize_text_field',
+    ];
+    foreach ( $map as $key => $sanitize ) {
+        if ( isset( $params[ $key ] ) ) {
+            update_post_meta( $id, $key, call_user_func( $sanitize, $params[ $key ] ) );
+            $written[] = $key;
+        }
+    }
+    if ( isset( $params['ai_is_followup'] ) ) {
+        update_post_meta( $id, 'ai_is_followup', (bool) $params['ai_is_followup'] ? 1 : 0 );
+        $written[] = 'ai_is_followup';
+    }
+
+    // Optional: also let backfill correct severity / type when the model
+    // disagrees strongly with the original keyword classification.
+    if ( ! empty( $params['update_severity'] ) && isset( $params['severity'] ) ) {
+        $sev = sanitize_text_field( $params['severity'] );
+        if ( in_array( $sev, [ 'low', 'medium', 'high' ], true ) ) {
+            update_post_meta( $id, 'severity', $sev );
+            $written[] = 'severity';
+        }
+    }
+    if ( ! empty( $params['update_type'] ) && isset( $params['type'] ) ) {
+        $type = sanitize_text_field( $params['type'] );
+        if ( $type ) {
+            update_post_meta( $id, 'type', $type );
+            $written[] = 'type';
+        }
+    }
+
+    return [ 'id' => $id, 'updated' => $written ];
+}
+
+
 

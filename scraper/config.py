@@ -21,3 +21,11 @@ MAX_ARTICLES  = int(os.getenv("MAX_ARTICLES_PER_RUN", "30"))
 DB_PATH       = DATA_DIR / "seen.db"
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+# ── Intelligence layer (Ollama) ───────────────────────────────────────────────
+# Local LLM-based incident analysis. Set OLLAMA_ENABLED=0 to fall back to the
+# legacy keyword classifier (useful for offline runs / CI).
+OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
+OLLAMA_HOST    = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "45"))

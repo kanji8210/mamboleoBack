@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 import db
 from api import client as api
 from config import DB_PATH, MAX_ARTICLES
-from processors import analyze, classify, geocoder, locations
+from processors import analyze, geocoder, intelligence, locations
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
 from scrapers.googlenews import GoogleNewsScraper
@@ -108,24 +108,37 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     # ── Step 4: is this also an incident? ─────────────────────────────────────
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
-    cls = classify.classify(raw["title"], raw.get("content", ""))
+    intel = intelligence.analyze(raw["title"], raw.get("content", "") or raw.get("excerpt", ""))
 
-    if cls is None or cls.confidence < CONFIDENCE_MIN:
-        log.debug("Not an incident (conf=%.2f): %s", cls.confidence if cls else 0, raw["title"][:80])
+    if not intel.is_incident or intel.confidence < CONFIDENCE_MIN:
+        log.debug(
+            "Not an incident (model=%s conf=%.2f): %s",
+            intel.model, intel.confidence, raw["title"][:80],
+        )
         if not dry_run:
             db.mark_seen(url, DB_PATH)
         return False
 
     # ── Location ──────────────────────────────────────────────────────────────
+    # Prefer the LLM's narrative location hint when the regex gazetteer
+    # comes up short — handles "junction of X and Y road" style descriptions.
     loc = locations.best_location(text)
     location_fallback = False
 
+    if (loc is None or loc.name == "Kenya") and intel.location_hint:
+        hint_loc = locations.best_location(intel.location_hint)
+        if hint_loc is not None and hint_loc.name != "Kenya":
+            loc = hint_loc
+
     if loc is None or loc.name == "Kenya":
-        # No specific place matched — try Nominatim on capitalised words so
-        # we can still pin it to a real town/city when possible.
+        # No specific place matched — try Nominatim on the LLM hint first,
+        # then on capitalised words from the title.
+        candidates: list[str] = []
+        if intel.location_hint:
+            candidates.append(intel.location_hint)
         import re
-        words = re.findall(r"[A-Z][a-z]{3,}", raw["title"])
-        for word in words:
+        candidates.extend(re.findall(r"[A-Z][a-z]{3,}", raw["title"]))
+        for word in candidates:
             coords = geocoder.geocode(word)
             if coords:
                 from processors.locations import Location
@@ -141,19 +154,23 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     # ── Decide whether this needs human review ────────────────────────────────
     review_reasons: list[str] = []
-    if cls.confidence < CONFIDENCE_REVIEW:
-        review_reasons.append(f"low classification confidence ({cls.confidence:.2f})")
+    if intel.confidence < CONFIDENCE_REVIEW:
+        review_reasons.append(f"low classification confidence ({intel.confidence:.2f})")
     if location_fallback or loc.specificity <= 1:
         review_reasons.append(f"imprecise location ({loc.name})")
+    if intel.used_fallback:
+        review_reasons.append("LLM unavailable — keyword fallback used")
+    if any(f in intel.flags for f in ("unverified", "speculative", "rumor", "single_source")):
+        review_reasons.append("editorial flag: " + ", ".join(intel.flags))
     needs_review = bool(review_reasons)
     review_reason = "; ".join(review_reasons)
 
     log.info(
         "[%s] %-12s  conf=%.2f  sev=%-6s  loc=%s%s",
         raw["source"],
-        cls.incident_type,
-        cls.confidence,
-        cls.severity,
+        intel.incident_type,
+        intel.confidence,
+        intel.severity,
         loc.name,
         "  [REVIEW]" if needs_review else "",
     )
@@ -163,23 +180,23 @@ def process_article(raw: dict, dry_run: bool) -> bool:
         return True
 
     # ── POST incident ─────────────────────────────────────────────────────────
-    incident_id = api.post_incident(
-        {
-            "title":         raw["title"],
-            "type":          cls.incident_type,
-            "latitude":      str(loc.lat),
-            "longitude":     str(loc.lng),
-            "severity":      cls.severity,
-            "status":        "unsafe",
-            "incident_time": raw.get("published_at", datetime.now(timezone.utc).isoformat()),
-            "location_name": loc.name,
-            "reporter_name": raw["source"],
-            "article_url":   url,
-            "needs_review":  needs_review,
-            "review_reason": review_reason,
-            "confidence":    round(cls.confidence, 2),
-        }
-    )
+    incident_payload = {
+        "title":         raw["title"],
+        "type":          intel.incident_type,
+        "latitude":      str(loc.lat),
+        "longitude":     str(loc.lng),
+        "severity":      intel.severity,
+        "status":        "unsafe",
+        "incident_time": raw.get("published_at", datetime.now(timezone.utc).isoformat()),
+        "location_name": loc.name,
+        "reporter_name": raw["source"],
+        "article_url":   url,
+        "needs_review":  needs_review,
+        "review_reason": review_reason,
+        "confidence":    round(intel.confidence, 2),
+        **intel.to_payload(),
+    }
+    incident_id = api.post_incident(incident_payload)
     if incident_id:
         log.info(
             "  %s incident #%d  @ %.4f, %.4f",

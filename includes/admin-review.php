@@ -178,6 +178,15 @@ function mamboleo_review_queue_page(): void {
                     $article    = get_post_meta( $id, 'article_url', true );
                     $conf_pct   = (int) round( $conf * 100 );
                     $conf_color = $conf >= 0.4 ? '#46b450' : ( $conf >= 0.3 ? '#ffb900' : '#dc3232' );
+
+                    // ── AI intelligence layer fields (populated by Ollama scraper) ──
+                    $ai_summary    = get_post_meta( $id, 'ai_summary', true );
+                    $ai_reasoning  = get_post_meta( $id, 'ai_severity_reasoning', true );
+                    $ai_flags_raw  = get_post_meta( $id, 'ai_flags', true );
+                    $ai_model      = get_post_meta( $id, 'ai_model', true );
+                    $ai_followup   = (bool) get_post_meta( $id, 'ai_is_followup', true );
+                    $ai_flags      = $ai_flags_raw ? array_filter( array_map( 'trim', explode( ',', $ai_flags_raw ) ) ) : [];
+                    $has_ai        = $ai_summary || $ai_reasoning || $ai_model;
                     ?>
                     <tr>
                         <th class="check-column">
@@ -219,6 +228,31 @@ function mamboleo_review_queue_page(): void {
                             </a>
                         </td>
                     </tr>
+                    <?php if ( $has_ai ) : ?>
+                    <tr style="background:#f6f7f7">
+                        <td></td>
+                        <td colspan="7" style="padding:8px 12px;border-left:3px solid #2271b1">
+                            <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#1d2327">
+                                <span style="font-weight:600;color:#2271b1">🤖 AI analysis</span>
+                                <?php if ( $ai_model ) : ?>
+                                    <code style="background:#fff;padding:1px 6px;border:1px solid #dcdcde;border-radius:3px"><?php echo esc_html( $ai_model ); ?></code>
+                                <?php endif; ?>
+                                <?php if ( $ai_followup ) : ?>
+                                    <span style="background:#fcf0c4;padding:1px 6px;border-radius:3px">↻ follow-up</span>
+                                <?php endif; ?>
+                                <?php foreach ( $ai_flags as $flag ) : ?>
+                                    <span style="background:#fde8e8;color:#a00;padding:1px 6px;border-radius:3px">⚑ <?php echo esc_html( $flag ); ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php if ( $ai_summary ) : ?>
+                                <div style="margin-top:6px"><strong>Summary:</strong> <?php echo esc_html( $ai_summary ); ?></div>
+                            <?php endif; ?>
+                            <?php if ( $ai_reasoning ) : ?>
+                                <div style="margin-top:4px;color:#50575e"><strong>Severity rationale:</strong> <?php echo esc_html( $ai_reasoning ); ?></div>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 <?php endwhile; wp_reset_postdata(); ?>
                 </tbody>
             </table>

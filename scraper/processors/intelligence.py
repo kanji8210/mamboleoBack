@@ -1,0 +1,219 @@
+"""Intelligence layer — structured LLM-based incident analysis.
+
+This module replaces the keyword engine in `classify.py` for the production
+pipeline. A single Ollama call returns:
+
+  * is_incident          — final yes/no on whether this is a real-world event
+  * incident_type        — one of the 11 frontend-supported categories
+  * severity             — low | medium | high (context-aware)
+  * severity_reasoning   — short rationale, surfaced in the admin Review Queue
+  * summary              — ≤200 char plain-English summary
+  * location_hint        — narrative location text fed into the geocoder
+  * is_followup          — True if the article updates a prior incident
+  * confidence           — calibrated 0–1, replaces keyword score
+  * flags                — editorial flags (e.g. single_source, historical)
+
+If the LLM is unreachable or returns malformed output, the module falls back
+to the legacy keyword classifier so the pipeline never grinds to a halt.
+"""
+from __future__ import annotations
+
+import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+
+from api import llm_client
+from config import OLLAMA_ENABLED, OLLAMA_MODEL
+from processors import classify as legacy
+
+log = logging.getLogger("intelligence")
+
+# ── Allowed enum values (kept in sync with frontend src/types/incident.ts) ────
+INCIDENT_TYPES: tuple[str, ...] = (
+    "fire", "accident", "flood", "protest", "police", "weather",
+    "medical", "military", "info", "health", "environmental",
+)
+SEVERITIES: tuple[str, ...] = ("low", "medium", "high")
+
+# Articles longer than this are truncated before being sent to the model — the
+# headline + first ~3500 chars carry virtually all the incident signal and we
+# stay well under the 4 KB context window we requested.
+_MAX_BODY_CHARS = 3500
+
+
+# ── Public dataclass ──────────────────────────────────────────────────────────
+
+@dataclass
+class Intelligence:
+    """Structured incident analysis returned to the pipeline."""
+    is_incident:        bool
+    incident_type:      str               # one of INCIDENT_TYPES
+    severity:           str               # one of SEVERITIES
+    severity_reasoning: str = ""
+    summary:            str = ""
+    location_hint:      str = ""
+    is_followup:        bool = False
+    confidence:         float = 0.0       # 0.0–1.0
+    flags:              list[str] = field(default_factory=list)
+    model:              str = ""          # which model produced this
+    used_fallback:      bool = False      # True when keyword engine was used
+
+    def to_payload(self) -> dict:
+        """Subset of fields posted to the /incidents REST endpoint."""
+        return {
+            "ai_summary":            self.summary[:500],
+            "ai_severity_reasoning": self.severity_reasoning[:500],
+            "ai_flags":              ",".join(self.flags)[:300],
+            "ai_model":              self.model,
+            "ai_is_followup":        self.is_followup,
+            "ai_processed_at":       datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }
+
+
+# ── Prompt construction ───────────────────────────────────────────────────────
+
+_SYSTEM_PROMPT = (
+    "You are an editorial assistant for Mamboleo, a Kenyan public-safety "
+    "incident map. You analyze news articles and decide whether each one "
+    "describes a real-world incident the public should be aware of "
+    "(disaster, crime, accident, protest, outbreak, etc.). You are strict: "
+    "speeches, policy launches, sports, religious ceremonies, opinion "
+    "columns, and corporate announcements are NOT incidents. Output ONLY "
+    "valid JSON matching the schema the user provides. No prose, no markdown."
+)
+
+_USER_TEMPLATE = """\
+Analyse the article below and return JSON with exactly these keys:
+
+{{
+  "is_incident":        boolean,
+  "incident_type":      one of {types},
+  "severity":           one of ["low","medium","high"],
+  "severity_reasoning": short string (≤200 chars) explaining the severity choice,
+  "summary":            short plain-English summary (≤200 chars),
+  "location_hint":      Kenyan place name or narrative location ("" if none),
+  "is_followup":        true if this article updates an earlier event,
+  "confidence":         number 0–1 (your certainty this is a real incident),
+  "flags":              array of strings, any of [
+                          "single_source", "unverified", "historical",
+                          "speculative", "rumor", "graphic", "minor"
+                        ]
+}}
+
+Rules:
+- If is_incident is false, set incident_type to "info", severity to "low",
+  and confidence to your certainty that it is NOT an incident.
+- Pick the SINGLE best incident_type even if multiple are mentioned.
+- Severity "high" requires reported deaths / mass casualties / major
+  displacement. "medium" for injuries, evacuations, significant damage.
+  "low" for minor incidents or threats without confirmed harm.
+- Use location_hint to capture narrative locations Kenyan place gazetteers
+  might miss (e.g. "junction of Thika Road and Outer Ring Road"). Leave
+  empty if no specific location is mentioned.
+- Output ONLY the JSON object. No markdown fences, no commentary.
+
+ARTICLE TITLE:
+{title}
+
+ARTICLE BODY:
+{body}
+"""
+
+
+def _build_user_prompt(title: str, body: str) -> str:
+    return _USER_TEMPLATE.format(
+        types=list(INCIDENT_TYPES),
+        title=title.strip(),
+        body=(body or "").strip()[:_MAX_BODY_CHARS] or "(no body)",
+    )
+
+
+# ── Coercion / validation ─────────────────────────────────────────────────────
+
+def _coerce(raw: dict, fallback_title: str) -> Intelligence:
+    """Validate and normalise the raw JSON dict from the model."""
+    incident_type = str(raw.get("incident_type", "info")).lower().strip()
+    if incident_type not in INCIDENT_TYPES:
+        incident_type = "info"
+
+    severity = str(raw.get("severity", "low")).lower().strip()
+    if severity not in SEVERITIES:
+        severity = "low"
+
+    try:
+        confidence = float(raw.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        confidence = 0.0
+    confidence = max(0.0, min(1.0, confidence))
+
+    flags_raw = raw.get("flags") or []
+    if isinstance(flags_raw, str):
+        flags_raw = [flags_raw]
+    flags = [str(f).lower().strip() for f in flags_raw if str(f).strip()][:8]
+
+    return Intelligence(
+        is_incident        = bool(raw.get("is_incident", False)),
+        incident_type      = incident_type,
+        severity           = severity,
+        severity_reasoning = str(raw.get("severity_reasoning", ""))[:500],
+        summary            = (str(raw.get("summary", "")) or fallback_title)[:500],
+        location_hint      = str(raw.get("location_hint", ""))[:300],
+        is_followup        = bool(raw.get("is_followup", False)),
+        confidence         = round(confidence, 2),
+        flags              = flags,
+        model              = OLLAMA_MODEL,
+    )
+
+
+def _from_legacy(title: str, body: str) -> Intelligence:
+    """Wrap the legacy keyword classifier in an Intelligence record."""
+    cls = legacy.classify(title, body)
+    if cls is None:
+        return Intelligence(
+            is_incident   = False,
+            incident_type = "info",
+            severity      = "low",
+            confidence    = 0.0,
+            summary       = title[:200],
+            model         = "keyword-fallback",
+            used_fallback = True,
+            flags         = ["llm_unavailable"],
+        )
+    return Intelligence(
+        is_incident   = True,
+        incident_type = cls.incident_type,
+        severity      = cls.severity,
+        confidence    = cls.confidence,
+        summary       = title[:200],
+        model         = "keyword-fallback",
+        used_fallback = True,
+        flags         = ["llm_unavailable"],
+    )
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+def analyze(title: str, body: str = "") -> Intelligence:
+    """Analyse an article and return structured incident intelligence.
+
+    Falls back to the legacy keyword classifier if Ollama is disabled,
+    unreachable, or returns malformed output.
+    """
+    if not OLLAMA_ENABLED:
+        return _from_legacy(title, body)
+
+    try:
+        raw = llm_client.chat_json(
+            system=_SYSTEM_PROMPT,
+            user=_build_user_prompt(title, body),
+        )
+    except llm_client.LLMError as exc:
+        log.warning("LLM unavailable (%s) — falling back to keyword classifier", exc)
+        return _from_legacy(title, body)
+
+    try:
+        return _coerce(raw, fallback_title=title)
+    except (TypeError, ValueError, KeyError) as exc:
+        log.warning("LLM returned unparseable JSON (%s): %s — falling back", exc, json.dumps(raw)[:300])
+        return _from_legacy(title, body)
