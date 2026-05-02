@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import db
+import health
 from api import client as api
 from config import DB_PATH, MAX_ARTICLES
 from processors import analyze, classify as legacy, geocoder, intelligence, locations
@@ -351,15 +352,25 @@ def main() -> None:
 
     def _run_one(label: str, scraper) -> int:
         """Drain one scraper. Returns number of new incidents posted."""
+        if not health.should_run(label):
+            log.info("--- %s skipped (in cooldown) ---", label.upper())
+            return 0
         log.info("--- %s (limit=%d) ---", label.upper(), args.limit)
         local = 0
+        seen = 0
+        crashed = False
         try:
             for raw in scraper.fetch_articles(limit=args.limit):
+                seen += 1
                 if process_article(raw, dry_run=args.dry_run):
                     local += 1
         except Exception as exc:
+            crashed = True
             log.error("Scraper %s crashed: %s", label, exc, exc_info=True)
-        log.info("--- %s done: %d incidents ---", label.upper(), local)
+        # Only credit the source if it actually produced articles. A crash
+        # or 0-yield counts as a failure for circuit-breaker purposes.
+        health.record(label, 0 if crashed else seen)
+        log.info("--- %s done: %d articles, %d incidents ---", label.upper(), seen, local)
         return local
 
     total_incidents = 0

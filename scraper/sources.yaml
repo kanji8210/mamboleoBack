@@ -360,7 +360,7 @@
     - https://www.monitor.co.ug/uganda/news/national
   link_pattern: "/news/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents — re-enable if you want UG context
 
 - id: the_citizen_tz
   name: The Citizen (Tanzania)
@@ -373,7 +373,7 @@
     - https://www.thecitizen.co.tz/tanzania/news/national
   link_pattern: "/news/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents
 
 - id: new_times_rw
   name: The New Times (Rwanda)
@@ -386,7 +386,7 @@
     - https://www.newtimes.co.rw/rwanda
   link_pattern: "/rwanda/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents
 
 - id: addis_standard
   name: Addis Standard (Ethiopia)
@@ -399,7 +399,7 @@
     - https://addisstandard.com/category/news/
   link_pattern: "/category/news/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents
 
 - id: garowe_online
   name: Garowe Online (Somalia)
@@ -412,7 +412,7 @@
     - https://www.garoweonline.com/en/news
   link_pattern: "/news/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents
 
 - id: sudan_tribune
   name: Sudan Tribune
@@ -425,7 +425,7 @@
     - https://sudantribune.com/category/news/
   link_pattern: "/category/news/"
   cadence: slow
-  enabled: true
+  enabled: false       # rarely covers Kenya incidents
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TIER 5 — Major international outlets (Kenya / East Africa coverage)
@@ -488,7 +488,7 @@
     - http://rss.cnn.com/rss/edition_africa.rss
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # republishes BBC/AP/AJ — duplicate signal
 
 - id: france24_africa
   name: France 24 Africa
@@ -499,7 +499,7 @@
     - https://www.france24.com/en/africa/rss
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # consistent HTTP 403 (Cloudflare bot block)
 
 - id: dw_africa
   name: Deutsche Welle Africa
@@ -510,7 +510,7 @@
     - https://rss.dw.com/rdf/rss-en-africa
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # republishes BBC/AP/AJ — duplicate signal
 
 - id: voa_africa
   name: Voice of America — Africa
@@ -523,7 +523,7 @@
     - https://www.voaafrica.com/
   link_pattern: "/a/"
   cadence: slow
-  enabled: true
+  enabled: false       # RSS URL malformed; republishes wires anyway
 
 - id: guardian_africa
   name: The Guardian Africa
@@ -534,7 +534,7 @@
     - https://www.theguardian.com/world/africa/rss
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # rarely Kenya-specific
 
 - id: nyt_africa
   name: New York Times — Africa
@@ -545,7 +545,7 @@
     - https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # paywalled / rarely Kenya-specific
 
 - id: economist_mea
   name: The Economist — Middle East & Africa
@@ -556,7 +556,7 @@
     - https://www.economist.com/middle-east-and-africa/rss.xml
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # paywalled; rarely incident-relevant
 
 - id: wsj_africa
   name: Wall Street Journal — World
@@ -567,7 +567,7 @@
     - https://feeds.a.dj.com/rss/RSSWorldNews.xml
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # generic world feed; rarely Kenya-specific
 
 - id: xinhua_africa
   name: Xinhua Africa
@@ -578,7 +578,7 @@
     - http://www.xinhuanet.com/english/africa/rss/africaRss.xml
   scrape_pages: []
   cadence: slow
-  enabled: true
+  enabled: false       # state-affiliated; off by default
 
 - id: rt_africa
   name: RT Africa
