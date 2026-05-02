@@ -37,16 +37,52 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 def _fetch_remote_llm_config() -> dict:
     """Pull provider settings from WP. Cached for the life of the process.
 
-    Returns {} if the endpoint is unreachable, the key is wrong, or the
-    plugin is too old — callers fall back to env vars / defaults.
+    Cached on disk too — if Cloudflare/WAF blocks a request once, we keep
+    using the last good value rather than silently falling back to Ollama
+    defaults (which would show up as "Connection refused" much later).
+
+    Returns {} only if we have NEVER successfully fetched the config.
     """
+    cache_file = DATA_DIR / "llm_config.json"
     try:
-        import requests  # local import to keep config import cheap
+        import json
+        import requests
         url = f"{WP_API_BASE.rstrip('/')}/wp-json/mamboleo/v1/llm-config"
-        resp = requests.get(url, headers={"X-API-Key": WP_API_KEY}, timeout=4)
+        # Mimic a browser — Cloudflare and other WAFs challenge bot-y UAs
+        # and bare requests/python user agents.
+        headers = {
+            "X-API-Key":      WP_API_KEY,
+            "User-Agent":     USER_AGENT,
+            "Accept":         "application/json",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        resp = requests.get(url, headers=headers, timeout=6)
         if resp.status_code == 200:
-            return resp.json() or {}
-    except Exception:  # noqa: BLE001 — config must never crash imports
+            ctype = resp.headers.get("Content-Type", "")
+            if "json" in ctype:
+                cfg = resp.json() or {}
+                try:
+                    cache_file.write_text(json.dumps(cfg))
+                except Exception:  # noqa: BLE001
+                    pass
+                return cfg
+            # 200 OK but HTML body = WAF challenge page (Cloudflare etc.)
+            print(
+                f"[config] /llm-config returned HTML (likely WAF challenge "
+                f"on {url}); using cached/fallback values."
+            )
+        else:
+            print(f"[config] /llm-config HTTP {resp.status_code}; using cached/fallback values.")
+    except Exception as exc:  # noqa: BLE001 — config must never crash imports
+        print(f"[config] /llm-config unreachable ({type(exc).__name__}: {exc}); using cached/fallback values.")
+
+    # Fall back to disk cache so a transient WAF block doesn't downgrade us
+    # to Ollama (which then fails with "Connection refused" 30s into a run).
+    try:
+        import json
+        if cache_file.exists():
+            return json.loads(cache_file.read_text()) or {}
+    except Exception:  # noqa: BLE001
         pass
     return {}
 
@@ -65,7 +101,12 @@ OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT") or _R_OLLAMA.get("timeout") o
 # is intentionally NOT read from env so it can't leak via .env files or
 # process listings. Endpoint/model can still be overridden for local testing.
 OPENAI_BASE_URL = (os.getenv("OPENAI_BASE_URL") or _R_OPENAI.get("base_url") or "https://api.openai.com/v1").rstrip("/")
-OPENAI_API_KEY  = _R_OPENAI.get("api_key") or ""
+# API key normally comes from WP admin (so it stays out of .env / git).
+# However, env override is allowed as a break-glass fallback for the case
+# where the /llm-config endpoint is blocked (Cloudflare WAF, etc.) — without
+# this, a transient block silently downgrades the run to Ollama → Connection
+# refused. Set OPENAI_API_KEY=... in scraper/.env only as a last resort.
+OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY") or _R_OPENAI.get("api_key") or ""
 OPENAI_MODEL    = os.getenv("OPENAI_MODEL") or _R_OPENAI.get("model") or "gpt-4o-mini"
 OPENAI_TIMEOUT  = float(_R_OPENAI.get("timeout") or 60)
 

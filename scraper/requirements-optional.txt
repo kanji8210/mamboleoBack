@@ -1,0 +1,17 @@
+# Optional NLP dependencies — install only if your environment can build
+# C extensions and has writable /tmp. The scraper degrades gracefully when
+# these are missing (regex-based entity extraction in processors/analyze.py).
+#
+# Common install errors:
+#   "No matching distribution found for thinc/blis"
+#       → Python version too new — try `pip install spacy<3.8` or upgrade
+#         to a Python release with published wheels.
+#   "ImportError: failed to map segment from shared object"
+#       → /tmp is mounted noexec. Workaround:
+#           mkdir -p ~/.tmp && TMPDIR=~/.tmp pip install -r requirements-optional.txt
+#   "Microsoft Visual C++ 14.0 or greater is required"  (Windows)
+#       → install Visual Studio Build Tools, or use a prebuilt spaCy wheel.
+
+spacy>=3.7.0,<4.0
+# After install, also run:
+#   python -m spacy download en_core_web_sm

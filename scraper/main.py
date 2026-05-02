@@ -335,6 +335,17 @@ def main() -> None:
         "=== Mamboleo scraper starting — %d source(s): %s ===",
         len(runnables), ", ".join(label for label, _ in runnables),
     )
+
+    # Surface the resolved LLM provider so misconfigurations (e.g. WP /llm-config
+    # blocked by WAF → silent fallback to ollama) show up at the top of the log
+    # instead of as a "Connection refused" warning later in the run.
+    try:
+        from api import llm_client
+        info = llm_client.provider_info()
+        log.info("LLM provider: %s", info)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Could not resolve LLM provider info: %s", exc)
+
     if args.dry_run:
         log.info("DRY-RUN mode: nothing will be posted to WordPress")
 

@@ -5,8 +5,18 @@ feedparser>=6.0.11
 python-dotenv>=1.0.0
 tweepy>=4.14.0
 PyYAML>=6.0.1
-# ── NLP (Media Monitor) ───────────────────────────────────────────────────────
+# Sentiment scoring — pure Python, always installs cleanly.
 vaderSentiment>=3.3.2
-spacy>=3.7.0
-# After install, also run:
+
+# ──────────────────────────────────────────────────────────────────────────────
+# spaCy is OPTIONAL — moved to requirements-optional.txt.
+# Reasons:
+#   • Pulls heavy compiled deps (thinc, blis, cymem, preshed) that fail on
+#     shared hosting where /tmp is mounted noexec ("failed to map segment").
+#   • Newer Python versions (3.13+) sometimes have no matching wheels yet.
+#   • The scraper has a regex fallback in processors/analyze.py — entity
+#     quality drops slightly but everything still works.
+# Install spaCy with:
+#   pip install -r requirements-optional.txt
 #   python -m spacy download en_core_web_sm
+# ──────────────────────────────────────────────────────────────────────────────

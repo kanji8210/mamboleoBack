@@ -131,12 +131,30 @@ function mamboleo_install_deps_ajax() {
     check_ajax_referer('mamboleo_scraper_nonce', 'security');
     if (!current_user_can('manage_options')) wp_die('Forbidden');
 
+    $mode = isset($_POST['mode']) && $_POST['mode'] === 'optional' ? 'optional' : 'core';
+    $req_file = $mode === 'optional' ? 'requirements-optional.txt' : 'requirements.txt';
+
     $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
+    if (!file_exists($scraper_dir . DIRECTORY_SEPARATOR . $req_file)) {
+        wp_send_json_error(['message' => "$req_file not found."]);
+    }
+
     $log_file = mamboleo_get_install_log_path();
     $python = mamboleo_python_cmd();
 
     // Prime the log so the poller has something to read immediately.
-    file_put_contents($log_file, "--- Installing Dependencies ---\n[" . date('H:i:s') . "] Starting pip install\n");
+    file_put_contents(
+        $log_file,
+        "--- Installing Dependencies ($req_file) ---\n[" . date('H:i:s') . "] Starting pip install\n"
+    );
+
+    // Workaround for shared hosting where /tmp is mounted noexec, which
+    // breaks pip's compiled C extensions ("failed to map segment from
+    // shared object"). We point TMPDIR at a writable+exec scratch dir
+    // inside wp-content/uploads, which on most hosts is exec-allowed.
+    $upload_dir = wp_upload_dir();
+    $exec_tmp = $upload_dir['basedir'] . '/mamboleo_pip_tmp';
+    if (!is_dir($exec_tmp)) @mkdir($exec_tmp, 0755, true);
 
     // -u  → unbuffered Python output (so the log updates per line, not at end)
     // pip --progress-bar off  → cleaner log, one line per package state change
@@ -145,19 +163,24 @@ function mamboleo_install_deps_ajax() {
     // poller watches for. `&` in cmd / `;` in sh ensure it runs even on pip failure.
     if (PHP_OS_FAMILY === 'Windows') {
         $cmd = sprintf(
-            '%s -u -m pip install --progress-bar off -v -r requirements.txt & echo --- Done (exit=%%errorlevel%%) ---',
-            $python
+            'set TMPDIR=%s && %s -u -m pip install --progress-bar off -v -r %s & echo --- Done (exit=%%errorlevel%%) ---',
+            escapeshellarg($exec_tmp),
+            $python,
+            escapeshellarg($req_file)
         );
     } else {
         $cmd = sprintf(
-            '%s -u -m pip install --progress-bar off -v -r requirements.txt; echo "--- Done (exit=$?) ---"',
-            $python
+            'TMPDIR=%s TMP=%s %s -u -m pip install --progress-bar off -v -r %s; echo "--- Done (exit=$?) ---"',
+            escapeshellarg($exec_tmp),
+            escapeshellarg($exec_tmp),
+            $python,
+            escapeshellarg($req_file)
         );
     }
 
     mamboleo_spawn_background($scraper_dir, $cmd, $log_file);
 
-    wp_send_json_success(['message' => 'Install started in background.']);
+    wp_send_json_success(['message' => "Install started ($req_file)."]);
 }
 
 function mamboleo_poll_install_ajax() {
@@ -202,7 +225,8 @@ function mamboleo_scraper_admin_page() {
             
             <div class="mamboleo-btn-group">
                 <button id="run-scraper-btn" class="button button-primary">Start Scraper</button>
-                <button id="install-deps-btn" class="button button-secondary">Install Dependencies</button>
+                <button id="install-deps-btn" class="button button-secondary" data-mode="core">Install Dependencies</button>
+                <button id="install-optional-btn" class="button button-secondary" data-mode="optional" title="Optional spaCy NLP — may fail on shared hosting; safe to skip.">Install Optional NLP</button>
             </div>
 
             <div class="mamboleo-status-bar">
@@ -317,21 +341,24 @@ function mamboleo_scraper_admin_page() {
             });
         });
 
-        $('#install-deps-btn').on('click', function() {
+        $('#install-deps-btn, #install-optional-btn').on('click', function() {
             const $btn = $(this);
+            const mode = $btn.data('mode') || 'core';
+            const label = mode === 'optional' ? 'optional NLP (spaCy)' : 'core dependencies';
             $btn.prop('disabled', true);
             $('#run-scraper-btn').prop('disabled', true);
+            $('#install-deps-btn, #install-optional-btn').prop('disabled', true);
             $loader.show();
             const startedAt = Date.now();
             $status.text('Starting pip install...');
-            $terminal.html('<div class="mamboleo-terminal-line terminal-info">--- Installing Dependencies ---</div>');
+            $terminal.html('<div class="mamboleo-terminal-line terminal-info">--- Installing ' + label + ' ---</div>');
             lastFullText = "";
 
             // Live elapsed-time ticker so the user sees activity even if
             // pip is silent during slow downloads (e.g. spacy ~50MB wheel).
             let elapsedTimer = setInterval(function() {
                 const secs = Math.round((Date.now() - startedAt) / 1000);
-                $status.text('Installing dependencies… ' + secs + 's elapsed');
+                $status.text('Installing ' + label + '… ' + secs + 's elapsed');
             }, 1000);
 
             function stopInstallPolling(statusText) {
@@ -339,8 +366,8 @@ function mamboleo_scraper_admin_page() {
                 clearInterval(elapsedTimer);
                 installPoll = null;
                 $loader.hide();
-                $btn.prop('disabled', false);
                 $('#run-scraper-btn').prop('disabled', false);
+                $('#install-deps-btn, #install-optional-btn').prop('disabled', false);
                 $status.text(statusText);
             }
 
@@ -350,6 +377,7 @@ function mamboleo_scraper_admin_page() {
                 type: 'POST',
                 data: {
                     action: 'mamboleo_install_deps',
+                    mode: mode,
                     security: '<?php echo wp_create_nonce("mamboleo_scraper_nonce"); ?>'
                 },
                 error: function() {
@@ -370,10 +398,11 @@ function mamboleo_scraper_admin_page() {
                         if (response.success) {
                             updateTerminal(response.data.output);
                             if (response.data.done) {
-                                const ok = response.data.output.indexOf('exit=0') !== -1
-                                       || response.data.output.indexOf('Successfully installed') !== -1
-                                       || response.data.output.indexOf('Requirement already satisfied') !== -1;
-                                stopInstallPolling(ok ? 'Dependencies installed.' : 'Install finished with errors.');
+                                const out = response.data.output;
+                                const failed = out.indexOf('ERROR:') !== -1
+                                            || out.indexOf('Traceback') !== -1
+                                            || /exit=([1-9]\d*)/.test(out);
+                                stopInstallPolling(failed ? 'Install finished with errors — see log.' : 'Dependencies installed.');
                             }
                         }
                     }
