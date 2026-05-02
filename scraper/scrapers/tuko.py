@@ -114,7 +114,9 @@ class TukoScraper(BaseScraper):
         published_at: str = "",
     ) -> dict | None:
         """Fetch article page and extract full text, title, date."""
-        resp = self.get(url)
+        # Cap per-article fetch at 12s — slow article pages shouldn't block a
+        # worker. RSS feed already provides title/excerpt for most items.
+        resp = self.get(url, timeout=12)
         if not resp:
             return None
         soup = BeautifulSoup(resp.text, "lxml")

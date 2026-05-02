@@ -108,7 +108,11 @@ class StandardScraper(BaseScraper):
         excerpt: str = "",
         published_at: str = "",
     ) -> dict | None:
-        resp = self.get(url)
+        # Standard Media's article-detail endpoint frequently stalls past 25s
+        # under load. Cap the per-article fetch at 12s so one slow item doesn't
+        # block a worker for half a minute. RSS already gave us title + excerpt
+        # in most cases, so a missed body is acceptable.
+        resp = self.get(url, timeout=12)
         if not resp:
             return None
         soup = BeautifulSoup(resp.text, "lxml")
