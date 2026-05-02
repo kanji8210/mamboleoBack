@@ -4550,3 +4550,10 @@ KeyboardInterrupt
 18:02:40  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
 18:02:56  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
 18:03:01  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
+ 
+==================================================================== 
+[02/05/2026 18:15:02.65] START cadence=fast 
+==================================================================== 
+18:15:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+18:15:04  INFO      main  --- FEED:KDF (limit=30) ---
+^C
