@@ -345,6 +345,31 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001
         log.warning("Could not resolve LLM provider info: %s", exc)
 
+    # WP API reachability check — surfaces Cloudflare 403 / DNS issues at
+    # startup rather than after each scraper has gathered 30 articles. We
+    # use a HEAD against /llm-config (already authenticated, idempotent).
+    if not args.dry_run:
+        try:
+            import requests as _r
+            from config import WP_API_BASE, WP_API_KEY, USER_AGENT
+            r = _r.get(
+                f"{WP_API_BASE.rstrip('/')}/wp-json/mamboleo/v1/llm-config",
+                headers={"X-API-Key": WP_API_KEY, "User-Agent": USER_AGENT},
+                timeout=6,
+            )
+            if r.status_code >= 400 or "json" not in r.headers.get("Content-Type", ""):
+                log.warning(
+                    "WP API preflight: HTTP %s from %s — articles/incidents "
+                    "POSTs will likely fail. Whitelist this server's IP in "
+                    "Cloudflare or set MAMBOLEO_WP_URL=http://127.0.0.1 with "
+                    "Host header on the prod box.",
+                    r.status_code, WP_API_BASE,
+                )
+            else:
+                log.info("WP API preflight: OK (%s)", WP_API_BASE)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("WP API preflight failed: %s", exc)
+
     if args.dry_run:
         log.info("DRY-RUN mode: nothing will be posted to WordPress")
 

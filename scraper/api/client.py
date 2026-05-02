@@ -45,6 +45,44 @@ _retry = Retry(
 _session.mount("https://", HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
 _session.mount("http://",  HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
 
+# ── WP-side circuit breaker ───────────────────────────────────────────────
+# When Cloudflare/WAF blocks POSTs we used to wait the full timeout for
+# every single article (4 workers × 30 articles × 15s ≈ 30 min hang).
+# After this many consecutive failures we stop hitting the endpoint and
+# return None immediately. The flag resets on the next process start.
+import threading
+_FAIL_LIMIT = 3
+_fail_lock  = threading.Lock()
+_fail_count = 0
+_tripped    = False
+
+
+def _trip_breaker(reason: str) -> None:
+    global _tripped
+    with _fail_lock:
+        if not _tripped:
+            _tripped = True
+            log.error(
+                "[circuit-breaker] WP API unreachable after %d failures (%s). "
+                "Suppressing further POSTs for this run; locally-classified "
+                "articles will not be persisted.",
+                _FAIL_LIMIT, reason,
+            )
+
+
+def _record_failure(reason: str) -> None:
+    global _fail_count
+    with _fail_lock:
+        _fail_count += 1
+        if _fail_count >= _FAIL_LIMIT:
+            _trip_breaker(reason)
+
+
+def _record_success() -> None:
+    global _fail_count
+    with _fail_lock:
+        _fail_count = 0
+
 # Max payload field sizes — keeps the POST body under typical WAF limits
 # (ModSecurity default SecRequestBodyLimit ≈ 128 KB, some hosts set 32 KB).
 _MAX_CONTENT_LEN = 4000   # Article body text
@@ -112,17 +150,22 @@ def _extract_json(text: str):
 
 def _post(url: str, data: dict, what: str) -> int | None:
     """Shared POST helper with rich diagnostics."""
+    if _tripped:
+        return None
     payload = _trim_payload(data)
     try:
-        resp = _session.post(url, json=payload, timeout=15)
+        resp = _session.post(url, json=payload, timeout=8)
     except requests.exceptions.Timeout:
-        log.error("%s POST timed out (>15s) → %s", what, url)
+        log.error("%s POST timed out (>8s) → %s", what, url)
+        _record_failure("timeout")
         return None
     except requests.exceptions.ConnectionError as exc:
         log.error("%s POST connection error → %s : %s", what, url, exc)
+        _record_failure("connection")
         return None
     except requests.exceptions.RequestException as exc:
         log.error("%s POST request failed: %s", what, exc)
+        _record_failure(type(exc).__name__)
         return None
 
     status = resp.status_code
@@ -135,6 +178,7 @@ def _post(url: str, data: dict, what: str) -> int | None:
     # which breaks the strict parser. Instead we fish the last JSON object
     # out of the body — this is robust to leading warnings or trailing newlines.
     if status < 400:
+        _record_success()
         body = _extract_json(resp.text)
         if isinstance(body, dict) and "id" in body:
             return int(body["id"])
@@ -149,6 +193,7 @@ def _post(url: str, data: dict, what: str) -> int | None:
         "%s POST failed → HTTP %s (server=%s, content-type=%s): %s",
         what, status, server, ctype or "none", hint,
     )
+    _record_failure(f"HTTP {status}")
     return None
 
 
