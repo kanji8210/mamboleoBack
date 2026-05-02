@@ -4556,4 +4556,22 @@ KeyboardInterrupt
 ==================================================================== 
 18:15:04  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
 18:15:04  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+==================================================================== 
+[02/05/2026 18:30:02.34] START cadence=fast 
+==================================================================== 
+18:30:03  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+18:30:03  INFO      main  --- FEED:KDF (limit=30) ---
+18:30:38  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/all-news/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /all-news/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=25)"))
+18:30:38  INFO      main  --- FEED:KDF done: 0 incidents ---
+18:30:38  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+18:31:14  WARNING   scraper.citizen_digital  Request failed \u2192 https://citizen.digital/news : HTTPSConnectionPool(host='citizen.digital', port=443): Max retries exceeded with url: /news (Caused by NameResolutionError("HTTPSConnection(host='citizen.digital', port=443): Failed to resolve 'citizen.digital' ([Errno 11001] getaddrinfo failed)"))
+18:31:14  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+18:31:14  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+ 
+==================================================================== 
+[02/05/2026 19:00:03.21] START cadence=fast 
+==================================================================== 
+19:00:05  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+19:00:05  INFO      main  --- FEED:KDF (limit=30) ---
 ^C
