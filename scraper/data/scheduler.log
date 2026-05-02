@@ -4611,3 +4611,7 @@ KeyboardInterrupt
 19:26:02  INFO      main  --- FEED:K24 (limit=30) ---
 19:26:55  ERROR     api.client  Article POST failed \u2192 HTTP 403 (server=cloudflare, content-type=text/html; charset=UTF-8): [HTML error page] <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scal
 19:26:59  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
+ 
+==================================================================== 
+[02/05/2026 19:45:03.99] START cadence=fast 
+==================================================================== 

@@ -1,0 +1,23 @@
+# Secrets — NEVER commit. Keys live in WP admin (Mamboleo → AI Intelligence)
+# and are fetched by the scraper at runtime via /wp-json/mamboleo/v1/llm-config.
+scraper/.env
+scraper/.env.*
+!scraper/.env.example
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Scraper local state
+scraper/data/seen.db
+scraper/data/*.json
+scraper/*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

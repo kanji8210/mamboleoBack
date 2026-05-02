@@ -83,6 +83,38 @@ function mamboleo_register_rest_routes(): void {
             ],
         ],
     ] );
+
+    // API-key protected: LLM provider config for the Python scraper.
+    // Keeps the OpenAI/Groq key out of scraper/.env — it lives in WP options only.
+    register_rest_route( 'mamboleo/v1', '/llm-config', [
+        'methods'             => 'GET',
+        'callback'            => 'mamboleo_get_llm_config',
+        'permission_callback' => 'mamboleo_verify_api_key',
+    ] );
+}
+
+/**
+ * Returns the LLM provider config (provider, endpoint, model, key) so the
+ * Python pipeline doesn't need to duplicate the secret in scraper/.env.
+ * Auth: requires MAMBOLEO_API_KEY (X-API-Key header).
+ */
+function mamboleo_get_llm_config( WP_REST_Request $request ): array {
+    $provider = get_option( 'mamboleo_llm_provider', 'ollama' );
+    return [
+        'provider' => $provider,
+        'enabled'  => (bool) ( get_option( 'mamboleo_llm_enabled', '1' ) !== '0' ),
+        'ollama'   => [
+            'host'    => (string) get_option( 'mamboleo_ollama_host', 'http://localhost:11434' ),
+            'model'   => (string) get_option( 'mamboleo_ollama_model', 'llama3.1:8b' ),
+            'timeout' => (int)    get_option( 'mamboleo_ollama_timeout', 45 ),
+        ],
+        'openai'   => [
+            'base_url' => (string) get_option( 'mamboleo_openai_base_url', 'https://api.openai.com/v1' ),
+            'model'    => (string) get_option( 'mamboleo_openai_model', 'gpt-4o-mini' ),
+            'api_key'  => (string) get_option( 'mamboleo_openai_api_key', '' ),
+            'timeout'  => 60,
+        ],
+    ];
 }
 
 // ── Auth helper ───────────────────────────────────────────────────────────────

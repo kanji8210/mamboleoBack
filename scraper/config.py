@@ -27,25 +27,47 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 #   • "ollama"  — local Ollama server (default, fully offline)
 #   • "openai"  — any OpenAI Chat-Completions-compatible endpoint
 #                 (OpenAI, Groq, Together.ai, OpenRouter, Mistral, LM Studio…)
+#
+# Source of truth for these values is the WordPress admin (Mamboleo → AI
+# Intelligence). We fetch them at process start via the authenticated
+# /mamboleo/v1/llm-config endpoint so the API key never has to live in
+# scraper/.env. Local env vars still override (handy for CI / offline runs).
 # Set OLLAMA_ENABLED=0 to disable the LLM entirely and fall back to the
-# legacy keyword classifier (useful for offline / CI runs).
-LLM_PROVIDER   = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
-OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
-OLLAMA_HOST    = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
-OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "45"))
+# legacy keyword classifier.
+def _fetch_remote_llm_config() -> dict:
+    """Pull provider settings from WP. Cached for the life of the process.
 
-# OpenAI-compatible provider (Groq is the recommended free tier — fast & free).
-# Common OPENAI_BASE_URL values:
-#   OpenAI       : https://api.openai.com/v1
-#   Groq         : https://api.groq.com/openai/v1   (free, fast)
-#   Together.ai  : https://api.together.xyz/v1
-#   OpenRouter   : https://openrouter.ai/api/v1
-#   LM Studio    : http://localhost:1234/v1         (no key needed)
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
-OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL    = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-OPENAI_TIMEOUT  = float(os.getenv("OPENAI_TIMEOUT", "60"))
+    Returns {} if the endpoint is unreachable, the key is wrong, or the
+    plugin is too old — callers fall back to env vars / defaults.
+    """
+    try:
+        import requests  # local import to keep config import cheap
+        url = f"{WP_API_BASE.rstrip('/')}/wp-json/mamboleo/v1/llm-config"
+        resp = requests.get(url, headers={"X-API-Key": WP_API_KEY}, timeout=4)
+        if resp.status_code == 200:
+            return resp.json() or {}
+    except Exception:  # noqa: BLE001 — config must never crash imports
+        pass
+    return {}
+
+
+_REMOTE = _fetch_remote_llm_config()
+_R_OLLAMA = _REMOTE.get("ollama") or {}
+_R_OPENAI = _REMOTE.get("openai") or {}
+
+LLM_PROVIDER   = (os.getenv("LLM_PROVIDER") or _REMOTE.get("provider") or "ollama").strip().lower()
+OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
+OLLAMA_HOST    = (os.getenv("OLLAMA_HOST") or _R_OLLAMA.get("host") or "http://localhost:11434").rstrip("/")
+OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL") or _R_OLLAMA.get("model") or "llama3.1:8b"
+OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT") or _R_OLLAMA.get("timeout") or 45)
+
+# OpenAI-compatible provider settings come from WP admin only — the API key
+# is intentionally NOT read from env so it can't leak via .env files or
+# process listings. Endpoint/model can still be overridden for local testing.
+OPENAI_BASE_URL = (os.getenv("OPENAI_BASE_URL") or _R_OPENAI.get("base_url") or "https://api.openai.com/v1").rstrip("/")
+OPENAI_API_KEY  = _R_OPENAI.get("api_key") or ""
+OPENAI_MODEL    = os.getenv("OPENAI_MODEL") or _R_OPENAI.get("model") or "gpt-4o-mini"
+OPENAI_TIMEOUT  = float(_R_OPENAI.get("timeout") or 60)
 
 # ── Social handles ─────────────────────────────────────────────────────────
 # Optional self-hosted RSSHub bridge for Facebook pages. When unset, Facebook

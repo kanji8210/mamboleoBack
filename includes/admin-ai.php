@@ -136,6 +136,91 @@ add_action( 'admin_post_mamboleo_reanalyse', function () {
     exit;
 } );
 
+/* Action: live "Test connection" — does a real chat-completion round-trip
+ * with the saved provider settings. Stashes the result in a transient so it
+ * survives the redirect back to the AI page. */
+add_action( 'admin_post_mamboleo_test_llm', function () {
+    if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Forbidden' );
+    check_admin_referer( 'mamboleo_test_llm' );
+
+    delete_transient( 'mamboleo_ollama_health' ); // force fresh health on return
+    $result = mamboleo_test_llm_chat();
+    set_transient( 'mamboleo_test_llm_result', $result, 60 );
+
+    wp_safe_redirect( admin_url( 'admin.php?page=mamboleo-ai' ) );
+    exit;
+} );
+
+function mamboleo_test_llm_chat(): array {
+    $provider = get_option( 'mamboleo_llm_provider', 'ollama' );
+    $started  = microtime( true );
+
+    if ( $provider === 'openai' ) {
+        $base = rtrim( get_option( 'mamboleo_openai_base_url', 'https://api.openai.com/v1' ), '/' );
+        $key  = (string) get_option( 'mamboleo_openai_api_key', '' );
+        $model = (string) get_option( 'mamboleo_openai_model', 'gpt-4o-mini' );
+
+        if ( $key === '' && strpos( $base, 'localhost' ) === false && strpos( $base, '127.0.0.1' ) === false ) {
+            return [ 'ok' => false, 'error' => 'API key not set.' ];
+        }
+
+        $headers = [ 'Content-Type' => 'application/json' ];
+        if ( $key !== '' ) $headers['Authorization'] = 'Bearer ' . $key;
+
+        $resp = wp_remote_post( $base . '/chat/completions', [
+            'timeout' => 15,
+            'headers' => $headers,
+            'body'    => wp_json_encode( [
+                'model'       => $model,
+                'temperature' => 0,
+                'max_tokens'  => 16,
+                'messages'    => [
+                    [ 'role' => 'system', 'content' => 'Reply with the single word OK.' ],
+                    [ 'role' => 'user',   'content' => 'ping' ],
+                ],
+            ] ),
+        ] );
+    } else {
+        $host  = rtrim( get_option( 'mamboleo_ollama_host', 'http://localhost:11434' ), '/' );
+        $model = (string) get_option( 'mamboleo_ollama_model', 'llama3.1:8b' );
+        $resp  = wp_remote_post( $host . '/api/chat', [
+            'timeout' => 30,
+            'headers' => [ 'Content-Type' => 'application/json' ],
+            'body'    => wp_json_encode( [
+                'model'    => $model,
+                'stream'   => false,
+                'messages' => [
+                    [ 'role' => 'system', 'content' => 'Reply with the single word OK.' ],
+                    [ 'role' => 'user',   'content' => 'ping' ],
+                ],
+            ] ),
+        ] );
+    }
+
+    $elapsed_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
+
+    if ( is_wp_error( $resp ) ) {
+        return [ 'ok' => false, 'error' => $resp->get_error_message(), 'ms' => $elapsed_ms ];
+    }
+    $code = (int) wp_remote_retrieve_response_code( $resp );
+    $body = wp_remote_retrieve_body( $resp );
+    if ( $code !== 200 ) {
+        return [ 'ok' => false, 'error' => "HTTP $code: " . substr( $body, 0, 240 ), 'ms' => $elapsed_ms ];
+    }
+
+    $json = json_decode( $body, true );
+    $reply = $provider === 'openai'
+        ? ( $json['choices'][0]['message']['content'] ?? '' )
+        : ( $json['message']['content'] ?? '' );
+
+    return [
+        'ok'    => $reply !== '',
+        'reply' => trim( (string) $reply ),
+        'ms'    => $elapsed_ms,
+        'error' => $reply === '' ? 'Empty response.' : '',
+    ];
+}
+
 function mamboleo_ai_admin_page(): void {
     if ( ! current_user_can( 'manage_options' ) ) return;
     $health = mamboleo_ollama_health();
@@ -273,6 +358,33 @@ function mamboleo_ai_admin_page(): void {
                 </tr>
             </table>
             <?php submit_button(); ?>
+        </form>
+
+        <h2 style="margin-top:24px;"><?php esc_html_e( 'Test connection', 'mamboleo' ); ?></h2>
+        <p class="description">
+            <?php esc_html_e( 'Sends a real chat-completion request with the saved settings. Useful right after rotating an API key.', 'mamboleo' ); ?>
+        </p>
+        <?php $test = get_transient( 'mamboleo_test_llm_result' );
+        if ( is_array( $test ) ) : delete_transient( 'mamboleo_test_llm_result' ); ?>
+            <?php if ( $test['ok'] ) : ?>
+                <div class="notice notice-success" style="max-width:780px;">
+                    <p>
+                        <b>✓ <?php esc_html_e( 'Live', 'mamboleo' ); ?></b>
+                        — <?php echo (int) ( $test['ms'] ?? 0 ); ?> ms,
+                        <?php esc_html_e( 'reply:', 'mamboleo' ); ?>
+                        <code><?php echo esc_html( $test['reply'] ?? '' ); ?></code>
+                    </p>
+                </div>
+            <?php else : ?>
+                <div class="notice notice-error" style="max-width:780px;">
+                    <p><b>✗ <?php esc_html_e( 'Failed', 'mamboleo' ); ?></b> — <code><?php echo esc_html( $test['error'] ?? 'Unknown error' ); ?></code></p>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:24px;">
+            <?php wp_nonce_field( 'mamboleo_test_llm' ); ?>
+            <input type="hidden" name="action" value="mamboleo_test_llm" />
+            <button class="button button-secondary"><?php esc_html_e( 'Run test now', 'mamboleo' ); ?></button>
         </form>
 
         <h2 style="margin-top:24px;"><?php esc_html_e( 'Recently analysed', 'mamboleo' ); ?></h2>

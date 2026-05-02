@@ -114,8 +114,8 @@ def _health_ollama() -> bool:
 def _chat_openai(system: str, user: str, model: str | None) -> dict[str, Any]:
     if not OPENAI_API_KEY and "localhost" not in OPENAI_BASE_URL and "127.0.0.1" not in OPENAI_BASE_URL:
         raise LLMError(
-            "OPENAI_API_KEY is not set. Add it to scraper/.env "
-            "(or set LLM_PROVIDER=ollama to use a local model)."
+            "LLM API key is not configured. Set it in WP admin → Mamboleo → "
+            "AI Intelligence (or switch LLM_PROVIDER to ollama for local runs)."
         )
 
     url     = f"{OPENAI_BASE_URL}/chat/completions"
