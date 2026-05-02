@@ -24,7 +24,6 @@ from processors import analyze, classify as legacy, geocoder, intelligence, loca
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
 from scrapers.googlenews import GoogleNewsScraper
-from scrapers.international import InternationalScraper
 from scrapers.nation import NationScraper
 from scrapers.social import SocialHandlesScraper
 from scrapers.sources_loader import load_sources
@@ -61,7 +60,6 @@ CONFIDENCE_REVIEW  = 0.60
 ALL_SCRAPERS = {
     "advisories":    AdvisoryScraper,
     "googlenews":    GoogleNewsScraper,
-    "international": InternationalScraper,
     "tuko":          TukoScraper,
     "nation":        NationScraper,
     "standard":      StandardScraper,

@@ -18,7 +18,7 @@
 #   enabled         — toggle without deleting the entry
 #
 # NOTE: We already have dedicated scrapers for Nation, Standard, Tuko,
-# GoogleNews, International, Advisories, Twitter — those remain and are
+# GoogleNews, Advisories, Twitter — those remain and are
 # NOT duplicated here. This file is the config-driven long tail.
 
 # ─────────────────────────────────────────────────────────────────────────────
