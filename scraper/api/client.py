@@ -10,6 +10,8 @@ import logging
 import re
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from config import WP_API_BASE, WP_API_KEY, USER_AGENT
 
@@ -26,6 +28,22 @@ _HEADERS = {
 
 _ARTICLES_URL  = f"{WP_API_BASE}/wp-json/mamboleo/v1/articles"
 _INCIDENTS_URL = f"{WP_API_BASE}/wp-json/mamboleo/v1/incidents"
+
+# Persistent session → reuses the TLS connection across the dozens of
+# POSTs in a typical scraper run (saves ~150–300ms per request).
+_session = requests.Session()
+_session.headers.update(_HEADERS)
+_retry = Retry(
+    total=2,
+    connect=2,
+    read=0,
+    backoff_factor=1.0,
+    status_forcelist=[502, 503, 504],
+    allowed_methods=["POST"],
+    raise_on_status=False,
+)
+_session.mount("https://", HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
+_session.mount("http://",  HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
 
 # Max payload field sizes — keeps the POST body under typical WAF limits
 # (ModSecurity default SecRequestBodyLimit ≈ 128 KB, some hosts set 32 KB).
@@ -96,7 +114,7 @@ def _post(url: str, data: dict, what: str) -> int | None:
     """Shared POST helper with rich diagnostics."""
     payload = _trim_payload(data)
     try:
-        resp = requests.post(url, json=payload, headers=_HEADERS, timeout=15)
+        resp = _session.post(url, json=payload, timeout=15)
     except requests.exceptions.Timeout:
         log.error("%s POST timed out (>15s) → %s", what, url)
         return None

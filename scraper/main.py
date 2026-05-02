@@ -11,13 +11,15 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import db
 from api import client as api
 from config import DB_PATH, MAX_ARTICLES
-from processors import analyze, geocoder, intelligence, locations
+from processors import analyze, classify as legacy, geocoder, intelligence, locations
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
 from scrapers.googlenews import GoogleNewsScraper
@@ -110,7 +112,19 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     # ── Step 4: is this also an incident? ─────────────────────────────────────
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
-    intel = intelligence.analyze(raw["title"], raw.get("content", "") or raw.get("excerpt", ""))
+
+    # Fast keyword pre-filter: if the legacy classifier finds no incident
+    # signal at all (no event verbs + no incident topic keywords), skip the
+    # expensive LLM call entirely. Behaviour preserved: we still mark the
+    # URL seen and POST the article record above — only the per-article
+    # 5–45 s LLM round-trip is short-circuited for obvious non-incidents.
+    body_for_check = raw.get("content", "") or raw.get("excerpt", "")
+    if legacy.classify(raw["title"], body_for_check) is None:
+        if not dry_run:
+            db.mark_seen(url, DB_PATH)
+        return False
+
+    intel = intelligence.analyze(raw["title"], body_for_check)
 
     if not intel.is_incident or intel.confidence < CONFIDENCE_MIN:
         log.debug(
@@ -134,13 +148,18 @@ def process_article(raw: dict, dry_run: bool) -> bool:
 
     if loc is None or loc.name == "Kenya":
         # No specific place matched — try Nominatim on the LLM hint first,
-        # then on capitalised words from the title.
+        # then on capitalised words from the title. Dedupe so we don't
+        # hit Nominatim twice for the same word (each call costs ~1.1s).
+        seen_words: set[str] = set()
         candidates: list[str] = []
         if intel.location_hint:
             candidates.append(intel.location_hint)
-        import re
         candidates.extend(re.findall(r"[A-Z][a-z]{3,}", raw["title"]))
         for word in candidates:
+            key = word.strip().lower()
+            if not key or key in seen_words:
+                continue
+            seen_words.add(key)
             coords = geocoder.geocode(word)
             if coords:
                 from processors.locations import Location
@@ -277,7 +296,26 @@ def main() -> None:
         "--dry-run", action="store_true",
         help="Classify and locate but do NOT post to WordPress",
     )
+    parser.add_argument(
+        "--workers", type=int, default=4,
+        help="Run up to N scrapers concurrently (default: %(default)s; "
+             "use 1 for serial behaviour). Each scraper has its own HTTP "
+             "session and rate limit, so parallelism is safe per-host.",
+    )
+    parser.add_argument(
+        "--skip-preflight", action="store_true",
+        help="Skip the dependency check at startup.",
+    )
     args = parser.parse_args()
+
+    # Dependency preflight — exits early with a friendly diagnostic if any
+    # required package is missing, instead of failing 30s in with ImportError.
+    if not args.skip_preflight:
+        import preflight
+        ok, _ = preflight.run(verbose=True)
+        if not ok:
+            log.error("Required dependencies missing — aborting.")
+            sys.exit(2)
 
     # Sensible default: if user passed nothing at all, behave like --all
     if not (args.sources or args.feeds or args.cadence or args.all):
@@ -300,24 +338,44 @@ def main() -> None:
     if args.dry_run:
         log.info("DRY-RUN mode: nothing will be posted to WordPress")
 
-    total_incidents = 0
-
-    for label, scraper in runnables:
+    def _run_one(label: str, scraper) -> int:
+        """Drain one scraper. Returns number of new incidents posted."""
         log.info("--- %s (limit=%d) ---", label.upper(), args.limit)
-        source_incidents = 0
-
+        local = 0
         try:
             for raw in scraper.fetch_articles(limit=args.limit):
                 if process_article(raw, dry_run=args.dry_run):
-                    source_incidents += 1
-        except KeyboardInterrupt:
-            log.info("Interrupted by user.")
-            break
+                    local += 1
         except Exception as exc:
             log.error("Scraper %s crashed: %s", label, exc, exc_info=True)
+        log.info("--- %s done: %d incidents ---", label.upper(), local)
+        return local
 
-        log.info("--- %s done: %d incidents ---", label.upper(), source_incidents)
-        total_incidents += source_incidents
+    total_incidents = 0
+    workers = max(1, min(args.workers, len(runnables)))
+
+    if workers == 1:
+        # Serial path — preserves the old log ordering when debugging.
+        try:
+            for label, scraper in runnables:
+                total_incidents += _run_one(label, scraper)
+        except KeyboardInterrupt:
+            log.info("Interrupted by user.")
+    else:
+        log.info("Running %d scrapers across %d worker threads", len(runnables), workers)
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="scraper") as pool:
+            futures = {pool.submit(_run_one, label, scraper): label
+                       for label, scraper in runnables}
+            try:
+                for fut in as_completed(futures):
+                    try:
+                        total_incidents += fut.result()
+                    except Exception as exc:
+                        log.error("Scraper %s failed: %s", futures[fut], exc, exc_info=True)
+            except KeyboardInterrupt:
+                log.info("Interrupted by user — cancelling pending scrapers.")
+                for fut in futures:
+                    fut.cancel()
 
     log.info("=== Done. Total new incidents: %d ===", total_incidents)
 

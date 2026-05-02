@@ -22,10 +22,55 @@ add_action('admin_menu', function() {
 add_action('wp_ajax_mamboleo_run_scraper', 'mamboleo_run_scraper_ajax');
 add_action('wp_ajax_mamboleo_poll_scraper', 'mamboleo_poll_scraper_ajax');
 add_action('wp_ajax_mamboleo_install_deps', 'mamboleo_install_deps_ajax');
+add_action('wp_ajax_mamboleo_poll_install', 'mamboleo_poll_install_ajax');
 
 function mamboleo_get_log_path() {
     $upload_dir = wp_upload_dir();
     return $upload_dir['basedir'] . '/mamboleo_scraper.log';
+}
+
+function mamboleo_get_install_log_path() {
+    $upload_dir = wp_upload_dir();
+    return $upload_dir['basedir'] . '/mamboleo_install.log';
+}
+
+/**
+ * Pick the python executable. Prefer 'python' on Windows, 'python3' elsewhere.
+ * Returns the resolved command string.
+ */
+function mamboleo_python_cmd() {
+    if (defined('MAMBOLEO_PYTHON_CMD') && MAMBOLEO_PYTHON_CMD) {
+        return MAMBOLEO_PYTHON_CMD;
+    }
+    return (PHP_OS_FAMILY === 'Windows') ? 'python' : 'python3';
+}
+
+/**
+ * Spawn a detached background process and stream its output to $log_file.
+ * Cross-platform (Windows + *nix). Returns immediately.
+ *
+ * The command is wrapped in a subshell group so any `&` (Windows) or `;`
+ * (sh) chaining inside $cmd_line stays grouped under a single redirection.
+ */
+function mamboleo_spawn_background($work_dir, $cmd_line, $log_file) {
+    if (PHP_OS_FAMILY === 'Windows') {
+        // (cmd) > log 2>&1   groups the whole chain so sentinel echos also log.
+        $full = sprintf(
+            'start /B "" cmd /C "cd /D %s && (%s) > %s 2>&1"',
+            escapeshellarg($work_dir),
+            $cmd_line,
+            escapeshellarg($log_file)
+        );
+        pclose(popen($full, 'r'));
+    } else {
+        $inner = sprintf(
+            'cd %s && { %s; } > %s 2>&1',
+            escapeshellarg($work_dir),
+            $cmd_line,
+            escapeshellarg($log_file)
+        );
+        exec(sprintf('nohup sh -c %s > /dev/null 2>&1 &', escapeshellarg($inner)));
+    }
 }
 
 function mamboleo_run_scraper_ajax() {
@@ -34,30 +79,30 @@ function mamboleo_run_scraper_ajax() {
 
     $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
     $log_file = mamboleo_get_log_path();
-    
-    // Clear old log
-    file_put_contents($log_file, "--- Initialization ---\n");
+    $python = mamboleo_python_cmd();
 
-    // Pre-determine python command (fast)
-    $python_cmd = 'python3';
-    // We'll skip the version check here to keep the response fast, 
-    // or just assume python3/python based on common setups.
-    
-    // Build a fully detached background command
-    // nohup keeps it running after the shell closes
-    // </dev/null prevents it from waiting for input
-    $command = sprintf(
-        'nohup sh -c "cd %s && %s run_all_scrapers.py" > %s 2>&1 </dev/null &',
-        escapeshellarg($scraper_dir),
-        $python_cmd,
-        escapeshellarg($log_file)
-    );
-    
-    exec($command);
-    
-    // Give it a tiny bit of time to start and write the first line
-    usleep(200000); 
-    
+    // Reset log so polling sees this run's output, not the previous one.
+    file_put_contents($log_file, "--- Initialization ---\n[" . date('H:i:s') . "] Starting scraper\n");
+
+    // -u → unbuffered, so the log updates line-by-line. Trailing sentinel
+    // marks completion regardless of exit code so the JS poller can stop.
+    if (PHP_OS_FAMILY === 'Windows') {
+        $cmd = sprintf(
+            '%s -u run_all_scrapers.py & echo --- Done (exit=%%errorlevel%%) ---',
+            $python
+        );
+    } else {
+        $cmd = sprintf(
+            '%s -u run_all_scrapers.py; echo "--- Done (exit=$?) ---"',
+            $python
+        );
+    }
+
+    mamboleo_spawn_background($scraper_dir, $cmd, $log_file);
+
+    // Tiny pause so the first log line is usually flushed before the poller fires.
+    usleep(200000);
+
     wp_send_json_success(['message' => 'Scraper started in background.']);
 }
 
@@ -72,7 +117,9 @@ function mamboleo_poll_scraper_ajax() {
     }
 
     $output = file_get_contents($log_file);
-    $is_done = (strpos($output, 'Done') !== false || strpos($output, 'Traceback') !== false);
+    // Use the explicit sentinel as the only "done" signal so partial logs
+    // containing the word "Done" mid-run don't end polling prematurely.
+    $is_done = (strpos($output, '--- Done') !== false || strpos($output, 'Traceback') !== false);
     
     wp_send_json_success([
         'output' => $output,
@@ -85,10 +132,51 @@ function mamboleo_install_deps_ajax() {
     if (!current_user_can('manage_options')) wp_die('Forbidden');
 
     $scraper_dir = MAMBOLEO_PLUGIN_DIR . 'scraper';
-    $command = 'cd ' . escapeshellarg($scraper_dir) . ' && pip install -r requirements.txt 2>&1';
-    $output = (string) shell_exec($command);
-    
-    wp_send_json_success(['output' => $output]);
+    $log_file = mamboleo_get_install_log_path();
+    $python = mamboleo_python_cmd();
+
+    // Prime the log so the poller has something to read immediately.
+    file_put_contents($log_file, "--- Installing Dependencies ---\n[" . date('H:i:s') . "] Starting pip install\n");
+
+    // -u  → unbuffered Python output (so the log updates per line, not at end)
+    // pip --progress-bar off  → cleaner log, one line per package state change
+    // pip -v                  → "Collecting / Downloading / Installing" lines per package
+    // Trailing "echo --- Done ---" is the explicit completion sentinel the
+    // poller watches for. `&` in cmd / `;` in sh ensure it runs even on pip failure.
+    if (PHP_OS_FAMILY === 'Windows') {
+        $cmd = sprintf(
+            '%s -u -m pip install --progress-bar off -v -r requirements.txt & echo --- Done (exit=%%errorlevel%%) ---',
+            $python
+        );
+    } else {
+        $cmd = sprintf(
+            '%s -u -m pip install --progress-bar off -v -r requirements.txt; echo "--- Done (exit=$?) ---"',
+            $python
+        );
+    }
+
+    mamboleo_spawn_background($scraper_dir, $cmd, $log_file);
+
+    wp_send_json_success(['message' => 'Install started in background.']);
+}
+
+function mamboleo_poll_install_ajax() {
+    check_ajax_referer('mamboleo_scraper_nonce', 'security');
+    if (!current_user_can('manage_options')) wp_die('Forbidden');
+
+    $log_file = mamboleo_get_install_log_path();
+    if (!file_exists($log_file)) {
+        wp_send_json_success(['output' => 'Waiting for install log...', 'done' => false]);
+        return;
+    }
+
+    $output = file_get_contents($log_file);
+    $is_done = (strpos($output, '--- Done') !== false);
+
+    wp_send_json_success([
+        'output' => $output,
+        'done'   => $is_done,
+    ]);
 }
 
 function mamboleo_scraper_admin_page() {
@@ -181,18 +269,31 @@ function mamboleo_scraper_admin_page() {
         function stopPolling(statusText) {
             clearInterval(pollInterval);
             pollInterval = null;
+            if (window.scraperElapsed) { clearInterval(window.scraperElapsed); window.scraperElapsed = null; }
             $loader.hide();
             $('#run-scraper-btn').prop('disabled', false);
+            $('#install-deps-btn').prop('disabled', false);
             $status.text(statusText);
         }
 
         $('#run-scraper-btn').on('click', function() {
             const $btn = $(this);
             $btn.prop('disabled', true);
+            $('#install-deps-btn').prop('disabled', true);
             $loader.show();
+            const startedAt = Date.now();
             $status.text('Scraper starting in background...');
             $terminal.html('<div class="mamboleo-terminal-line terminal-info">Initializing background process...</div>');
             lastFullText = "";
+
+            // Live elapsed-time so the user sees activity even when the
+            // scraper is mid-LLM-call and not flushing log lines.
+            if (window.scraperElapsed) clearInterval(window.scraperElapsed);
+            window.scraperElapsed = setInterval(function() {
+                const secs = Math.round((Date.now() - startedAt) / 1000);
+                const mins = Math.floor(secs / 60);
+                $status.text('Scraper running… ' + (mins ? (mins + 'm ') : '') + (secs % 60) + 's');
+            }, 1000);
 
             $.ajax({
                 url: ajaxurl,
@@ -203,13 +304,14 @@ function mamboleo_scraper_admin_page() {
                 },
                 success: function(response) {
                     if (response.success) {
-                        $status.text('Scraper running... (Cloudflare safe)');
                         startPolling();
                     } else {
+                        clearInterval(window.scraperElapsed);
                         stopPolling('Failed to start.');
                     }
                 },
                 error: function() {
+                    clearInterval(window.scraperElapsed);
                     stopPolling('Initial request failed.');
                 }
             });
@@ -218,10 +320,31 @@ function mamboleo_scraper_admin_page() {
         $('#install-deps-btn').on('click', function() {
             const $btn = $(this);
             $btn.prop('disabled', true);
+            $('#run-scraper-btn').prop('disabled', true);
             $loader.show();
-            $status.text('Installing dependencies (blocking)...');
-            $terminal.html('<div class="mamboleo-terminal-line">--- Installing Dependencies ---</div>');
+            const startedAt = Date.now();
+            $status.text('Starting pip install...');
+            $terminal.html('<div class="mamboleo-terminal-line terminal-info">--- Installing Dependencies ---</div>');
+            lastFullText = "";
 
+            // Live elapsed-time ticker so the user sees activity even if
+            // pip is silent during slow downloads (e.g. spacy ~50MB wheel).
+            let elapsedTimer = setInterval(function() {
+                const secs = Math.round((Date.now() - startedAt) / 1000);
+                $status.text('Installing dependencies… ' + secs + 's elapsed');
+            }, 1000);
+
+            function stopInstallPolling(statusText) {
+                clearInterval(installPoll);
+                clearInterval(elapsedTimer);
+                installPoll = null;
+                $loader.hide();
+                $btn.prop('disabled', false);
+                $('#run-scraper-btn').prop('disabled', false);
+                $status.text(statusText);
+            }
+
+            // Kick off the background install
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
@@ -229,19 +352,33 @@ function mamboleo_scraper_admin_page() {
                     action: 'mamboleo_install_deps',
                     security: '<?php echo wp_create_nonce("mamboleo_scraper_nonce"); ?>'
                 },
-                success: function(response) {
-                    if (response.success) {
-                        updateTerminal(response.data.output);
-                        $status.text('Dependencies updated.');
-                    } else {
-                        $status.text('Installation failed.');
-                    }
-                },
-                complete: function() {
-                    $btn.prop('disabled', false);
-                    $loader.hide();
+                error: function() {
+                    stopInstallPolling('Failed to start install.');
                 }
             });
+
+            // Poll the install log every 1.5s
+            var installPoll = setInterval(function() {
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'mamboleo_poll_install',
+                        security: '<?php echo wp_create_nonce("mamboleo_scraper_nonce"); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            updateTerminal(response.data.output);
+                            if (response.data.done) {
+                                const ok = response.data.output.indexOf('exit=0') !== -1
+                                       || response.data.output.indexOf('Successfully installed') !== -1
+                                       || response.data.output.indexOf('Requirement already satisfied') !== -1;
+                                stopInstallPolling(ok ? 'Dependencies installed.' : 'Install finished with errors.');
+                            }
+                        }
+                    }
+                });
+            }, 1500);
         });
     });
     </script>

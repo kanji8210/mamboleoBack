@@ -4674,3 +4674,50 @@ KeyboardInterrupt
 ==================================================================== 
 20:30:10  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
 20:30:10  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+==================================================================== 
+[02/05/2026 20:35:03.25] START cadence=slow 
+==================================================================== 
+20:35:07  INFO      main  === Mamboleo scraper starting — 25 source(s): feed:state_house, feed:business_daily, feed:people_daily, feed:ghafla, feed:hivisasa, feed:the_elephant, feed:kenyan_wall_street, feed:mpasho, feed:east_african, feed:monitor_ug, feed:the_citizen_tz, feed:new_times_rw, feed:addis_standard, feed:garowe_online, feed:sudan_tribune, feed:ap_africa, feed:cnn_africa, feed:france24_africa, feed:dw_africa, feed:voa_africa, feed:guardian_africa, feed:nyt_africa, feed:economist_mea, feed:wsj_africa, feed:xinhua_africa ===
+20:35:07  INFO      main  --- FEED:STATE_HOUSE (limit=30) ---
+20:35:08  INFO      main  --- FEED:STATE_HOUSE done: 0 incidents ---
+20:35:08  INFO      main  --- FEED:BUSINESS_DAILY (limit=30) ---
+20:35:19  WARNING   scraper.business_daily  HTTP 403 \u2192 https://www.businessdailyafrica.com/bd/news
+20:35:19  INFO      main  --- FEED:BUSINESS_DAILY done: 0 incidents ---
+20:35:19  INFO      main  --- FEED:PEOPLE_DAILY (limit=30) ---
+^C 
+==================================================================== 
+[02/05/2026 20:45:03.32] START cadence=fast 
+==================================================================== 
+^C 
+==================================================================== 
+[02/05/2026 21:00:03.47] START cadence=fast 
+==================================================================== 
+21:00:06  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+21:00:06  INFO      main  --- FEED:KDF (limit=30) ---
+^C 
+==================================================================== 
+[02/05/2026 21:15:04.04] START cadence=fast 
+==================================================================== 
+ 
+==================================================================== 
+[02/05/2026 21:30:03.18] START cadence=fast 
+==================================================================== 
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 315, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[02/05/2026 21:30:07.73] END cadence=fast exit=1 

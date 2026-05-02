@@ -23,7 +23,7 @@ def _make_session() -> requests.Session:
         allowed_methods=["GET"],
         raise_on_status=False,
     )
-    adapter = HTTPAdapter(max_retries=retry)
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=8, pool_maxsize=16)
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     session.headers.update(
