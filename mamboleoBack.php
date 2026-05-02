@@ -32,12 +32,17 @@ require_once MAMBOLEO_PLUGIN_DIR . 'includes/rest-api.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/utilities.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/cors.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-dashboard.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-scraper.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-review.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-media-monitor.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-location-tools.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-quick-edit.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-ai.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-updates.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-lifecycle.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-expiry.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-updates.php';
 
 // Activation/Deactivation hooks
 function mamboleo_activate() {

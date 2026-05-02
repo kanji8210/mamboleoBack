@@ -13,12 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // ── Menu registration ─────────────────────────────────────────────────────────
 add_action( 'admin_menu', function () {
-    // Parent menu is registered in admin-scraper.php; guard in case order changes.
-    $parent = isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ? 'mamboleo-main' : null;
-    if ( ! $parent ) {
-        add_menu_page( 'Mamboleo', 'Mamboleo', 'manage_options', 'mamboleo-main', '__return_null', 'dashicons-shield-alt', 80 );
-        $parent = 'mamboleo-main';
-    }
+    if ( ! isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ) return;
 
     $count = mamboleo_pending_review_count();
     $label = $count > 0
@@ -26,7 +21,7 @@ add_action( 'admin_menu', function () {
         : 'Review Queue';
 
     add_submenu_page(
-        $parent,
+        'mamboleo-main',
         'Review Queue',
         $label,
         'manage_options',

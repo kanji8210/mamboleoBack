@@ -157,3 +157,88 @@ function mamboleo_save_meta( int $post_id ): void {
 
     update_post_meta( $post_id, 'is_verified', isset( $_POST['mamboleo_is_verified'] ) ? 1 : 0 );
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * AI Intelligence side meta-box on the incident edit screen.
+ * Surfaces what the local LLM said about this incident + a Re-analyse button.
+ * ────────────────────────────────────────────────────────────────────── */
+add_action( 'add_meta_boxes', function () {
+    add_meta_box(
+        'mamboleo_ai_panel',
+        __( 'AI Intelligence', 'mamboleo' ),
+        'mamboleo_ai_meta_box_cb',
+        'incident',
+        'side',
+        'default'
+    );
+} );
+
+function mamboleo_ai_meta_box_cb( WP_Post $post ): void {
+    $model      = get_post_meta( $post->ID, 'ai_model', true );
+    $summary    = get_post_meta( $post->ID, 'ai_summary', true );
+    $reasoning  = get_post_meta( $post->ID, 'ai_severity_reasoning', true );
+    $flags      = get_post_meta( $post->ID, 'ai_flags', true );
+    $followup   = (int) get_post_meta( $post->ID, 'ai_is_followup', true );
+    $processed  = get_post_meta( $post->ID, 'ai_processed_at', true );
+    $expires    = get_post_meta( $post->ID, 'expires_at', true );
+    $updates    = (int) get_post_meta( $post->ID, 'update_count', true );
+    ?>
+    <style>
+        .mb-ai-row { margin:6px 0; font-size:12px; }
+        .mb-ai-row b { display:inline-block; min-width:78px; color:#646970; font-weight:600; }
+        .mb-ai-chip { display:inline-block; padding:2px 6px; border-radius:3px; background:#f0f0f1; font-size:11px; margin-right:4px; }
+        .mb-ai-summary { background:#f6f7f7; padding:8px; border-radius:4px; font-size:12px; line-height:1.5; }
+    </style>
+    <?php if ( $model ) : ?>
+        <div class="mb-ai-row"><b><?php esc_html_e( 'Model', 'mamboleo' ); ?>:</b> <code><?php echo esc_html( $model ); ?></code></div>
+        <?php if ( $followup ) : ?>
+            <div class="mb-ai-row"><span class="mb-ai-chip" style="background:#fcf0a8;"><?php esc_html_e( 'Follow-up story', 'mamboleo' ); ?></span></div>
+        <?php endif; ?>
+        <?php if ( $flags ) : ?>
+            <div class="mb-ai-row"><b><?php esc_html_e( 'Flags', 'mamboleo' ); ?>:</b>
+                <?php foreach ( array_filter( array_map( 'trim', explode( ',', $flags ) ) ) as $f ) : ?>
+                    <span class="mb-ai-chip" style="background:#fde2e2;color:#8a1f1f;"><?php echo esc_html( $f ); ?></span>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <?php if ( $summary ) : ?>
+            <div class="mb-ai-row"><b><?php esc_html_e( 'Summary', 'mamboleo' ); ?>:</b></div>
+            <div class="mb-ai-summary"><?php echo esc_html( $summary ); ?></div>
+        <?php endif; ?>
+        <?php if ( $reasoning ) : ?>
+            <div class="mb-ai-row" style="margin-top:8px;"><b><?php esc_html_e( 'Severity', 'mamboleo' ); ?>:</b></div>
+            <div class="mb-ai-summary"><?php echo esc_html( $reasoning ); ?></div>
+        <?php endif; ?>
+        <?php if ( $processed ) : ?>
+            <div class="mb-ai-row" style="margin-top:8px;color:#646970;">
+                <?php printf( esc_html__( 'Analysed %s ago', 'mamboleo' ), esc_html( human_time_diff( strtotime( $processed ), time() ) ) ); ?>
+            </div>
+        <?php endif; ?>
+    <?php else : ?>
+        <p style="font-size:12px;color:#646970;"><?php esc_html_e( 'Not yet analysed by the AI layer.', 'mamboleo' ); ?></p>
+    <?php endif; ?>
+
+    <hr style="margin:12px 0;" />
+    <div class="mb-ai-row"><b><?php esc_html_e( 'Updates', 'mamboleo' ); ?>:</b> <?php echo (int) $updates; ?></div>
+    <?php if ( $expires ) : ?>
+        <div class="mb-ai-row"><b><?php esc_html_e( 'Expires', 'mamboleo' ); ?>:</b>
+            <?php
+            $ts = strtotime( $expires );
+            echo $ts > time()
+                ? esc_html( 'in ' . human_time_diff( time(), $ts ) )
+                : '<span style="color:#d63638;">' . esc_html__( 'overdue', 'mamboleo' ) . '</span>';
+            ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-top:10px;">
+        <?php wp_nonce_field( 'mamboleo_reanalyse' ); ?>
+        <input type="hidden" name="action"      value="mamboleo_reanalyse" />
+        <input type="hidden" name="incident_id" value="<?php echo (int) $post->ID; ?>" />
+        <button class="button button-secondary" style="width:100%;"><?php esc_html_e( 'Re-analyse with AI', 'mamboleo' ); ?></button>
+    </form>
+    <p style="font-size:11px;color:#646970;margin:6px 0 0;">
+        <?php esc_html_e( 'Re-analysis runs on the next scraper / backfill pass.', 'mamboleo' ); ?>
+    </p>
+    <?php
+}

@@ -304,18 +304,17 @@ add_action( 'rest_api_init', function () {
 // ──────────────────────────────────────────────────────────────────────────
 
 add_action( 'admin_menu', function () {
-    $parent = isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ? 'mamboleo-main' : null;
-    if ( ! $parent ) return;
+    if ( ! isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ) return;
     add_submenu_page(
-        $parent,
+        'mamboleo-main',
         'Fix Locations',
         'Fix Locations',
         'manage_options',
         'mamboleo-fix-locations',
         'mamboleo_fix_locations_page',
-        5
+        8
     );
-}, 26 );
+}, 27 );
 
 /**
  * List incidents that need a location fix: lat/lng outside Kenya OR

@@ -20,20 +20,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
 add_action( 'admin_menu', function () {
-    $parent = isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ? 'mamboleo-main' : null;
-    if ( ! $parent ) {
-        add_menu_page( 'Mamboleo', 'Mamboleo', 'manage_options', 'mamboleo-main', '__return_null', 'dashicons-shield-alt', 80 );
-        $parent = 'mamboleo-main';
-    }
-
+    if ( ! isset( $GLOBALS['admin_page_hooks']['mamboleo-main'] ) ) return;
     add_submenu_page(
-        $parent,
+        'mamboleo-main',
         'Media Monitor',
         'Media Monitor',
         'manage_options',
         'mamboleo-media-monitor',
         'mamboleo_media_monitor_page',
-        3
+        7
     );
 }, 25 );
 

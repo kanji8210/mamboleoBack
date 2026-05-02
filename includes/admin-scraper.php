@@ -4,21 +4,9 @@
  * Adds a button to the WP admin to trigger backend scraping.
  */
 
-// Register a top-level Mamboleo menu if not already present
+// Scraper submenu — parent menu is registered by admin-dashboard.php.
 add_action('admin_menu', function() {
-    // Top-level menu
-    if (!isset($GLOBALS['admin_page_hooks']['mamboleo-main'])) {
-        add_menu_page(
-            'Mamboleo',
-            'Mamboleo',
-            'manage_options',
-            'mamboleo-main',
-            '__return_null',
-            'dashicons-shield-alt',
-            80
-        );
-    }
-    // Scraper submenu
+    if (!isset($GLOBALS['admin_page_hooks']['mamboleo-main'])) return;
     add_submenu_page(
         'mamboleo-main',
         'Scraper Trigger',
@@ -26,9 +14,9 @@ add_action('admin_menu', function() {
         'manage_options',
         'mamboleo-scraper',
         'mamboleo_scraper_admin_page',
-        1
+        6
     );
-});
+}, 30);
 
 // AJAX Handlers
 add_action('wp_ajax_mamboleo_run_scraper', 'mamboleo_run_scraper_ajax');

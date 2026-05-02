@@ -4526,4 +4526,27 @@ KeyboardInterrupt
 ==================================================================== 
 [02/05/2026 17:35:02.84] START cadence=slow 
 ==================================================================== 
-^C
+^C 
+==================================================================== 
+[02/05/2026 17:45:02.59] START cadence=fast 
+==================================================================== 
+17:45:05  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+17:45:05  INFO      main  --- FEED:KDF (limit=30) ---
+ 
+==================================================================== 
+[02/05/2026 18:00:02.69] START cadence=fast 
+==================================================================== 
+18:00:05  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+18:00:05  INFO      main  --- FEED:KDF (limit=30) ---
+18:00:57  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news/strengthening-strategic-partnerships-through-defence-diplomacy/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news/strengthening-strategic-partnerships-through-defence-diplomacy/ (Caused by ProtocolError('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')))
+18:01:13  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/news-releases/jcsc-holds-college-control-board-meeting/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /news-releases/jcsc-holds-college-control-board-meeting/ (Caused by ReadTimeoutError("HTTPSConnectionPool(host='www.mod.go.ke', port=443): Read timed out. (read timeout=10)"))
+18:01:48  INFO      main  --- FEED:KDF done: 0 incidents ---
+18:01:48  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+18:02:05  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+18:02:05  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+18:02:09  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+18:02:09  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+18:02:36  ERROR     api.client  Article POST failed \u2192 HTTP 403 (server=cloudflare, content-type=text/html; charset=UTF-8): [HTML error page] <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scal
+18:02:40  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
+18:02:56  ERROR     api.client  Article POST timed out (>15s) \u2192 https://mamboleole.com/wp-json/mamboleo/v1/articles
+18:03:01  WARNING   intelligence  LLM unavailable (Ollama unreachable at http://localhost:11434: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/chat (Caused by NewConnectionError("HTTPConnection(host='localhost', port=11434): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it"))) — falling back to keyword classifier
