@@ -4615,3 +4615,42 @@ KeyboardInterrupt
 ==================================================================== 
 [02/05/2026 19:45:03.99] START cadence=fast 
 ==================================================================== 
+ 
+==================================================================== 
+[02/05/2026 20:00:14.78] START cadence=fast 
+==================================================================== 
+20:00:25  INFO      main  === Mamboleo scraper starting — 11 source(s): feed:kdf, feed:citizen_digital, feed:ktn_news, feed:capital_fm, feed:the_star, feed:ntv, feed:k24, feed:kenyans_co_ke, feed:pulse_live, feed:bbc_africa, feed:aljazeera_africa ===
+20:00:25  INFO      main  --- FEED:KDF (limit=30) ---
+20:00:39  WARNING   scraper.kdf  Request failed \u2192 https://www.mod.go.ke/all-news/ : HTTPSConnectionPool(host='www.mod.go.ke', port=443): Max retries exceeded with url: /all-news/ (Caused by NameResolutionError("HTTPSConnection(host='www.mod.go.ke', port=443): Failed to resolve 'www.mod.go.ke' ([Errno 11001] getaddrinfo failed)"))
+20:00:39  INFO      main  --- FEED:KDF done: 0 incidents ---
+20:00:39  INFO      main  --- FEED:CITIZEN_DIGITAL (limit=30) ---
+20:00:42  WARNING   scraper.citizen_digital  Request failed \u2192 https://citizen.digital/news : HTTPSConnectionPool(host='citizen.digital', port=443): Max retries exceeded with url: /news (Caused by NameResolutionError("HTTPSConnection(host='citizen.digital', port=443): Failed to resolve 'citizen.digital' ([Errno 11001] getaddrinfo failed)"))
+20:00:42  INFO      main  --- FEED:CITIZEN_DIGITAL done: 0 incidents ---
+20:00:42  INFO      main  --- FEED:KTN_NEWS (limit=30) ---
+20:00:45  WARNING   scraper.ktn_news  Request failed \u2192 https://www.ktnnews.com/category/news/ : HTTPSConnectionPool(host='www.ktnnews.com', port=443): Max retries exceeded with url: /category/news/ (Caused by NameResolutionError("HTTPSConnection(host='www.ktnnews.com', port=443): Failed to resolve 'www.ktnnews.com' ([Errno 11001] getaddrinfo failed)"))
+20:00:45  INFO      main  --- FEED:KTN_NEWS done: 0 incidents ---
+20:00:45  INFO      main  --- FEED:CAPITAL_FM (limit=30) ---
+20:00:49  WARNING   scraper.capital_fm  Request failed \u2192 https://www.capitalfm.co.ke/news/ : HTTPSConnectionPool(host='www.capitalfm.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='www.capitalfm.co.ke', port=443): Failed to resolve 'www.capitalfm.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:00:49  INFO      main  --- FEED:CAPITAL_FM done: 0 incidents ---
+20:00:49  INFO      main  --- FEED:THE_STAR (limit=30) ---
+20:00:52  WARNING   scraper.the_star  Request failed \u2192 https://www.the-star.co.ke/news/ : HTTPSConnectionPool(host='www.the-star.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='www.the-star.co.ke', port=443): Failed to resolve 'www.the-star.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:00:52  INFO      main  --- FEED:THE_STAR done: 0 incidents ---
+20:00:52  INFO      main  --- FEED:NTV (limit=30) ---
+20:00:55  WARNING   scraper.ntv  Request failed \u2192 https://ntvkenya.co.ke/news/ : HTTPSConnectionPool(host='ntvkenya.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='ntvkenya.co.ke', port=443): Failed to resolve 'ntvkenya.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:00:55  INFO      main  --- FEED:NTV done: 0 incidents ---
+20:00:55  INFO      main  --- FEED:K24 (limit=30) ---
+20:00:58  WARNING   scraper.k24  Request failed \u2192 https://www.k24tv.co.ke/news/ : HTTPSConnectionPool(host='www.k24tv.co.ke', port=443): Max retries exceeded with url: /news/ (Caused by NameResolutionError("HTTPSConnection(host='www.k24tv.co.ke', port=443): Failed to resolve 'www.k24tv.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:00:58  INFO      main  --- FEED:K24 done: 0 incidents ---
+20:00:58  INFO      main  --- FEED:KENYANS_CO_KE (limit=30) ---
+20:01:01  WARNING   scraper.kenyans_co_ke  Request failed \u2192 https://www.kenyans.co.ke/news : HTTPSConnectionPool(host='www.kenyans.co.ke', port=443): Max retries exceeded with url: /news (Caused by NameResolutionError("HTTPSConnection(host='www.kenyans.co.ke', port=443): Failed to resolve 'www.kenyans.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:01:01  INFO      main  --- FEED:KENYANS_CO_KE done: 0 incidents ---
+20:01:01  INFO      main  --- FEED:PULSE_LIVE (limit=30) ---
+20:01:04  WARNING   scraper.pulse_live  Request failed \u2192 https://www.pulselive.co.ke/news : HTTPSConnectionPool(host='www.pulselive.co.ke', port=443): Max retries exceeded with url: /news (Caused by NameResolutionError("HTTPSConnection(host='www.pulselive.co.ke', port=443): Failed to resolve 'www.pulselive.co.ke' ([Errno 11001] getaddrinfo failed)"))
+20:01:04  INFO      main  --- FEED:PULSE_LIVE done: 0 incidents ---
+20:01:04  INFO      main  --- FEED:BBC_AFRICA (limit=30) ---
+20:01:04  INFO      main  --- FEED:BBC_AFRICA done: 0 incidents ---
+20:01:04  INFO      main  --- FEED:ALJAZEERA_AFRICA (limit=30) ---
+20:01:08  WARNING   scraper.aljazeera_africa  Request failed \u2192 https://www.aljazeera.com/africa/ : HTTPSConnectionPool(host='www.aljazeera.com', port=443): Max retries exceeded with url: /africa/ (Caused by NameResolutionError("HTTPSConnection(host='www.aljazeera.com', port=443): Failed to resolve 'www.aljazeera.com' ([Errno 11001] getaddrinfo failed)"))
+20:01:08  INFO      main  --- FEED:ALJAZEERA_AFRICA done: 0 incidents ---
+20:01:08  INFO      main  === Done. Total new incidents: 0 ===
+[02/05/2026 20:01:08.28] END cadence=fast exit=0 
