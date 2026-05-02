@@ -64,7 +64,10 @@ function mamboleo_dashboard_page(): void {
 
     $lifecycle_run = get_option( 'mamboleo_lifecycle_last_run', null );
     $expiry_run    = get_option( 'mamboleo_expiry_last_run', null );
-    $ollama_host   = get_option( 'mamboleo_ollama_host', 'http://localhost:11434' );
+    $llm_provider  = get_option( 'mamboleo_llm_provider', 'ollama' );
+    $llm_endpoint  = $llm_provider === 'openai'
+        ? get_option( 'mamboleo_openai_base_url', 'https://api.openai.com/v1' )
+        : get_option( 'mamboleo_ollama_host', 'http://localhost:11434' );
 
     ?>
     <div class="wrap">
@@ -128,7 +131,8 @@ function mamboleo_dashboard_page(): void {
             </div>
             <div class="mb-panel">
                 <h2><?php esc_html_e( 'AI Intelligence layer', 'mamboleo' ); ?></h2>
-                <p class="mb-kv"><b><?php esc_html_e( 'Ollama host', 'mamboleo' ); ?>:</b> <code><?php echo esc_html( $ollama_host ); ?></code></p>
+                <p class="mb-kv"><b><?php esc_html_e( 'Provider', 'mamboleo' ); ?>:</b> <code><?php echo esc_html( $llm_provider ); ?></code></p>
+                <p class="mb-kv"><b><?php esc_html_e( 'Endpoint', 'mamboleo' ); ?>:</b> <code><?php echo esc_html( $llm_endpoint ); ?></code></p>
                 <p class="mb-kv"><b><?php esc_html_e( 'Incidents analysed', 'mamboleo' ); ?>:</b>
                     <?php printf( '%d / %d', (int) $analysed, (int) $total_incidents ); ?>
                 </p>

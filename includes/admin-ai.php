@@ -29,18 +29,38 @@ add_action( 'admin_menu', function () {
 
 /* Settings storage */
 add_action( 'admin_init', function () {
+    register_setting( 'mamboleo_ai', 'mamboleo_llm_provider', [
+        'type' => 'string', 'default' => 'ollama',
+        'sanitize_callback' => static fn( $v ) => in_array( $v, [ 'ollama', 'openai' ], true ) ? $v : 'ollama',
+    ] );
     register_setting( 'mamboleo_ai', 'mamboleo_ollama_host',  [ 'type' => 'string', 'default' => 'http://localhost:11434' ] );
     register_setting( 'mamboleo_ai', 'mamboleo_ollama_model', [ 'type' => 'string', 'default' => 'llama3.1:8b' ] );
     register_setting( 'mamboleo_ai', 'mamboleo_ollama_timeout', [ 'type' => 'integer', 'default' => 45 ] );
+    register_setting( 'mamboleo_ai', 'mamboleo_openai_base_url', [ 'type' => 'string', 'default' => 'https://api.openai.com/v1' ] );
+    register_setting( 'mamboleo_ai', 'mamboleo_openai_model',    [ 'type' => 'string', 'default' => 'gpt-4o-mini' ] );
+    register_setting( 'mamboleo_ai', 'mamboleo_openai_api_key',  [
+        'type' => 'string', 'default' => '',
+        'sanitize_callback' => static fn( $v ) => trim( (string) $v ),
+    ] );
 } );
 
 /**
- * Live ping to Ollama. Cached 60s so the dashboard doesn't hammer the host.
+ * Live ping to the active provider. Cached 60s.
  */
 function mamboleo_ollama_health(): array {
     $cached = get_transient( 'mamboleo_ollama_health' );
     if ( is_array( $cached ) ) return $cached;
 
+    $provider = get_option( 'mamboleo_llm_provider', 'ollama' );
+    $result   = $provider === 'openai'
+        ? mamboleo_health_openai()
+        : mamboleo_health_ollama();
+
+    set_transient( 'mamboleo_ollama_health', $result, MINUTE_IN_SECONDS );
+    return $result;
+}
+
+function mamboleo_health_ollama(): array {
     $host = rtrim( get_option( 'mamboleo_ollama_host', 'http://localhost:11434' ), '/' );
     $resp = wp_remote_get( $host . '/api/tags', [ 'timeout' => 3 ] );
     $ok   = ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) === 200;
@@ -52,14 +72,51 @@ function mamboleo_ollama_health(): array {
             $models = array_column( $body['models'], 'name' );
         }
     }
-
-    $result = [
-        'ok'     => $ok,
-        'models' => $models,
-        'error'  => is_wp_error( $resp ) ? $resp->get_error_message() : '',
+    return [
+        'provider' => 'ollama',
+        'endpoint' => $host,
+        'ok'       => $ok,
+        'models'   => $models,
+        'error'    => is_wp_error( $resp ) ? $resp->get_error_message() : ( $ok ? '' : 'HTTP ' . wp_remote_retrieve_response_code( $resp ) ),
     ];
-    set_transient( 'mamboleo_ollama_health', $result, MINUTE_IN_SECONDS );
-    return $result;
+}
+
+function mamboleo_health_openai(): array {
+    $base = rtrim( get_option( 'mamboleo_openai_base_url', 'https://api.openai.com/v1' ), '/' );
+    $key  = (string) get_option( 'mamboleo_openai_api_key', '' );
+    $is_local = ( strpos( $base, 'localhost' ) !== false || strpos( $base, '127.0.0.1' ) !== false );
+
+    if ( $key === '' && ! $is_local ) {
+        return [
+            'provider' => 'openai',
+            'endpoint' => $base,
+            'ok'       => false,
+            'models'   => [],
+            'error'    => 'API key not set — add it below or use a local endpoint.',
+        ];
+    }
+
+    $headers = [];
+    if ( $key !== '' ) $headers['Authorization'] = 'Bearer ' . $key;
+    $resp = wp_remote_get( $base . '/models', [ 'timeout' => 4, 'headers' => $headers ] );
+    $code = is_wp_error( $resp ) ? 0 : (int) wp_remote_retrieve_response_code( $resp );
+    // Some providers reject GET /models with 401/403 even when usable; treat <500 as up.
+    $ok   = ! is_wp_error( $resp ) && $code > 0 && $code < 500;
+
+    $models = [];
+    if ( $ok && $code === 200 ) {
+        $body = json_decode( wp_remote_retrieve_body( $resp ), true );
+        if ( ! empty( $body['data'] ) && is_array( $body['data'] ) ) {
+            $models = array_slice( array_column( $body['data'], 'id' ), 0, 25 );
+        }
+    }
+    return [
+        'provider' => 'openai',
+        'endpoint' => $base,
+        'ok'       => $ok,
+        'models'   => $models,
+        'error'    => is_wp_error( $resp ) ? $resp->get_error_message() : ( $ok ? '' : 'HTTP ' . $code ),
+    ];
 }
 
 /* Action: queue an incident for re-analysis. The scraper picks up the flag
@@ -103,14 +160,21 @@ function mamboleo_ai_admin_page(): void {
     <div class="wrap">
         <h1><?php esc_html_e( 'AI Intelligence', 'mamboleo' ); ?></h1>
         <p class="description">
-            <?php esc_html_e( 'Local LLM (Ollama) classifies incident type, severity, follow-up nature and risk flags. Editors stay in control — every analysis is logged and re-runnable.', 'mamboleo' ); ?>
+            <?php esc_html_e( 'An LLM classifies incident type, severity, follow-up nature and risk flags. You can run a fully offline model (Ollama) or any OpenAI-compatible cloud endpoint (Groq, OpenAI, OpenRouter, LM Studio…). Editors stay in control — every analysis is logged and re-runnable.', 'mamboleo' ); ?>
         </p>
 
         <h2><?php esc_html_e( 'Status', 'mamboleo' ); ?></h2>
         <table class="widefat striped" style="max-width:780px;">
             <tbody>
                 <tr>
-                    <th style="width:200px;"><?php esc_html_e( 'Ollama reachable', 'mamboleo' ); ?></th>
+                    <th style="width:200px;"><?php esc_html_e( 'Active provider', 'mamboleo' ); ?></th>
+                    <td>
+                        <code><?php echo esc_html( $health['provider'] ?? '—' ); ?></code>
+                        — <code><?php echo esc_html( $health['endpoint'] ?? '—' ); ?></code>
+                    </td>
+                </tr>
+                <tr>
+                    <th><?php esc_html_e( 'Reachable', 'mamboleo' ); ?></th>
                     <td>
                         <?php if ( $health['ok'] ) : ?>
                             <span style="color:#00a32a;font-weight:600;">● Online</span>
@@ -139,11 +203,28 @@ function mamboleo_ai_admin_page(): void {
         </table>
 
         <h2 style="margin-top:24px;"><?php esc_html_e( 'Settings', 'mamboleo' ); ?></h2>
+        <?php $provider = get_option( 'mamboleo_llm_provider', 'ollama' ); ?>
         <form method="post" action="options.php">
             <?php settings_fields( 'mamboleo_ai' ); ?>
             <table class="form-table" style="max-width:780px;">
                 <tr>
-                    <th scope="row"><label for="mamboleo_ollama_host"><?php esc_html_e( 'Ollama host', 'mamboleo' ); ?></label></th>
+                    <th scope="row"><label for="mamboleo_llm_provider"><?php esc_html_e( 'Provider', 'mamboleo' ); ?></label></th>
+                    <td>
+                        <select id="mamboleo_llm_provider" name="mamboleo_llm_provider">
+                            <option value="ollama" <?php selected( $provider, 'ollama' ); ?>>Ollama (local, offline)</option>
+                            <option value="openai" <?php selected( $provider, 'openai' ); ?>>OpenAI-compatible (cloud or LM Studio)</option>
+                        </select>
+                        <p class="description">
+                            <?php esc_html_e( 'These options must also be set in scraper/.env so the Python pipeline picks them up. WordPress only uses them for health checks.', 'mamboleo' ); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <h3><?php esc_html_e( 'Ollama (local)', 'mamboleo' ); ?></h3>
+            <table class="form-table" style="max-width:780px;">
+                <tr>
+                    <th scope="row"><label for="mamboleo_ollama_host"><?php esc_html_e( 'Host', 'mamboleo' ); ?></label></th>
                     <td><input type="url" id="mamboleo_ollama_host" name="mamboleo_ollama_host" value="<?php echo esc_attr( get_option( 'mamboleo_ollama_host', 'http://localhost:11434' ) ); ?>" class="regular-text" /></td>
                 </tr>
                 <tr>
@@ -153,6 +234,42 @@ function mamboleo_ai_admin_page(): void {
                 <tr>
                     <th scope="row"><label for="mamboleo_ollama_timeout"><?php esc_html_e( 'Timeout (seconds)', 'mamboleo' ); ?></label></th>
                     <td><input type="number" id="mamboleo_ollama_timeout" name="mamboleo_ollama_timeout" value="<?php echo esc_attr( get_option( 'mamboleo_ollama_timeout', 45 ) ); ?>" min="5" max="300" /></td>
+                </tr>
+            </table>
+
+            <h3><?php esc_html_e( 'OpenAI-compatible', 'mamboleo' ); ?></h3>
+            <table class="form-table" style="max-width:780px;">
+                <tr>
+                    <th scope="row"><label for="mamboleo_openai_base_url"><?php esc_html_e( 'Base URL', 'mamboleo' ); ?></label></th>
+                    <td>
+                        <input type="url" id="mamboleo_openai_base_url" name="mamboleo_openai_base_url" value="<?php echo esc_attr( get_option( 'mamboleo_openai_base_url', 'https://api.openai.com/v1' ) ); ?>" class="regular-text" />
+                        <p class="description">
+                            Groq: <code>https://api.groq.com/openai/v1</code> ·
+                            OpenAI: <code>https://api.openai.com/v1</code> ·
+                            LM Studio: <code>http://localhost:1234/v1</code>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="mamboleo_openai_model"><?php esc_html_e( 'Model', 'mamboleo' ); ?></label></th>
+                    <td>
+                        <input type="text" id="mamboleo_openai_model" name="mamboleo_openai_model" value="<?php echo esc_attr( get_option( 'mamboleo_openai_model', 'gpt-4o-mini' ) ); ?>" class="regular-text" />
+                        <p class="description">
+                            <?php esc_html_e( 'e.g. gpt-4o-mini, llama-3.1-8b-instant (Groq), mistral-small-latest', 'mamboleo' ); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="mamboleo_openai_api_key"><?php esc_html_e( 'API key', 'mamboleo' ); ?></label></th>
+                    <td>
+                        <?php $stored_key = (string) get_option( 'mamboleo_openai_api_key', '' ); ?>
+                        <input type="password" id="mamboleo_openai_api_key" name="mamboleo_openai_api_key" value="<?php echo esc_attr( $stored_key ); ?>" class="regular-text" autocomplete="new-password" />
+                        <?php if ( $stored_key ) : ?>
+                            <p class="description"><?php esc_html_e( 'Stored. Replace to rotate, leave blank to clear.', 'mamboleo' ); ?></p>
+                        <?php else : ?>
+                            <p class="description"><?php esc_html_e( 'Required for cloud providers. Not needed for LM Studio / localhost.', 'mamboleo' ); ?></p>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             </table>
             <?php submit_button(); ?>

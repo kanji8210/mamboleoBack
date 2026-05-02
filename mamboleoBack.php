@@ -40,6 +40,7 @@ require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-location-tools.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-quick-edit.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-ai.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-updates.php';
+require_once MAMBOLEO_PLUGIN_DIR . 'includes/admin-social.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-lifecycle.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-expiry.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'includes/incident-updates.php';
