@@ -110,10 +110,8 @@ class GenericScraper(BaseScraper):
         for feed_url in self.rss_feeds:
             if count >= limit:
                 return
-            try:
-                feed = feedparser.parse(feed_url)
-            except Exception as exc:  # noqa: BLE001 — feedparser is broad
-                self.log.warning("RSS parse failed %s : %s", feed_url, exc)
+            feed = self.fetch_feed(feed_url)
+            if feed is None:
                 continue
             for entry in feed.entries:
                 if count >= limit:

@@ -74,6 +74,26 @@ class BaseScraper:
 
     # ── Interface ─────────────────────────────────────────────────────────────
 
+    def fetch_feed(self, feed_url: str, timeout: int = 10):
+        """Fetch and parse an RSS/Atom feed with a hard timeout.
+
+        `feedparser.parse(url)` does NOT honour any timeout and can hang
+        forever on a slow or dead feed. Always go through this helper so
+        the request is bounded by our session's connect/read timeouts.
+
+        Returns a parsed feedparser FeedParserDict, or None on any failure
+        (network error, non-200, empty body). Caller can check ``.entries``.
+        """
+        import feedparser  # local import to avoid hard dep in base imports
+        resp = self.get(feed_url, timeout=timeout)
+        if not resp:
+            return None
+        try:
+            return feedparser.parse(resp.content)
+        except Exception as exc:  # noqa: BLE001
+            self.log.warning("Feed parse failed → %s : %s", feed_url, exc)
+            return None
+
     def fetch_articles(self, limit: int = 20) -> Iterator[dict]:
         """
         Yield article dicts:

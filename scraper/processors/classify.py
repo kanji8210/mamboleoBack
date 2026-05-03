@@ -279,3 +279,79 @@ def classify(title: str, body: str = "") -> Classification | None:
         severity=severity,
         confidence=round(best_score, 2),
     )
+
+
+# ── Broad LLM gate ────────────────────────────────────────────────────────────
+# Headline-level signals that strongly imply a real-world event but might miss
+# the strict topic+verb co-occurrence required by classify(). Used purely as a
+# cheap router so the LLM gets a chance to look at the article.
+_CANDIDATE_HEADLINE_WORDS: list[str] = [
+    # casualties / harm
+    "dead", "died", "dies", "killed", "kills", "deaths", "fatal", "fatalities",
+    "casualties", "injured", "wounded", "hospitalised", "hospitalized",
+    "perished", "missing", "feared dead", "bodies", "body found", "found dead",
+    "trapped", "rescued", "evacuated", "displaced", "stranded", "marooned",
+    # event verbs (broader than the strict EVENT_VERBS set)
+    "crash", "crashed", "collide", "collided", "overturned", "rolled over",
+    "burnt", "burned", "burns", "burning", "razed", "gutted", "ablaze",
+    "explosion", "blast", "exploded", "flooded", "flooding", "swept away",
+    "washed away", "submerged", "drowned", "drowning", "landslide", "mudslide",
+    "shot", "shooting", "stabbed", "stabbing", "lynched", "robbed", "raided",
+    "kidnapped", "kidnapping", "abducted", "abduction", "ambushed", "ambush",
+    "looted", "torched", "clashed", "clashes", "riot", "rioting", "protest",
+    "demonstration", "teargas", "running battles", "attack", "attacked",
+    "outbreak", "epidemic", "contaminated", "poisoned", "poisoning",
+    "struck by lightning",
+    # editorial cues
+    "tragedy", "horror", "carnage", "mayhem", "scene of", "mourning",
+    "grief", "panic", "chaos", "stampede", "hostage", "siege",
+    # weather hazards
+    "storm", "hailstorm", "cyclone", "tornado", "heavy downpour", "flash flood",
+]
+
+
+def looks_like_incident_candidate(title: str, body: str = "") -> bool:
+    """Cheap, *inclusive* gate that decides whether the LLM should look at this.
+
+    Returns True when ANY of the following hold:
+      • the headline contains a casualty / harm / event word
+      • the title or body contains any incident topic keyword
+      • the title or body contains any strict event verb
+
+    Returns False only when the title is clearly off-topic (sports / celebrity /
+    policy speech / religious ceremony) AND no incident signal is present.
+
+    This is *much* more permissive than `classify()` on purpose — its job is
+    to filter obvious noise (sports recaps, music videos, opinion columns)
+    while still routing borderline narrative pieces to the LLM, which is the
+    authoritative judge.
+    """
+    title_l = (title or "").lower()
+    body_l  = (body or "").lower()
+
+    # Hard exclusion — only on the *headline*. Body matches are too noisy
+    # (a celebrity may be quoted in an incident article).
+    if _is_excluded(title_l):
+        # Still allow through if a strong casualty word appears in the title.
+        for w in ("killed", "dead", "died", "shot", "stabbed", "crash",
+                  "fatal", "explosion", "fire ", "ablaze"):
+            if w in title_l:
+                return True
+        return False
+
+    # Headline-level event signal → always send to LLM.
+    for w in _CANDIDATE_HEADLINE_WORDS:
+        if w in title_l:
+            return True
+
+    # Any incident topic keyword anywhere → send to LLM.
+    for kws in INCIDENT_KEYWORDS.values():
+        if _count_word_hits(title_l, kws) or _count_word_hits(body_l, kws):
+            return True
+
+    # Any strict event verb anywhere → send to LLM.
+    for verbs in EVENT_VERBS.values():
+        if _count_word_hits(title_l, verbs) or _count_word_hits(body_l, verbs):
+            return True
+
+    return False

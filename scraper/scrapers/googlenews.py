@@ -39,8 +39,10 @@ class GoogleNewsScraper(BaseScraper):
             feed_url = f"https://news.google.com/rss/search?q={encoded_query}+when:24h&hl=en-KE&gl=KE&ceid=KE:en"
             
             self.log.info("Searching Google News: %r", query)
-            feed = feedparser.parse(feed_url)
-            
+            feed = self.fetch_feed(feed_url)
+            if feed is None:
+                continue
+            self.log.info("  → %d entries from Google News", len(feed.entries))
             for entry in feed.entries:
                 if count >= limit:
                     break
@@ -62,33 +64,35 @@ class GoogleNewsScraper(BaseScraper):
                     title=title,
                     source=f"Google News ({source_name})",
                     published_at=_parse_rss_date(entry),
+                    summary=entry.get("summary", ""),
                 )
                 
                 if article:
                     count += 1
                     yield article
 
-    def _enrich(self, url: str, title: str, source: str, published_at: str) -> dict | None:
+    def _enrich(self, url: str, title: str, source: str, published_at: str,
+                summary: str = "") -> dict | None:
+        """Build an article dict from the RSS entry alone.
+
+        We deliberately do NOT follow Google News' redirect URLs
+        (`news.google.com/rss/articles/CBMi…`) — they go through a JavaScript
+        decoder page that stalls plain-`requests` clients indefinitely.
+        The RSS title + summary is enough signal for the LLM intelligence
+        layer to decide is_incident; downstream consumers can fetch the real
+        publisher URL on demand if needed.
         """
-        For Google News, we mostly rely on the feed data since follow-through scraping 
-        of the target site might still hit 403s.
-        """
-        # We still try to get the real content if possible, but we won't fail if we can't
-        resp = self.get(url)
         content = ""
-        if resp:
-            soup = BeautifulSoup(resp.text, "lxml")
-            # Try to find common content blocks
-            for sel in ["article", ".entry-content", ".article-body", ".story-body"]:
-                el = soup.select_one(sel)
-                if el:
-                    content = el.get_text(" ", strip=True)[:3000]
-                    break
-        
+        if summary:
+            try:
+                content = BeautifulSoup(summary, "lxml").get_text(" ", strip=True)[:1500]
+            except Exception:  # noqa: BLE001
+                content = summary[:1500]
+
         return {
             "url":          url,
             "title":        title,
-            "excerpt":      "", # RSS excerpt is often just a link
+            "excerpt":      content[:280],
             "content":      content,
             "published_at": published_at,
             "source":       source,

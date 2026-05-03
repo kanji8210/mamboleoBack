@@ -174,7 +174,9 @@ class AdvisoryScraper(BaseScraper):
             return
 
         feed_url = "https://travel.state.gov/_res/rss/TAs.xml"
-        feed = feedparser.parse(feed_url)
+        feed = self.fetch_feed(feed_url)
+        if feed is None:
+            return
         for entry in feed.entries:
             title = entry.get("title", "")
             summary = entry.get("summary", "")

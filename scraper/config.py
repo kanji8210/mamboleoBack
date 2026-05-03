@@ -28,12 +28,15 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 #   • "openai"  — any OpenAI Chat-Completions-compatible endpoint
 #                 (OpenAI, Groq, Together.ai, OpenRouter, Mistral, LM Studio…)
 #
-# Source of truth for these values is the WordPress admin (Mamboleo → AI
-# Intelligence). We fetch them at process start via the authenticated
-# /mamboleo/v1/llm-config endpoint so the API key never has to live in
-# scraper/.env. Local env vars still override (handy for CI / offline runs).
-# Set OLLAMA_ENABLED=0 to disable the LLM entirely and fall back to the
-# legacy keyword classifier.
+# **Source of truth is the WordPress admin** (Mamboleo → AI Intelligence).
+# Provider, endpoint, model, and API key are fetched at process start via
+# the authenticated /mamboleo/v1/llm-config endpoint and cached on disk so a
+# transient WAF block doesn't downgrade the run. Nothing related to the LLM
+# provider lives in scraper/.env any more — keeping secrets out of the
+# filesystem is intentional.
+#
+# Set OLLAMA_ENABLED=0 in .env to disable the LLM entirely and fall back to
+# the legacy keyword classifier.
 def _fetch_remote_llm_config() -> dict:
     """Pull provider settings from WP. Cached for the life of the process.
 
@@ -91,23 +94,28 @@ _REMOTE = _fetch_remote_llm_config()
 _R_OLLAMA = _REMOTE.get("ollama") or {}
 _R_OPENAI = _REMOTE.get("openai") or {}
 
-LLM_PROVIDER   = (os.getenv("LLM_PROVIDER") or _REMOTE.get("provider") or "ollama").strip().lower()
+# Provider + model + key all come from WP admin. .env is no longer consulted
+# for any LLM credential — the only env knobs are debug toggles below.
+LLM_PROVIDER   = (_REMOTE.get("provider") or "ollama").strip().lower()
 OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
-OLLAMA_HOST    = (os.getenv("OLLAMA_HOST") or _R_OLLAMA.get("host") or "http://localhost:11434").rstrip("/")
-OLLAMA_MODEL   = os.getenv("OLLAMA_MODEL") or _R_OLLAMA.get("model") or "llama3.1:8b"
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT") or _R_OLLAMA.get("timeout") or 45)
 
-# OpenAI-compatible provider settings come from WP admin only — the API key
-# is intentionally NOT read from env so it can't leak via .env files or
-# process listings. Endpoint/model can still be overridden for local testing.
-OPENAI_BASE_URL = (os.getenv("OPENAI_BASE_URL") or _R_OPENAI.get("base_url") or "https://api.openai.com/v1").rstrip("/")
-# API key normally comes from WP admin (so it stays out of .env / git).
-# However, env override is allowed as a break-glass fallback for the case
-# where the /llm-config endpoint is blocked (Cloudflare WAF, etc.) — without
-# this, a transient block silently downgrades the run to Ollama → Connection
-# refused. Set OPENAI_API_KEY=... in scraper/.env only as a last resort.
-OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY") or _R_OPENAI.get("api_key") or ""
-OPENAI_MODEL    = os.getenv("OPENAI_MODEL") or _R_OPENAI.get("model") or "gpt-4o-mini"
+# When set to 1/true, every scraped article is sent to the LLM intelligence
+# layer (no keyword pre-filter). Useful when the keyword gate is suspected
+# of dropping real incidents written in narrative prose. Costs more LLM calls.
+LLM_ALL_ARTICLES = os.getenv("LLM_ALL_ARTICLES", "0") not in ("0", "false", "False", "")
+
+OLLAMA_HOST    = (_R_OLLAMA.get("host") or "http://localhost:11434").rstrip("/")
+OLLAMA_MODEL   = _R_OLLAMA.get("model") or "llama3.1:8b"
+OLLAMA_TIMEOUT = float(_R_OLLAMA.get("timeout") or 45)
+
+# OpenAI-compatible provider settings (Groq, OpenAI, Together, OpenRouter…).
+# Sourced exclusively from WP admin so the API key cannot leak via .env or
+# process listings. If /llm-config is unreachable AND the disk cache is
+# empty, OPENAI_API_KEY is "" and llm_client.chat_json() raises a clear
+# error — the pipeline then falls back to the keyword classifier.
+OPENAI_BASE_URL = (_R_OPENAI.get("base_url") or "https://api.openai.com/v1").rstrip("/")
+OPENAI_API_KEY  = _R_OPENAI.get("api_key") or ""
+OPENAI_MODEL    = _R_OPENAI.get("model") or "gpt-4o-mini"
 OPENAI_TIMEOUT  = float(_R_OPENAI.get("timeout") or 60)
 
 # ── Social handles ─────────────────────────────────────────────────────────

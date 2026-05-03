@@ -59,7 +59,9 @@ class StandardScraper(BaseScraper):
         for feed_url in _RSS_FEEDS:
             if count >= limit:
                 break
-            feed = feedparser.parse(feed_url)
+            feed = self.fetch_feed(feed_url)
+            if feed is None:
+                continue
             for entry in feed.entries:
                 if count >= limit:
                     break

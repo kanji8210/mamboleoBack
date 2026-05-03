@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import db
 import health
 from api import client as api
-from config import DB_PATH, MAX_ARTICLES
+from config import DB_PATH, MAX_ARTICLES, LLM_ALL_ARTICLES
 from processors import analyze, classify as legacy, geocoder, intelligence, locations
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
@@ -71,7 +71,8 @@ ALL_SCRAPERS = {
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
-def process_article(raw: dict, dry_run: bool) -> bool:
+def process_article(raw: dict, dry_run: bool, stats: dict | None = None,
+                    llm_all: bool = False) -> bool:
     """
     Full pipeline for one article:
       1. Deduplicate via SQLite
@@ -82,8 +83,13 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     """
     url = raw["url"]
 
+    def _bump(key: str) -> None:
+        if stats is not None:
+            stats[key] = stats.get(key, 0) + 1
+
     if db.is_seen(url, DB_PATH):
         log.debug("Skip (seen): %s", url)
+        _bump("already_seen")
         return False
 
     # ── Step 2: article-level NLP (runs on EVERYTHING) ────────────────────────
@@ -112,24 +118,30 @@ def process_article(raw: dict, dry_run: bool) -> bool:
     # ── Step 4: is this also an incident? ─────────────────────────────────────
     text = raw["title"] + " " + raw.get("excerpt", "") + " " + raw.get("content", "")
 
-    # Fast keyword pre-filter: if the legacy classifier finds no incident
-    # signal at all (no event verbs + no incident topic keywords), skip the
-    # expensive LLM call entirely. Behaviour preserved: we still mark the
-    # URL seen and POST the article record above — only the per-article
-    # 5–45 s LLM round-trip is short-circuited for obvious non-incidents.
+    # Cheap, *inclusive* gate: route to the LLM whenever the article shows
+    # any incident signal. The strict topic+verb classifier was dropping
+    # real incidents written in narrative prose ("Tragedy strikes…",
+    # "Three found dead…") because they don't hit the narrow verb list.
+    # Set LLM_ALL_ARTICLES=1 (or pass --llm-all) to bypass even this gate
+    # and let the LLM see every article.
     body_for_check = raw.get("content", "") or raw.get("excerpt", "")
-    if legacy.classify(raw["title"], body_for_check) is None:
-        if not dry_run:
-            db.mark_seen(url, DB_PATH)
-        return False
+    if not (llm_all or LLM_ALL_ARTICLES):
+        if not legacy.looks_like_incident_candidate(raw["title"], body_for_check):
+            _bump("prefilter_dropped")
+            if not dry_run:
+                db.mark_seen(url, DB_PATH)
+            return False
 
+    _bump("llm_checked")
+    log.info("  · LLM check: %s", raw["title"][:90])
     intel = intelligence.analyze(raw["title"], body_for_check)
 
     if not intel.is_incident or intel.confidence < CONFIDENCE_MIN:
-        log.debug(
-            "Not an incident (model=%s conf=%.2f): %s",
-            intel.model, intel.confidence, raw["title"][:80],
+        log.info(
+            "    ✗ rejected (model=%s conf=%.2f)",
+            intel.model, intel.confidence,
         )
+        _bump("llm_rejected")
         if not dry_run:
             db.mark_seen(url, DB_PATH)
         return False
@@ -305,6 +317,13 @@ def main() -> None:
         "--skip-preflight", action="store_true",
         help="Skip the dependency check at startup.",
     )
+    parser.add_argument(
+        "--llm-all", action="store_true",
+        help="Send EVERY scraped article to the LLM intelligence layer "
+             "(skip the keyword pre-filter). Use when the pre-filter is "
+             "suspected of dropping real incidents. Equivalent to "
+             "LLM_ALL_ARTICLES=1 in .env.",
+    )
     args = parser.parse_args()
 
     # Dependency preflight — exits early with a friendly diagnostic if any
@@ -382,10 +401,12 @@ def main() -> None:
         local = 0
         seen = 0
         crashed = False
+        stats: dict[str, int] = {}
         try:
             for raw in scraper.fetch_articles(limit=args.limit):
                 seen += 1
-                if process_article(raw, dry_run=args.dry_run):
+                if process_article(raw, dry_run=args.dry_run, stats=stats,
+                                   llm_all=args.llm_all):
                     local += 1
         except Exception as exc:
             crashed = True
@@ -393,7 +414,15 @@ def main() -> None:
         # Only credit the source if it actually produced articles. A crash
         # or 0-yield counts as a failure for circuit-breaker purposes.
         health.record(label, 0 if crashed else seen)
-        log.info("--- %s done: %d articles, %d incidents ---", label.upper(), seen, local)
+        log.info(
+            "--- %s done: %d articles, %d incidents "
+            "(seen-before=%d, prefilter-dropped=%d, llm-checked=%d, llm-rejected=%d) ---",
+            label.upper(), seen, local,
+            stats.get("already_seen", 0),
+            stats.get("prefilter_dropped", 0),
+            stats.get("llm_checked", 0),
+            stats.get("llm_rejected", 0),
+        )
         return local
 
     total_incidents = 0

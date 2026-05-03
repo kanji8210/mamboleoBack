@@ -56,7 +56,14 @@ class TukoScraper(BaseScraper):
         for feed_url in _RSS_FEEDS:
             if count >= limit:
                 break
-            feed = feedparser.parse(feed_url)
+            # feedparser.parse(url) has NO network timeout and can hang
+            # indefinitely on slow feeds. Fetch via our timed HTTP client
+            # and hand the bytes to feedparser instead.
+            resp = self.get(feed_url, timeout=10)
+            if not resp:
+                self.log.warning("RSS fetch failed: %s", feed_url)
+                continue
+            feed = feedparser.parse(resp.content)
             if feed.bozo:
                 self.log.debug("RSS parse issue for %s", feed_url)
             for entry in feed.entries:

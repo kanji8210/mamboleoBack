@@ -4772,4 +4772,198 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 ==================================================================== 
 [02/05/2026 23:00:03.32] START cadence=fast 
 ==================================================================== 
-^C
+^C 
+==================================================================== 
+[03/05/2026  8:30:02.83] START cadence=fast 
+==================================================================== 
+[config] /llm-config HTTP 403; using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 314, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 80, in run
+    _check_one(name, pip_name, required)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 51, in _check_one
+    mod = importlib.import_module(import_name)
+  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\spacy\__init__.py", line 6, in <module>
+    from .errors import setup_default_warnings
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\spacy\errors.py", line 3, in <module>
+    from .compat import Literal
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\spacy\compat.py", line 5, in <module>
+    from thinc.util import copy_array
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\thinc\__init__.py", line 5, in <module>
+    from .config import registry
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\thinc\config.py", line 2, in <module>
+    import confection
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\confection\__init__.py", line 2, in <module>
+    from ._config import Config  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\confection\_config.py", line 15, in <module>
+    from .validation import ValidationError, ensure_schema
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\confection\validation.py", line 22, in <module>
+    from pydantic.v1 import (
+        BaseModel as _PydanticV1BaseModel,  # pyright: ignore[reportMissingImports]
+    )
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic\__init__.py", line 5, in <module>
+    from ._migration import getattr_migration
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic\_migration.py", line 4, in <module>
+    from pydantic.warnings import PydanticDeprecatedSince20
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic\warnings.py", line 5, in <module>
+    from .version import version_short
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic\version.py", line 7, in <module>
+    from pydantic_core import __version__ as __pydantic_core_version__
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic_core\__init__.py", line 31, in <module>
+    from .core_schema import CoreConfig, CoreSchema, CoreSchemaType, ErrorType
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\pydantic_core\core_schema.py", line 4367, in <module>
+    @deprecated('`field_before_validator_function` is deprecated, use `with_info_before_validator_function` instead.')
+     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\typing_extensions.py", line 2997, in __call__
+    import asyncio.coroutines
+  File "C:\Python313\Lib\asyncio\__init__.py", line 22, in <module>
+    from .threads import *
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1022, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1159, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1217, in get_data
+KeyboardInterrupt
+^C 
+==================================================================== 
+[03/05/2026  8:35:03.45] START cadence=slow 
+==================================================================== 
+[config] /llm-config unreachable (ConnectTimeout: HTTPSConnectionPool(host='mamboleole.com', port=443): Max retries exceeded with url: /wp-json/mamboleo/v1/llm-config (Caused by ConnectTimeoutError(<HTTPSConnection(host='mamboleole.com', port=443) at 0x14efb3c5010>, 'Connection to mamboleole.com timed out. (connect timeout=6)'))); using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 314, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+ 
+==================================================================== 
+[03/05/2026  8:45:02.59] START cadence=fast 
+==================================================================== 
+[config] /llm-config HTTP 403; using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 314, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026  8:45:08.15] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026  9:00:02.56] START cadence=fast 
+==================================================================== 
+[config] /llm-config HTTP 403; using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 332, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026  9:00:06.16] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026  9:15:02.35] START cadence=fast 
+==================================================================== 
+[config] /llm-config HTTP 403; using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 332, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026  9:15:06.04] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026  9:30:02.49] START cadence=fast 
+==================================================================== 
+[config] /llm-config HTTP 403; using cached/fallback values.
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 333, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026  9:30:07.95] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026  9:35:02.45] START cadence=slow 
+==================================================================== 
+^C 
+==================================================================== 
+[03/05/2026  9:45:02.96] START cadence=fast 
+==================================================================== 
+^C 
+==================================================================== 
+[03/05/2026 10:00:02.54] START cadence=fast 
+==================================================================== 
