@@ -23,6 +23,26 @@ add_action( 'admin_menu', function () {
     );
 }, 27 );
 
+/**
+ * Register social-platform credentials. These live in WP options so they
+ * never have to be copied into scraper/.env. The Python scraper reads them
+ * at startup via /wp-json/mamboleo/v1/llm-config (auth: X-API-Key).
+ */
+add_action( 'admin_init', function () {
+    register_setting( 'mamboleo_social', 'mamboleo_twitter_bearer', [
+        'type'              => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+        'default'           => '',
+        'show_in_rest'      => false,
+    ] );
+    register_setting( 'mamboleo_social', 'mamboleo_rsshub_host', [
+        'type'              => 'string',
+        'sanitize_callback' => function ( $v ) { return rtrim( esc_url_raw( (string) $v ), '/' ); },
+        'default'           => '',
+        'show_in_rest'      => false,
+    ] );
+} );
+
 function mamboleo_social_admin_page(): void {
     if ( ! current_user_can( 'manage_options' ) ) return;
     $yaml_path = MAMBOLEO_PLUGIN_DIR . 'scraper/social_sources.yaml';
@@ -36,6 +56,76 @@ function mamboleo_social_admin_page(): void {
         <p>
             <code><?php echo esc_html( $yaml_path ); ?></code>
         </p>
+
+        <?php
+        // ── Credential form (Twitter bearer + RSSHub host) ───────────────
+        // Stored as WP options, served to the Python scraper via the
+        // authenticated /wp-json/mamboleo/v1/llm-config endpoint, never
+        // written to scraper/.env. Same pattern as the LLM API key.
+        $twitter_bearer = (string) get_option( 'mamboleo_twitter_bearer', '' );
+        $rsshub_host    = (string) get_option( 'mamboleo_rsshub_host', '' );
+        $tw_masked      = $twitter_bearer
+            ? substr( $twitter_bearer, 0, 6 ) . str_repeat( '•', max( 0, strlen( $twitter_bearer ) - 10 ) ) . substr( $twitter_bearer, -4 )
+            : '';
+        ?>
+        <h2 style="margin-top:24px;"><?php esc_html_e( 'Platform credentials', 'mamboleo' ); ?></h2>
+        <p class="description">
+            <?php esc_html_e( 'Stored in the WordPress database, fetched by the scraper over HTTPS. Leave blank to disable a platform.', 'mamboleo' ); ?>
+        </p>
+        <form method="post" action="options.php" style="background:#fff;border:1px solid #c3c4c7;padding:14px 18px;max-width:760px;">
+            <?php settings_fields( 'mamboleo_social' ); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row">
+                        <label for="mamboleo_twitter_bearer"><?php esc_html_e( 'X / Twitter Bearer Token', 'mamboleo' ); ?></label>
+                    </th>
+                    <td>
+                        <input
+                            type="password"
+                            id="mamboleo_twitter_bearer"
+                            name="mamboleo_twitter_bearer"
+                            value="<?php echo esc_attr( $twitter_bearer ); ?>"
+                            class="regular-text"
+                            autocomplete="off"
+                            placeholder="<?php echo esc_attr( $tw_masked ?: 'AAAAAAAAAAAAAAAAAAAAAA…' ); ?>"
+                        />
+                        <p class="description">
+                            <?php
+                            printf(
+                                /* translators: %s: link to X developer portal */
+                                esc_html__( 'Free tier from %s — keep usage under 100 reads/month.', 'mamboleo' ),
+                                '<a href="https://developer.x.com/en/portal/dashboard" target="_blank" rel="noopener">developer.x.com</a>'
+                            );
+                            ?>
+                            <?php if ( $tw_masked ) : ?>
+                                <br><strong><?php esc_html_e( 'Currently set:', 'mamboleo' ); ?></strong> <code><?php echo esc_html( $tw_masked ); ?></code>
+                            <?php endif; ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="mamboleo_rsshub_host"><?php esc_html_e( 'RSSHub Host (Facebook bridge)', 'mamboleo' ); ?></label>
+                    </th>
+                    <td>
+                        <input
+                            type="url"
+                            id="mamboleo_rsshub_host"
+                            name="mamboleo_rsshub_host"
+                            value="<?php echo esc_attr( $rsshub_host ); ?>"
+                            class="regular-text"
+                            placeholder="http://localhost:1200"
+                        />
+                        <p class="description">
+                            <?php esc_html_e( 'Self-hosted RSSHub instance used to consume Facebook page feeds. Without it, fb_* entries below are skipped.', 'mamboleo' ); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button( __( 'Save credentials', 'mamboleo' ) ); ?>
+        </form>
+
+        <h2 style="margin-top:24px;"><?php esc_html_e( 'Configured handles', 'mamboleo' ); ?></h2>
 
         <?php if ( ! $entries ) : ?>
             <div class="notice notice-warning"><p><?php esc_html_e( 'No social sources configured.', 'mamboleo' ); ?></p></div>

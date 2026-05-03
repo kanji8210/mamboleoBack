@@ -36,8 +36,8 @@
   handle: citizentvkenya
   tier: 1
   bias_baseline: -5
-  max_per_run: 5
-  cadence: fast
+  max_per_run: 2
+  cadence: slow
   enabled: true
 
 - id: x_ntvkenya
@@ -46,8 +46,8 @@
   handle: ntvkenya
   tier: 1
   bias_baseline: -5
-  max_per_run: 5
-  cadence: fast
+  max_per_run: 2
+  cadence: slow
   enabled: true
 
 - id: x_tuko
@@ -56,8 +56,8 @@
   handle: Tuko_co_ke
   tier: 1
   bias_baseline: 0
-  max_per_run: 5
-  cadence: fast
+  max_per_run: 2
+  cadence: slow
   enabled: true
 
 - id: x_standardkenya
@@ -66,9 +66,9 @@
   handle: StandardKenya
   tier: 1
   bias_baseline: 0
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 - id: x_ktnnewske
   name: KTN News (X)
@@ -76,9 +76,9 @@
   handle: KTNNewsKE
   tier: 1
   bias_baseline: 0
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 - id: x_kbcchannel1
   name: KBC Channel 1 (X)
@@ -86,9 +86,9 @@
   handle: KBCChannel1
   tier: 1
   bias_baseline: 15
-  max_per_run: 5
+  max_per_run: 2
   cadence: slow
-  enabled: true
+  enabled: false
 
 - id: x_k24tv
   name: K24 TV (X)
@@ -96,9 +96,9 @@
   handle: K24Tv
   tier: 1
   bias_baseline: 10
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 - id: x_bdafrica
   name: Business Daily Africa (X)
@@ -106,9 +106,9 @@
   handle: BD_Africa
   tier: 1
   bias_baseline: -5
-  max_per_run: 4
+  max_per_run: 2
   cadence: slow
-  enabled: true
+  enabled: false
 
 - id: x_thestarkenya
   name: The Star Kenya (X)
@@ -116,9 +116,9 @@
   handle: TheStarKenya
   tier: 1
   bias_baseline: 0
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 - id: x_kenyanscoke
   name: Kenyans.co.ke (X)
@@ -126,9 +126,9 @@
   handle: kenyans
   tier: 1
   bias_baseline: 0
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TIER 2 — Influential journalists & bloggers
@@ -141,9 +141,9 @@
   handle: RobertAlai
   tier: 2
   bias_baseline: -10
-  max_per_run: 5
-  cadence: fast
-  enabled: true
+  max_per_run: 2
+  cadence: slow
+  enabled: false
 
 - id: x_nyakundi
   name: Cyprian Nyakundi
@@ -243,4 +243,104 @@
   bias_baseline: 0
   max_per_run: 10
   cadence: fast
+  enabled: true
+
+- id: fb_mutembeitv
+  name: Mutembei TV
+  platform: facebook
+  handle: MutembeiTv
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 8
+  cadence: fast
+  enabled: true
+
+- id: fb_ktnnewske
+  name: KTN News (Facebook)
+  platform: facebook
+  handle: KTNNewsKE
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_k24tv
+  name: K24 TV (Facebook)
+  platform: facebook
+  handle: K24TV
+  tier: 1
+  bias_baseline: 10
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_standardkenya
+  name: The Standard (Facebook)
+  platform: facebook
+  handle: StandardKenya
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_thestarkenya
+  name: The Star Kenya (Facebook)
+  platform: facebook
+  handle: TheStarKenya
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_kenyanscoke
+  name: Kenyans.co.ke (Facebook)
+  platform: facebook
+  handle: kenyans.co.ke
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_nationafrica
+  name: Nation Africa (Facebook)
+  platform: facebook
+  handle: nationafrica
+  tier: 1
+  bias_baseline: -5
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_kenyaredcross
+  name: Kenya Red Cross (Facebook)
+  platform: facebook
+  handle: KenyaRedCross
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: fast
+  enabled: true
+
+- id: fb_policeke
+  name: National Police Service Kenya (Facebook)
+  platform: facebook
+  handle: NPSOfficial
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: slow
+  enabled: true
+
+- id: fb_ntsa
+  name: NTSA Kenya (Facebook)
+  platform: facebook
+  handle: ntsa.kenya
+  tier: 1
+  bias_baseline: 0
+  max_per_run: 5
+  cadence: slow
   enabled: true

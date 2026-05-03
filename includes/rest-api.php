@@ -114,6 +114,13 @@ function mamboleo_get_llm_config( WP_REST_Request $request ): array {
             'api_key'  => (string) get_option( 'mamboleo_openai_api_key', '' ),
             'timeout'  => 60,
         ],
+        // Social platform credentials. Kept here (not in scraper/.env) so
+        // the bearer token can be rotated from WP admin without redeploying
+        // the scraper. Same X-API-Key auth as the LLM key.
+        'social'   => [
+            'twitter_bearer' => (string) get_option( 'mamboleo_twitter_bearer', '' ),
+            'rsshub_host'    => rtrim( (string) get_option( 'mamboleo_rsshub_host', '' ), '/' ),
+        ],
     ];
 }
 

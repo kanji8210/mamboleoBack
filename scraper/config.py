@@ -14,6 +14,11 @@ load_dotenv(ROOT_DIR / ".env")
 
 WP_API_BASE    = os.getenv("MAMBOLEO_WP_URL",  "http://localhost/wordpress")
 WP_API_KEY     = os.getenv("MAMBOLEO_API_KEY", "mamboleo-dev-key-change-in-production")
+# Env values are *fallbacks* only. Source of truth for both Twitter bearer
+# and RSSHub host is the WP admin (Mamboleo → Social Sources). The remote
+# /llm-config endpoint returns them under `social.twitter_bearer` and
+# `social.rsshub_host`; we override env with the WP value below once
+# _fetch_remote_llm_config() has run.
 TWITTER_BEARER = os.getenv("TWITTER_BEARER_TOKEN", "")
 
 REQUEST_DELAY = float(os.getenv("SCRAPER_DELAY", "2.5"))
@@ -133,3 +138,12 @@ OPENAI_TIMEOUT  = float(_R_OPENAI.get("timeout") or 60)
 # entries in social_sources.yaml are silently skipped.
 # Example: RSSHUB_HOST=https://rsshub.mydomain.com
 RSSHUB_HOST    = os.getenv("RSSHUB_HOST", "").rstrip("/")
+
+# Override env values with anything WP admin sent us. WP wins because it's
+# the user-managed source of truth — the env values are only there to keep
+# the scraper running before the admin has filled in the form.
+_R_SOCIAL = _REMOTE.get("social") or {}
+if _R_SOCIAL.get("twitter_bearer"):
+    TWITTER_BEARER = str(_R_SOCIAL["twitter_bearer"])
+if _R_SOCIAL.get("rsshub_host"):
+    RSSHUB_HOST = str(_R_SOCIAL["rsshub_host"]).rstrip("/")
