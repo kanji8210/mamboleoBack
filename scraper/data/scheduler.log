@@ -5070,3 +5070,60 @@ Traceback (most recent call last):
            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
 [03/05/2026 12:00:28.76] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026 12:15:04.74] START cadence=fast 
+==================================================================== 
+^C 
+==================================================================== 
+[03/05/2026 12:30:03.04] START cadence=fast 
+==================================================================== 
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 334, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026 12:30:11.27] END cadence=fast exit=1 
+ 
+==================================================================== 
+[03/05/2026 12:35:02.45] START cadence=slow 
+==================================================================== 
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 57, in <module>
+    run_main()
+    ~~~~~~~~^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 334, in main
+    ok, _ = preflight.run(verbose=True)
+            ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 88, in run
+    _print_report(results)
+    ~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\preflight.py", line 105, in _print_report
+    print(c(_DIM, "\u2500\u2500 Dependency check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+[03/05/2026 12:35:09.09] END cadence=slow exit=1 
+ 
+==================================================================== 
+[03/05/2026 12:45:02.89] START cadence=fast 
+==================================================================== 
+^C 
+==================================================================== 
+[03/05/2026 13:02:14.79] START cadence=fast 
+==================================================================== 
+^C
