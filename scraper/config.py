@@ -52,21 +52,28 @@ def _fetch_remote_llm_config() -> tuple[dict, str]:
     cache_file = DATA_DIR / "llm_config.json"
     try:
         import json
-        import requests
+        # Use stdlib urllib (not requests) — Cloudflare's bot management
+        # fingerprints urllib3's TLS/cipher order and returns 403 even when
+        # headers look browser-like. Stdlib urllib uses Python's default SSL
+        # context which gets through with the headers below.
+        import urllib.request
         url = f"{WP_API_BASE.rstrip('/')}/wp-json/mamboleo/v1/llm-config"
-        # Mimic a browser — Cloudflare and other WAFs challenge bot-y UAs
-        # and bare requests/python user agents.
-        headers = {
-            "X-API-Key":      WP_API_KEY,
-            "User-Agent":     USER_AGENT,
-            "Accept":         "application/json",
-            "Accept-Language": "en-US,en;q=0.9",
-        }
-        resp = requests.get(url, headers=headers, timeout=6)
-        if resp.status_code == 200:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "X-API-Key":      WP_API_KEY,
+                "User-Agent":     USER_AGENT,
+                "Accept":         "application/json",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            status = resp.status
             ctype = resp.headers.get("Content-Type", "")
+            body = resp.read()
+        if status == 200:
             if "json" in ctype:
-                cfg = resp.json() or {}
+                cfg = json.loads(body.decode("utf-8") or "{}") or {}
                 try:
                     cache_file.write_text(json.dumps(cfg))
                 except Exception:  # noqa: BLE001
@@ -74,11 +81,11 @@ def _fetch_remote_llm_config() -> tuple[dict, str]:
                 return cfg, "wp"
             # 200 OK but HTML body = WAF challenge page (Cloudflare etc.)
             print(
-                f"[config] /llm-config returned HTML (likely WAF challenge "
-                f"on {url}); using cached/fallback values."
+                f"[config] /llm-config returned non-JSON ({ctype}); "
+                f"likely WAF challenge on {url}; using cached/fallback values."
             )
         else:
-            print(f"[config] /llm-config HTTP {resp.status_code}; using cached/fallback values.")
+            print(f"[config] /llm-config HTTP {status}; using cached/fallback values.")
     except Exception as exc:  # noqa: BLE001 — config must never crash imports
         print(f"[config] /llm-config unreachable ({type(exc).__name__}: {exc}); using cached/fallback values.")
 
