@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -361,6 +362,38 @@ def main() -> None:
         from api import llm_client
         info = llm_client.provider_info()
         log.info("LLM provider: %s", info)
+
+        # Hard-fail when the configured provider is unusable. Without this
+        # check a Cloudflare 403 on /llm-config silently downgrades the run
+        # to the keyword classifier and you only notice when no incidents
+        # appear hours later. Use --skip-preflight (or set LLM_ALLOW_DEGRADED=1)
+        # to opt out — useful for offline development.
+        from config import OLLAMA_ENABLED
+        allow_degraded = os.getenv("LLM_ALLOW_DEGRADED", "0") not in ("0", "false", "False", "")
+        if OLLAMA_ENABLED and not args.skip_preflight and not allow_degraded:
+            healthy = llm_client.health_check()
+            has_key = bool(info.get("has_key"))
+            if info.get("provider") == "openai" and not has_key:
+                log.error(
+                    "LLM provider is 'openai' but no API key was returned by "
+                    "WP /llm-config — the scraper would silently fall back to "
+                    "the keyword classifier and miss most incidents. "
+                    "Likely cause: Cloudflare/WAF is blocking the scraper IP "
+                    "from /wp-json/mamboleo/v1/llm-config. "
+                    "Fix: whitelist this server in Cloudflare, or set "
+                    "LLM_ALLOW_DEGRADED=1 to run without the LLM."
+                )
+                sys.exit(3)
+            if not healthy:
+                log.error(
+                    "LLM provider %s is unreachable (%s). "
+                    "Aborting to avoid silent downgrade to keyword classifier. "
+                    "Set LLM_ALLOW_DEGRADED=1 to run anyway.",
+                    info.get("provider"), info.get("endpoint"),
+                )
+                sys.exit(3)
+    except SystemExit:
+        raise
     except Exception as exc:  # noqa: BLE001
         log.warning("Could not resolve LLM provider info: %s", exc)
 
