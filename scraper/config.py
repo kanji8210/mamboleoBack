@@ -37,14 +37,17 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 #
 # Set OLLAMA_ENABLED=0 in .env to disable the LLM entirely and fall back to
 # the legacy keyword classifier.
-def _fetch_remote_llm_config() -> dict:
+def _fetch_remote_llm_config() -> tuple[dict, str]:
     """Pull provider settings from WP. Cached for the life of the process.
 
     Cached on disk too — if Cloudflare/WAF blocks a request once, we keep
     using the last good value rather than silently falling back to Ollama
     defaults (which would show up as "Connection refused" much later).
 
-    Returns {} only if we have NEVER successfully fetched the config.
+    Returns (config, source) where source is one of:
+      "wp"     — fresh fetch from WP succeeded
+      "cache"  — WP fetch failed but we had a previous good config on disk
+      "none"   — never fetched, no cache, running on hard-coded defaults
     """
     cache_file = DATA_DIR / "llm_config.json"
     try:
@@ -68,7 +71,7 @@ def _fetch_remote_llm_config() -> dict:
                     cache_file.write_text(json.dumps(cfg))
                 except Exception:  # noqa: BLE001
                     pass
-                return cfg
+                return cfg, "wp"
             # 200 OK but HTML body = WAF challenge page (Cloudflare etc.)
             print(
                 f"[config] /llm-config returned HTML (likely WAF challenge "
@@ -84,13 +87,13 @@ def _fetch_remote_llm_config() -> dict:
     try:
         import json
         if cache_file.exists():
-            return json.loads(cache_file.read_text()) or {}
+            return (json.loads(cache_file.read_text()) or {}), "cache"
     except Exception:  # noqa: BLE001
         pass
-    return {}
+    return {}, "none"
 
 
-_REMOTE = _fetch_remote_llm_config()
+_REMOTE, LLM_CONFIG_SOURCE = _fetch_remote_llm_config()
 _R_OLLAMA = _REMOTE.get("ollama") or {}
 _R_OPENAI = _REMOTE.get("openai") or {}
 

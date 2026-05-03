@@ -368,22 +368,46 @@ def main() -> None:
         # to the keyword classifier and you only notice when no incidents
         # appear hours later. Use --skip-preflight (or set LLM_ALLOW_DEGRADED=1)
         # to opt out — useful for offline development.
-        from config import OLLAMA_ENABLED
+        from config import OLLAMA_ENABLED, LLM_CONFIG_SOURCE, WP_API_BASE
+        log.info("LLM config source: %s", LLM_CONFIG_SOURCE)
+
         allow_degraded = os.getenv("LLM_ALLOW_DEGRADED", "0") not in ("0", "false", "False", "")
+
+        # Most common failure mode: WP /llm-config was unreachable, no disk
+        # cache exists, so the provider defaulted to "ollama" with localhost
+        # — but Ollama isn't installed. Surface the *actual* root cause.
+        wp_config_missing = (LLM_CONFIG_SOURCE == "none")
+
         if OLLAMA_ENABLED and not args.skip_preflight and not allow_degraded:
             healthy = llm_client.health_check()
             has_key = bool(info.get("has_key"))
+
+            if wp_config_missing:
+                log.error(
+                    "Could not load LLM config from WP (%s/wp-json/mamboleo/v1/llm-config) "
+                    "and there is no on-disk cache. The provider has fallen back to the "
+                    "default '%s' which is not reachable on this host. "
+                    "ROOT CAUSE: Cloudflare/WAF is most likely blocking the scraper IP "
+                    "from /wp-json/mamboleo/v1/*. "
+                    "FIX: whitelist this server in Cloudflare (see scraper/SETUP.md), "
+                    "or set LLM_ALLOW_DEGRADED=1 in scraper/.env to run with the "
+                    "keyword classifier only.",
+                    WP_API_BASE, info.get("provider"),
+                )
+                sys.exit(3)
+
             if info.get("provider") == "openai" and not has_key:
                 log.error(
                     "LLM provider is 'openai' but no API key was returned by "
                     "WP /llm-config — the scraper would silently fall back to "
                     "the keyword classifier and miss most incidents. "
-                    "Likely cause: Cloudflare/WAF is blocking the scraper IP "
-                    "from /wp-json/mamboleo/v1/llm-config. "
-                    "Fix: whitelist this server in Cloudflare, or set "
-                    "LLM_ALLOW_DEGRADED=1 to run without the LLM."
+                    "Likely cause: the API key is not set in WP admin → "
+                    "Mamboleo → AI Intelligence, or Cloudflare/WAF is "
+                    "blocking the scraper IP from /wp-json/mamboleo/v1/llm-config. "
+                    "Set LLM_ALLOW_DEGRADED=1 to run without the LLM."
                 )
                 sys.exit(3)
+
             if not healthy:
                 log.error(
                     "LLM provider %s is unreachable (%s). "
