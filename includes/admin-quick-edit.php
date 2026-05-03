@@ -62,6 +62,15 @@ add_action( 'quick_edit_custom_box', function ( $column_name, $post_type ) {
         'accident' => 'Accident',
         'police'   => 'Police',
         'weather'  => 'Weather',
+        'protest'  => 'Protest',
+        'flood'    => 'Flood',
+        'medical'  => 'Medical',
+        'military' => 'Military Ops',
+        'info'     => 'Info',
+        'health'   => 'Public Health',
+        'environmental' => 'Environmental',
+        'homicide' => 'Homicide',
+        'femicide' => 'Femicide',
     ];
     ?>
     <fieldset class="inline-edit-col-right inline-edit-mamboleo">
@@ -208,7 +217,7 @@ add_action( 'save_post_incident', function ( $post_id, $post, $update ) {
 
     // Type — accept whitelist only.
     if ( isset( $_POST['mm_type'] ) ) {
-        $allowed_types = [ 'fire', 'accident', 'police', 'weather' ];
+        $allowed_types = [ 'fire', 'accident', 'police', 'weather', 'protest', 'flood', 'medical', 'military', 'info', 'health', 'environmental', 'homicide', 'femicide' ];
         $type = sanitize_key( wp_unslash( $_POST['mm_type'] ) );
         if ( in_array( $type, $allowed_types, true ) ) {
             update_post_meta( $post_id, 'type', $type );

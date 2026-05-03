@@ -34,6 +34,7 @@ log = logging.getLogger("intelligence")
 INCIDENT_TYPES: tuple[str, ...] = (
     "fire", "accident", "flood", "protest", "police", "weather",
     "medical", "military", "info", "health", "environmental",
+    "homicide", "femicide",
 )
 SEVERITIES: tuple[str, ...] = ("low", "medium", "high")
 

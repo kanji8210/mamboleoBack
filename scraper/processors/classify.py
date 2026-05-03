@@ -108,9 +108,23 @@ INCIDENT_KEYWORDS: dict[str, list[str]] = {
         "protesters", "teargas", "running battles", "picketing", "sit-in",
     ],
     "police": [
-        "robbery", "theft", "murder", "stabbing", "assault",
+        "robbery", "theft", "stabbing", "assault",
         "kidnapping", "abduction", "gang", "carjacking", "bandit",
         "ambush", "raid", "suspect",
+    ],
+    "homicide": [
+        "murder", "murdered", "homicide", "manslaughter",
+        "killed", "shot dead", "hacked to death", "stabbed to death",
+        "body found", "bodies found", "lynched", "lynching",
+        "mob justice", "extrajudicial killing", "assassination",
+        "assassinated", "gunned down",
+    ],
+    "femicide": [
+        "femicide", "feminicide", "gender violence", "gender-based violence",
+        "gbv", "intimate partner", "domestic violence", "domestic abuse",
+        "battered to death", "woman killed", "women killed",
+        "girl killed", "girls killed", "wife killed", "strangled",
+        "defilement", "rape", "raped", "sexual assault",
     ],
     "weather": [
         "storm", "hailstorm", "lightning strike", "cyclone",
@@ -148,6 +162,17 @@ EVENT_VERBS: dict[str, list[str]] = {
         "arrested", "detained", "shot", "killed", "wounded", "robbed",
         "attacked", "ambushed", "kidnapped", "abducted", "raided",
         "seized", "recovered", "stabbed", "hacked", "lynched",
+    ],
+    "homicide": [
+        "killed", "murdered", "shot dead", "stabbed to death",
+        "hacked to death", "strangled", "beaten to death",
+        "found dead", "lynched", "executed", "assassinated",
+        "gunned down",
+    ],
+    "femicide": [
+        "killed", "murdered", "strangled", "battered", "beaten to death",
+        "raped", "defiled", "attacked", "assaulted", "abused",
+        "stabbed", "hacked",
     ],
     "weather": [
         "struck by lightning", "destroyed", "uprooted", "damaged",
