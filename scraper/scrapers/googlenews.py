@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Iterator
 
 import feedparser
+import requests as _requests
 from bs4 import BeautifulSoup
 
 from scrapers.base import BaseScraper
@@ -22,6 +23,39 @@ _QUERIES = [
     "Kenya protest demonstration",
     "Kenya accident fire",
 ]
+
+
+def _resolve_redirect(google_url: str) -> str | None:
+    """Follow one HTTP redirect to extract the canonical publisher URL.
+
+    Google News RSS links (`news.google.com/rss/articles/CBMi…`) redirect
+    via a 302/303 to the real publisher page.  Some newer links use a
+    JavaScript-only decoder page that returns 200 with an HTML body — we
+    detect those and give up (return None).
+
+    Uses a HEAD request with a tight 5 s timeout and `allow_redirects=False`
+    so we can inspect the Location header without downloading the full page.
+    """
+    if "news.google.com" not in google_url:
+        return google_url  # already a direct URL
+
+    try:
+        resp = _requests.head(
+            google_url,
+            allow_redirects=False,
+            timeout=5,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; MamboleoBot/1.0)",
+            },
+        )
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("Location", "")
+            if location and "news.google.com" not in location:
+                return location
+    except _requests.exceptions.RequestException:
+        pass
+    return None
+
 
 class GoogleNewsScraper(BaseScraper):
     NAME = "googlenews"
@@ -47,11 +81,22 @@ class GoogleNewsScraper(BaseScraper):
                 if count >= limit:
                     break
                 
-                # Google News links are often redirects
-                url = entry.get("link", "").strip()
-                if not url or url in seen_urls:
+                # Google News links are often redirects — try to resolve to
+                # the canonical publisher URL so dedup matches site-specific
+                # scrapers (Nation, Standard, Tuko etc.).
+                raw_url = entry.get("link", "").strip()
+                if not raw_url:
+                    continue
+
+                resolved = _resolve_redirect(raw_url)
+                url = resolved or raw_url
+
+                if url in seen_urls:
                     continue
                 seen_urls.add(url)
+                # Also mark the raw Google URL as seen so we don't re-resolve
+                if raw_url != url:
+                    seen_urls.add(raw_url)
 
                 # Title is usually "Title - Source"
                 raw_title = entry.get("title", "")
@@ -73,14 +118,12 @@ class GoogleNewsScraper(BaseScraper):
 
     def _enrich(self, url: str, title: str, source: str, published_at: str,
                 summary: str = "") -> dict | None:
-        """Build an article dict from the RSS entry alone.
+        """Build an article dict from the RSS entry metadata.
 
-        We deliberately do NOT follow Google News' redirect URLs
-        (`news.google.com/rss/articles/CBMi…`) — they go through a JavaScript
-        decoder page that stalls plain-`requests` clients indefinitely.
-        The RSS title + summary is enough signal for the LLM intelligence
-        layer to decide is_incident; downstream consumers can fetch the real
-        publisher URL on demand if needed.
+        We resolve Google News redirect URLs to canonical publisher URLs
+        (via _resolve_redirect) for dedup, but we still don't fetch the
+        full article body — the RSS title + summary provides enough signal
+        for the LLM intelligence layer to decide is_incident.
         """
         content = ""
         if summary:
