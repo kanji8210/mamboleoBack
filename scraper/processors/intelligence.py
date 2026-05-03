@@ -20,11 +20,12 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from api import llm_client
-from config import OLLAMA_ENABLED, OLLAMA_MODEL
+from config import OLLAMA_ENABLED, OLLAMA_MODEL, LLM_PROVIDER, OPENAI_MODEL
 from processors import classify as legacy
 
 log = logging.getLogger("intelligence")
@@ -36,10 +37,11 @@ INCIDENT_TYPES: tuple[str, ...] = (
 )
 SEVERITIES: tuple[str, ...] = ("low", "medium", "high")
 
-# Articles longer than this are truncated before being sent to the model — the
-# headline + first ~3500 chars carry virtually all the incident signal and we
-# stay well under the 4 KB context window we requested.
-_MAX_BODY_CHARS = 3500
+# Articles longer than this are truncated before being sent to the model.
+# Ollama with llama3.1:8b has a 4K context window (num_ctx=4096) so we keep
+# the body short. Cloud LLMs (Groq, OpenAI, etc.) have 8K–128K context
+# windows, so we can afford to send more signal.
+_MAX_BODY_CHARS = 3500 if LLM_PROVIDER == "ollama" else 8000
 
 
 # ── Public dataclass ──────────────────────────────────────────────────────────
@@ -131,6 +133,9 @@ def _build_user_prompt(title: str, body: str) -> str:
 
 # ── Coercion / validation ─────────────────────────────────────────────────────
 
+# Resolve model name once — reflects the *actual* provider, not always Ollama.
+_ACTIVE_MODEL = OPENAI_MODEL if LLM_PROVIDER == "openai" else OLLAMA_MODEL
+
 def _coerce(raw: dict, fallback_title: str) -> Intelligence:
     """Validate and normalise the raw JSON dict from the model."""
     incident_type = str(raw.get("incident_type", "info")).lower().strip()
@@ -162,7 +167,7 @@ def _coerce(raw: dict, fallback_title: str) -> Intelligence:
         is_followup        = bool(raw.get("is_followup", False)),
         confidence         = round(confidence, 2),
         flags              = flags,
-        model              = OLLAMA_MODEL,
+        model              = _ACTIVE_MODEL,
     )
 
 
@@ -197,20 +202,32 @@ def _from_legacy(title: str, body: str) -> Intelligence:
 def analyze(title: str, body: str = "") -> Intelligence:
     """Analyse an article and return structured incident intelligence.
 
-    Falls back to the legacy keyword classifier if Ollama is disabled,
-    unreachable, or returns malformed output.
+    Falls back to the legacy keyword classifier if the LLM is disabled,
+    unreachable, or returns malformed output. One retry with backoff is
+    attempted before giving up — prevents transient 429 / timeout from
+    silently degrading to the keyword classifier.
     """
     if not OLLAMA_ENABLED:
         return _from_legacy(title, body)
 
-    try:
-        raw = llm_client.chat_json(
-            system=_SYSTEM_PROMPT,
-            user=_build_user_prompt(title, body),
-        )
-    except llm_client.LLMError as exc:
-        log.warning("LLM unavailable (%s) — falling back to keyword classifier", exc)
-        return _from_legacy(title, body)
+    prompt = _build_user_prompt(title, body)
+    last_exc: Exception | None = None
+
+    for attempt in range(2):
+        try:
+            raw = llm_client.chat_json(
+                system=_SYSTEM_PROMPT,
+                user=prompt,
+            )
+            break
+        except llm_client.LLMError as exc:
+            last_exc = exc
+            if attempt == 0:
+                log.info("LLM attempt 1 failed (%s) — retrying in 2s", exc)
+                time.sleep(2)
+            else:
+                log.warning("LLM unavailable after 2 attempts (%s) — falling back to keyword classifier", exc)
+                return _from_legacy(title, body)
 
     try:
         return _coerce(raw, fallback_title=title)

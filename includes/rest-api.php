@@ -123,7 +123,10 @@ function mamboleo_verify_api_key( WP_REST_Request $request ): bool|WP_Error {
     if ( empty( $api_key ) ) {
         return new WP_Error( 'rest_forbidden', __( 'API Key not configured on server.', 'mamboleo' ), [ 'status' => 403 ] );
     }
-    return $request->get_header( 'X-API-Key' ) === $api_key;
+    if ( $request->get_header( 'X-API-Key' ) !== $api_key ) {
+        return new WP_Error( 'rest_forbidden', __( 'Invalid API key. Check MAMBOLEO_API_KEY in wp-config.php matches scraper/.env.', 'mamboleo' ), [ 'status' => 403 ] );
+    }
+    return true;
 }
 
 // ── Public: citizen report ────────────────────────────────────────────────────
@@ -196,6 +199,22 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     $params = $request->get_json_params();
     if ( empty( $params['title'] ) ) {
         return new WP_Error( 'missing_params', __( 'Title is required.', 'mamboleo' ), [ 'status' => 400 ] );
+    }
+
+    // Dedupe by article_url so the same news story scraped by two different
+    // scrapers (e.g. Google News + Nation) doesn't create duplicate incidents.
+    $article_url = isset( $params['article_url'] ) ? esc_url_raw( $params['article_url'] ) : '';
+    if ( $article_url ) {
+        $existing = get_posts( [
+            'post_type'      => 'incident',
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'meta_query'     => [ [ 'key' => 'article_url', 'value' => $article_url ] ],
+        ] );
+        if ( ! empty( $existing ) ) {
+            return [ 'id' => (int) $existing[0], 'message' => 'Incident already exists (deduped by article_url).' ];
+        }
     }
 
     // Uncertain incidents are parked for admin review. Trusted ones publish immediately.

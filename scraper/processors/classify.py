@@ -65,9 +65,10 @@ EXCLUSION_PHRASES: list[str] = [
 EXCLUSION_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(urges|calls on|criticises|criticizes|praises|condemns|warns against)\b", re.I),
     re.compile(r"\b(launches|unveils|announces)\b.*\b(programme|program|initiative|campaign)\b", re.I),
-    # Religious / dignitary visits — "Pope visits …", "Pope arrives in …"
-    re.compile(r"\bpope\b.*\b(visit|visits|arrives|arrival|tour|meets|blesses|prays)\b", re.I),
-    re.compile(r"\b(pope|pontiff|papal)\b", re.I),
+    # Religious / dignitary visits — "Pope visits …", "Pope arrives in …".
+    # Only excludes *ceremonial* pope coverage. A "stampede at Pope's mass"
+    # still passes because the casualty-word override fires (line 336+).
+    re.compile(r"\bpope\b.*\b(visit|visits|arrives|arrival|tour|meets|blesses|prays|homily|mass|message)\b", re.I),
 ]
 
 # Metaphorical / idiomatic phrases that look like event verbs but are not.
@@ -307,6 +308,31 @@ _CANDIDATE_HEADLINE_WORDS: list[str] = [
     "grief", "panic", "chaos", "stampede", "hostage", "siege",
     # weather hazards
     "storm", "hailstorm", "cyclone", "tornado", "heavy downpour", "flash flood",
+    # crime / justice / GBV — narrative journalism often frames these as
+    # explainers or features rather than straight news ("the untold story
+    # of…", "justice for…", "…explained"). The LLM is the right judge here.
+    "murder", "murdered", "homicide", "femicide", "feminicide", "victim",
+    "victims", "suspect", "arrested", "convicted", "sentenced", "accused",
+    "rape", "raped", "sexual assault", "gender violence", "domestic violence",
+    "defilement", "manslaughter", "arson", "assaulted", "battered",
+    "justice", "inquest", "autopsy", "postmortem", "exhumation",
+    "revenge", "vendetta", "gang war", "extortion", "trafficking",
+    "child abuse", "child labour", "eviction", "demolition", "squatter",
+    "squatters", "land grab", "dispossessed", "adverse possession",
+]
+
+# Narrative / feature framing words — titles like "…explained", "the untold
+# story of…" or "the high stakes of…" wrap real incidents in feature-style
+# headlines that pass zero event-verb checks. If ANY of these appear in the
+# title AND the body contains any incident-related vocabulary, route to the LLM.
+_NARRATIVE_TITLE_CUES: list[str] = [
+    "explained", "untold story", "high stakes", "inside the",
+    "behind the", "the truth about", "what happened", "how it happened",
+    "silence and", "what we know", "timeline of", "anatomy of",
+    "the case of", "why it matters", "the cost of", "a deep dive",
+    "in pictures", "in numbers", "special report", "investigation",
+    "exclusive", "expose", "exposé", "cover-up", "revealed",
+    "unanswered questions", "dark side", "deadly",
 ]
 
 
@@ -314,9 +340,10 @@ def looks_like_incident_candidate(title: str, body: str = "") -> bool:
     """Cheap, *inclusive* gate that decides whether the LLM should look at this.
 
     Returns True when ANY of the following hold:
-      • the headline contains a casualty / harm / event word
+      • the headline contains a casualty / harm / event / crime word
       • the title or body contains any incident topic keyword
       • the title or body contains any strict event verb
+      • the title uses narrative/feature framing AND the body has incident vocab
 
     Returns False only when the title is clearly off-topic (sports / celebrity /
     policy speech / religious ceremony) AND no incident signal is present.
@@ -332,9 +359,11 @@ def looks_like_incident_candidate(title: str, body: str = "") -> bool:
     # Hard exclusion — only on the *headline*. Body matches are too noisy
     # (a celebrity may be quoted in an incident article).
     if _is_excluded(title_l):
-        # Still allow through if a strong casualty word appears in the title.
+        # Still allow through if a strong casualty / crime word appears in the title.
         for w in ("killed", "dead", "died", "shot", "stabbed", "crash",
-                  "fatal", "explosion", "fire ", "ablaze"):
+                  "fatal", "explosion", "fire ", "ablaze", "murder",
+                  "murdered", "victim", "femicide", "stampede", "lynched",
+                  "drowning", "drowned", "rape", "arson", "homicide"):
             if w in title_l:
                 return True
         return False
@@ -343,6 +372,21 @@ def looks_like_incident_candidate(title: str, body: str = "") -> bool:
     for w in _CANDIDATE_HEADLINE_WORDS:
         if w in title_l:
             return True
+
+    # Narrative / feature framing in title + any incident vocabulary in body.
+    # Catches: "The high stakes of adverse possession, explained" where the
+    # title has zero event verbs but the body discusses actual violence/crime.
+    for cue in _NARRATIVE_TITLE_CUES:
+        if cue in title_l:
+            # Body must show at least one incident-related word to avoid
+            # sending pure policy explainers ("GDP explained") to the LLM.
+            for kws in INCIDENT_KEYWORDS.values():
+                if _count_word_hits(body_l, kws):
+                    return True
+            for w in _CANDIDATE_HEADLINE_WORDS:
+                if w in body_l:
+                    return True
+            break  # matched the cue but body has no incident signal → skip
 
     # Any incident topic keyword anywhere → send to LLM.
     for kws in INCIDENT_KEYWORDS.values():
