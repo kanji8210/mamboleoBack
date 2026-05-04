@@ -38,7 +38,7 @@
   bias_baseline: -5
   max_per_run: 2
   cadence: slow
-  enabled: true
+  enabled: false
 
 - id: x_ntvkenya
   name: NTV Kenya (X)
@@ -48,7 +48,7 @@
   bias_baseline: -5
   max_per_run: 2
   cadence: slow
-  enabled: true
+  enabled: false
 
 - id: x_tuko
   name: Tuko (X)
@@ -58,7 +58,7 @@
   bias_baseline: 0
   max_per_run: 2
   cadence: slow
-  enabled: true
+  enabled: false
 
 - id: x_standardkenya
   name: The Standard (X)
