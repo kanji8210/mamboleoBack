@@ -2,16 +2,21 @@
 
 Surfaces richer diagnostics when a WAF / proxy / host blocks the request
 (typical symptom: HTML error page returned instead of JSON).
+
+Uses stdlib `urllib` for the actual HTTP transport because Cloudflare
+fingerprints urllib3's TLS/cipher order and returns 403 even when headers
+look browser-like. Stdlib urllib uses Python's default SSL context which
+gets through. Same trick as `config._fetch_remote_llm_config()`.
 """
 from __future__ import annotations
 
 import json
 import logging
 import re
-
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+import socket
+import ssl
+import urllib.error
+import urllib.request
 
 from config import WP_API_BASE, WP_API_KEY, USER_AGENT
 
@@ -20,30 +25,21 @@ log = logging.getLogger("api.client")
 # Use a friendlier browser-ish UA + explicit Accept → some shared-hosting
 # WAFs (GoDaddy, cPanel Imunify) block requests that look like bots.
 _HEADERS = {
-    "X-API-Key":    WP_API_KEY,
-    "Content-Type": "application/json",
-    "Accept":       "application/json",
-    "User-Agent":   USER_AGENT,
+    "X-API-Key":       WP_API_KEY,
+    "Content-Type":    "application/json",
+    "Accept":          "application/json",
+    "Accept-Language": "en-US,en;q=0.9",
+    "User-Agent":      USER_AGENT,
 }
 
 _ARTICLES_URL  = f"{WP_API_BASE}/wp-json/mamboleo/v1/articles"
 _INCIDENTS_URL = f"{WP_API_BASE}/wp-json/mamboleo/v1/incidents"
 
-# Persistent session → reuses the TLS connection across the dozens of
-# POSTs in a typical scraper run (saves ~150–300ms per request).
-_session = requests.Session()
-_session.headers.update(_HEADERS)
-_retry = Retry(
-    total=2,
-    connect=2,
-    read=0,
-    backoff_factor=1.0,
-    status_forcelist=[502, 503, 504],
-    allowed_methods=["POST"],
-    raise_on_status=False,
-)
-_session.mount("https://", HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
-_session.mount("http://",  HTTPAdapter(max_retries=_retry, pool_connections=4, pool_maxsize=8))
+# Default SSL context — Cloudflare's bot manager flags urllib3's specific
+# cipher ordering. Python's stdlib context uses the OpenSSL default which
+# matches what curl/browsers send and gets through.
+_SSL_CTX = ssl.create_default_context()
+_TIMEOUT = 8.0  # seconds
 
 # ── WP-side circuit breaker ───────────────────────────────────────────────
 # When Cloudflare/WAF blocks POSTs we used to wait the full timeout for

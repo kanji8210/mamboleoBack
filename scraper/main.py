@@ -423,23 +423,36 @@ def main() -> None:
 
     # WP API reachability check — surfaces Cloudflare 403 / DNS issues at
     # startup rather than after each scraper has gathered 30 articles. We
-    # use a HEAD against /llm-config (already authenticated, idempotent).
+    # GET /llm-config (already authenticated, idempotent). Uses stdlib urllib
+    # rather than `requests` because Cloudflare fingerprints urllib3's TLS
+    # handshake and returns 403 even with browser-like headers — this is the
+    # same workaround `config._fetch_remote_llm_config()` already relies on.
     if not args.dry_run:
         try:
-            import requests as _r
+            import urllib.request, urllib.error
             from config import WP_API_BASE, WP_API_KEY, USER_AGENT
-            r = _r.get(
+            req = urllib.request.Request(
                 f"{WP_API_BASE.rstrip('/')}/wp-json/mamboleo/v1/llm-config",
-                headers={"X-API-Key": WP_API_KEY, "User-Agent": USER_AGENT},
-                timeout=6,
+                headers={
+                    "X-API-Key":       WP_API_KEY,
+                    "User-Agent":      USER_AGENT,
+                    "Accept":          "application/json",
+                    "Accept-Language": "en-US,en;q=0.9",
+                },
             )
-            if r.status_code >= 400 or "json" not in r.headers.get("Content-Type", ""):
+            try:
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    status = resp.status
+                    ctype  = resp.headers.get("Content-Type", "")
+            except urllib.error.HTTPError as he:
+                status, ctype = he.code, he.headers.get("Content-Type", "") if he.headers else ""
+            if status >= 400 or "json" not in ctype:
                 log.warning(
                     "WP API preflight: HTTP %s from %s — articles/incidents "
                     "POSTs will likely fail. Whitelist this server's IP in "
                     "Cloudflare or set MAMBOLEO_WP_URL=http://127.0.0.1 with "
                     "Host header on the prod box.",
-                    r.status_code, WP_API_BASE,
+                    status, WP_API_BASE,
                 )
             else:
                 log.info("WP API preflight: OK (%s)", WP_API_BASE)
