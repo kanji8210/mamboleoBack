@@ -35,9 +35,41 @@ _rate_lock = threading.Lock()
 _last_call: float = 0.0
 
 
+def _candidate_queries(location_name: str) -> list[str]:
+    """Return a few concise geocoder-friendly variants for a location hint."""
+    raw = (location_name or "").strip()
+    if not raw:
+        return []
+
+    candidates: list[str] = [raw]
+
+    cleaned = raw
+    for prefix in (
+        "at the ", "at ", "in the ", "in ", "near the ", "near ",
+        "outside ", "inside ", "around ", "from ", "on ",
+    ):
+        if cleaned.lower().startswith(prefix):
+            cleaned = cleaned[len(prefix):].strip(" ,.-")
+            break
+
+    if cleaned and cleaned not in candidates:
+        candidates.append(cleaned)
+
+    # Narrative hints like "junction of X and Y" often geocode better once
+    # trimmed down to the road / place segment.
+    for marker in ("junction of ", "intersection of ", "near ", "outside "):
+        idx = cleaned.lower().find(marker)
+        if idx != -1:
+            trimmed = cleaned[idx + len(marker):].strip(" ,.-")
+            if trimmed and trimmed not in candidates:
+                candidates.append(trimmed)
+
+    return candidates
+
+
 @lru_cache(maxsize=2048)
 def geocode(location_name: str) -> tuple[float, float] | None:
-    """Return (lat, lng) for a Kenya location, or None on failure.
+    """Return (lat, lng) for a geocodable place anywhere, or None on failure.
 
     Memoised — same string in a single run hits Nominatim at most once.
     """
@@ -49,26 +81,26 @@ def geocode(location_name: str) -> tuple[float, float] | None:
     # Lock held across the sleep + the actual GET so only one request
     # is in-flight at a time, even from concurrent scraper threads.
     with _rate_lock:
-        wait = 1.1 - (time.time() - _last_call)
-        if wait > 0:
-            time.sleep(wait)
-        try:
-            resp = _session.get(
-                _NOMINATIM,
-                params={
-                    "q":            f"{location_name}, Kenya",
-                    "format":       "json",
-                    "limit":        1,
-                    "countrycodes": "ke",
-                },
-                timeout=8,
-            )
-            _last_call = time.time()
-            resp.raise_for_status()
-            results = resp.json()
-            if results:
-                return float(results[0]["lat"]), float(results[0]["lon"])
-        except Exception as exc:
-            log.warning("Nominatim error for %r: %s", location_name, exc)
+        for query in _candidate_queries(location_name):
+            wait = 1.1 - (time.time() - _last_call)
+            if wait > 0:
+                time.sleep(wait)
+            try:
+                resp = _session.get(
+                    _NOMINATIM,
+                    params={
+                        "q":      query,
+                        "format": "json",
+                        "limit":  1,
+                    },
+                    timeout=8,
+                )
+                _last_call = time.time()
+                resp.raise_for_status()
+                results = resp.json()
+                if results:
+                    return float(results[0]["lat"]), float(results[0]["lon"])
+            except Exception as exc:
+                log.warning("Nominatim error for %r via %r: %s", location_name, query, exc)
 
     return None

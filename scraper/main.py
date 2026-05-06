@@ -69,6 +69,46 @@ ALL_SCRAPERS = {
     "social":        SocialHandlesScraper,
 }
 
+_TITLE_LOCATION_STOPWORDS = {
+    "A", "An", "And", "At", "After", "Before", "By", "Former", "For",
+    "From", "In", "Into", "Near", "On", "Of", "Over", "The", "To",
+    "Under", "With", "Without", "Driver", "Girl", "Boy", "Man", "Woman",
+    "FedEx", "Police", "Court", "Judge", "Death", "Home", "House",
+}
+
+
+def _title_location_candidates(title: str) -> list[str]:
+    """Extract geocoder-friendly place candidates from a title.
+
+    Prefer multi-word capitalised spans like ``Fort Worth`` or
+    ``Fort Worth, Texas`` and discard generic narrative/title words like
+    ``Former`` that would otherwise become bogus map pins.
+    """
+    if not title or not title.strip():
+        return []
+
+    candidates: list[str] = []
+    seen: set[str] = set()
+
+    # Multi-word / comma-separated place strings are the strongest signal.
+    for match in re.findall(r"\b(?:[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+(?:,\s*[A-Z][a-z]+)*)\b", title):
+        candidate = match.strip(" ,.-")
+        key = candidate.lower()
+        if key and key not in seen:
+            seen.add(key)
+            candidates.append(candidate)
+
+    # Single capitalised words only if they aren't obvious title noise.
+    for match in re.findall(r"\b[A-Z][a-z]{3,}\b", title):
+        if match in _TITLE_LOCATION_STOPWORDS:
+            continue
+        key = match.lower()
+        if key not in seen:
+            seen.add(key)
+            candidates.append(match)
+
+    return candidates
+
 
 
 # ── Pipeline ──────────────────────────────────────────────────────────────────
@@ -167,7 +207,7 @@ def process_article(raw: dict, dry_run: bool, stats: dict | None = None,
         candidates: list[str] = []
         if intel.location_hint:
             candidates.append(intel.location_hint)
-        candidates.extend(re.findall(r"[A-Z][a-z]{3,}", raw["title"]))
+        candidates.extend(_title_location_candidates(raw["title"]))
         for word in candidates:
             key = word.strip().lower()
             if not key or key in seen_words:

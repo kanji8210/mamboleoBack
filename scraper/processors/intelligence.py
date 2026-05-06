@@ -102,7 +102,7 @@ Analyse the article below and return JSON with exactly these keys:
   "severity":           one of ["low","medium","high"],
   "severity_reasoning": short string (≤200 chars) explaining the severity choice,
   "summary":            short plain-English summary (≤200 chars),
-  "location_hint":      Kenyan place name or narrative location ("" if none),
+    "location_hint":      concise place string (city/state/country/landmark) anywhere in the world, or "" if none,
   "is_followup":        true if this article updates an earlier event,
   "confidence":         number 0–1 (your certainty this is a real incident),
   "flags":              array of strings, any of [
@@ -118,9 +118,12 @@ Rules:
 - Severity "high" requires reported deaths / mass casualties / major
   displacement. "medium" for injuries, evacuations, significant damage.
   "low" for minor incidents or threats without confirmed harm.
-- Use location_hint to capture narrative locations Kenyan place gazetteers
-  might miss (e.g. "junction of Thika Road and Outer Ring Road"). Leave
-  empty if no specific location is mentioned.
+- Use location_hint to return the best mappable place string from the story:
+    city, county, state, province, district, landmark, or country.
+- Do NOT restrict location_hint to Kenya. If the story is in Texas, return
+    "Texas" or a more specific city such as "Fort Worth, Texas" when present.
+- Keep location_hint concise and geocodable. Prefer just the place name over
+    prose such as "at her Texas home".
 - Output ONLY the JSON object. No markdown fences, no commentary.
 
 ARTICLE TITLE:

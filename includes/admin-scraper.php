@@ -221,10 +221,10 @@ function mamboleo_scraper_admin_page() {
     <div class="wrap">
         <h1>Mamboleo Scraper Control</h1>
         <div class="mamboleo-admin-card">
-            <p><strong>Note:</strong> The scraper now runs in a detached background process to prevent Cloudflare timeouts (Error 524).</p>
+            <p><strong>Note:</strong> The scraper runs as a detached background job. Starting it here only queues the run; it does not stream live progress in this page.</p>
             
             <div class="mamboleo-btn-group">
-                <button id="run-scraper-btn" class="button button-primary">Start Scraper</button>
+                <button id="run-scraper-btn" class="button button-primary">Start Background Scraper</button>
                 <button id="install-deps-btn" class="button button-secondary" data-mode="core">Install Dependencies</button>
                 <button id="install-optional-btn" class="button button-secondary" data-mode="optional" title="Optional spaCy NLP — may fail on shared hosting; safe to skip.">Install Optional NLP</button>
             </div>
@@ -235,7 +235,7 @@ function mamboleo_scraper_admin_page() {
             </div>
 
             <div id="mamboleo-terminal" class="mamboleo-terminal">
-                <div class="mamboleo-terminal-line">Waiting for command...</div>
+                <div class="mamboleo-terminal-line">Background runs do not stream here. Start the scraper, then refresh later to inspect the latest log file if needed.</div>
             </div>
         </div>
     </div>
@@ -245,7 +245,6 @@ function mamboleo_scraper_admin_page() {
         const $terminal = $('#mamboleo-terminal');
         const $loader = $('#mamboleo-loader');
         const $status = $('#mamboleo-status-text');
-        let pollInterval = null;
         let lastFullText = "";
 
         function updateTerminal(fullText) {
@@ -268,56 +267,21 @@ function mamboleo_scraper_admin_page() {
             $terminal.scrollTop($terminal[0].scrollHeight);
         }
 
-        function startPolling() {
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(function() {
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'mamboleo_poll_scraper',
-                        security: '<?php echo wp_create_nonce("mamboleo_scraper_nonce"); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            updateTerminal(response.data.output);
-                            if (response.data.done) {
-                                stopPolling('Completed.');
-                            }
-                        }
-                    }
-                });
-            }, 2000);
-        }
-
-        function stopPolling(statusText) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-            if (window.scraperElapsed) { clearInterval(window.scraperElapsed); window.scraperElapsed = null; }
+        function finishScraperStart(statusText) {
             $loader.hide();
             $('#run-scraper-btn').prop('disabled', false);
-            $('#install-deps-btn').prop('disabled', false);
+            $('#install-deps-btn, #install-optional-btn').prop('disabled', false);
             $status.text(statusText);
         }
 
         $('#run-scraper-btn').on('click', function() {
             const $btn = $(this);
             $btn.prop('disabled', true);
-            $('#install-deps-btn').prop('disabled', true);
+            $('#install-deps-btn, #install-optional-btn').prop('disabled', true);
             $loader.show();
-            const startedAt = Date.now();
             $status.text('Scraper starting in background...');
-            $terminal.html('<div class="mamboleo-terminal-line terminal-info">Initializing background process...</div>');
+            $terminal.html('<div class="mamboleo-terminal-line terminal-info">Submitting background scraper job…</div>');
             lastFullText = "";
-
-            // Live elapsed-time so the user sees activity even when the
-            // scraper is mid-LLM-call and not flushing log lines.
-            if (window.scraperElapsed) clearInterval(window.scraperElapsed);
-            window.scraperElapsed = setInterval(function() {
-                const secs = Math.round((Date.now() - startedAt) / 1000);
-                const mins = Math.floor(secs / 60);
-                $status.text('Scraper running… ' + (mins ? (mins + 'm ') : '') + (secs % 60) + 's');
-            }, 1000);
 
             $.ajax({
                 url: ajaxurl,
@@ -328,15 +292,18 @@ function mamboleo_scraper_admin_page() {
                 },
                 success: function(response) {
                     if (response.success) {
-                        startPolling();
+                        $terminal.html(
+                            '<div class="mamboleo-terminal-line terminal-success">' +
+                            'Background scraper started. This page will not stream live output.' +
+                            '</div>'
+                        );
+                        finishScraperStart('Background scraper started. You can leave this page and check results later.');
                     } else {
-                        clearInterval(window.scraperElapsed);
-                        stopPolling('Failed to start.');
+                        finishScraperStart('Failed to start.');
                     }
                 },
                 error: function() {
-                    clearInterval(window.scraperElapsed);
-                    stopPolling('Initial request failed.');
+                    finishScraperStart('Initial request failed.');
                 }
             });
         });
