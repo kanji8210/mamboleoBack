@@ -145,37 +145,65 @@ def _extract_json(text: str):
 
 
 def _post(url: str, data: dict, what: str) -> int | None:
-    """Shared POST helper with rich diagnostics."""
+    """Shared POST helper with rich diagnostics.
+
+    Uses stdlib urllib (see module docstring) so Cloudflare doesn't 403 on
+    urllib3's TLS fingerprint. Hard 8s timeout — one slow WAF must never
+    stall a worker thread for minutes.
+    """
     if _tripped:
         return None
     payload = _trim_payload(data)
+    body_bytes = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=body_bytes,
+        headers=_HEADERS,
+        method="POST",
+    )
+
     try:
-        resp = _session.post(url, json=payload, timeout=8)
-    except requests.exceptions.Timeout:
-        log.error("%s POST timed out (>8s) → %s", what, url)
+        with urllib.request.urlopen(req, timeout=_TIMEOUT, context=_SSL_CTX) as resp:
+            status = resp.status
+            headers = resp.headers
+            text = resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as he:
+        status = he.code
+        headers = he.headers if he.headers is not None else {}
+        try:
+            text = he.read().decode("utf-8", errors="replace")
+        except Exception:
+            text = ""
+    except socket.timeout:
+        log.error("%s POST timed out (>%.0fs) → %s", what, _TIMEOUT, url)
         _record_failure("timeout")
         return None
-    except requests.exceptions.ConnectionError as exc:
-        log.error("%s POST connection error → %s : %s", what, url, exc)
-        _record_failure("connection")
+    except urllib.error.URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        if isinstance(reason, socket.timeout):
+            log.error("%s POST timed out (>%.0fs) → %s", what, _TIMEOUT, url)
+            _record_failure("timeout")
+        else:
+            log.error("%s POST connection error → %s : %s", what, url, reason)
+            _record_failure("connection")
         return None
-    except requests.exceptions.RequestException as exc:
+    except Exception as exc:  # noqa: BLE001
         log.error("%s POST request failed: %s", what, exc)
         _record_failure(type(exc).__name__)
         return None
 
-    status = resp.status_code
-    ctype  = resp.headers.get("Content-Type", "")
-    server = resp.headers.get("Server", "?")
+    ctype  = headers.get("Content-Type", "") if headers else ""
+    server = headers.get("Server", "?") if headers else "?"
 
     # Happy path — valid JSON response from WordPress.
-    # We do NOT rely on resp.json() alone: some WordPress hosts emit
+    # We do NOT rely on strict json.loads alone: some WordPress hosts emit
     # PHP notices/warnings before the JSON body (e.g. "Deprecated: ..."),
-    # which breaks the strict parser. Instead we fish the last JSON object
-    # out of the body — this is robust to leading warnings or trailing newlines.
+    # which breaks the strict parser. _extract_json fishes the last JSON
+    # object out of the body, robust to leading warnings or trailing newlines.
     if status < 400:
         _record_success()
-        body = _extract_json(resp.text)
+        body = _extract_json(text)
         if isinstance(body, dict) and "id" in body:
             return int(body["id"])
         if isinstance(body, dict):
@@ -184,7 +212,7 @@ def _post(url: str, data: dict, what: str) -> int | None:
             return None
 
     # Anything else → surface status + server + body fingerprint.
-    hint = _summarise_error_body(resp.text)
+    hint = _summarise_error_body(text)
     log.error(
         "%s POST failed → HTTP %s (server=%s, content-type=%s): %s",
         what, status, server, ctype or "none", hint,
