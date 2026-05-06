@@ -14,7 +14,9 @@ import sqlite3
 import threading
 from pathlib import Path
 
-_lock = threading.Lock()
+# _seen_set() populates the cache while calling _conn(), so the same thread
+# can legitimately re-enter this lock during first-use initialisation.
+_lock = threading.RLock()
 _conn_cache: dict[str, sqlite3.Connection] = {}
 _seen_cache: dict[str, set[str]] = {}
 

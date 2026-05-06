@@ -14,13 +14,14 @@ import logging
 import os
 import re
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import db
 import health
 from api import client as api
-from config import DB_PATH, MAX_ARTICLES, LLM_ALL_ARTICLES
+from config import DB_PATH, MAX_ARTICLES, LLM_ALL_ARTICLES, MAX_SOURCE_SECONDS
 from processors import analyze, classify as legacy, geocoder, intelligence, locations
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
@@ -468,16 +469,31 @@ def main() -> None:
             log.info("--- %s skipped (in cooldown) ---", label.upper())
             return 0
         log.info("--- %s (limit=%d) ---", label.upper(), args.limit)
+        started = time.monotonic()
         local = 0
         seen = 0
         crashed = False
         stats: dict[str, int] = {}
         try:
             for raw in scraper.fetch_articles(limit=args.limit):
+                elapsed = time.monotonic() - started
+                if elapsed >= MAX_SOURCE_SECONDS:
+                    log.warning(
+                        "--- %s hit source budget (%.0fs) after %d article(s); moving on ---",
+                        label.upper(), MAX_SOURCE_SECONDS, seen,
+                    )
+                    break
                 seen += 1
                 if process_article(raw, dry_run=args.dry_run, stats=stats,
                                    llm_all=args.llm_all):
                     local += 1
+                elapsed = time.monotonic() - started
+                if elapsed >= MAX_SOURCE_SECONDS:
+                    log.warning(
+                        "--- %s hit source budget (%.0fs) after %d article(s); moving on ---",
+                        label.upper(), MAX_SOURCE_SECONDS, seen,
+                    )
+                    break
         except Exception as exc:
             crashed = True
             log.error("Scraper %s crashed: %s", label, exc, exc_info=True)

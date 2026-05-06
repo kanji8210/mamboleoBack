@@ -24,6 +24,7 @@ TWITTER_BEARER = os.getenv("TWITTER_BEARER_TOKEN", "")
 REQUEST_DELAY = float(os.getenv("SCRAPER_DELAY", "2.5"))
 MAX_ARTICLES  = int(os.getenv("MAX_ARTICLES_PER_RUN", "30"))
 DB_PATH       = DATA_DIR / "seen.db"
+MAX_SOURCE_SECONDS = float(os.getenv("MAX_SOURCE_SECONDS", "40"))
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
@@ -113,6 +114,10 @@ _R_OPENAI = _REMOTE.get("openai") or {}
 # for any LLM credential — the only env knobs are debug toggles below.
 LLM_PROVIDER   = (_REMOTE.get("provider") or "ollama").strip().lower()
 OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
+LLM_TIMEOUT_CAP = float(os.getenv("LLM_TIMEOUT_CAP", "8"))
+LLM_MAX_ATTEMPTS = max(1, int(os.getenv("LLM_MAX_ATTEMPTS", "1")))
+LLM_RETRY_BACKOFF = float(os.getenv("LLM_RETRY_BACKOFF", "1.5"))
+ENABLE_SPACY_ENRICHMENT = os.getenv("ENABLE_SPACY_ENRICHMENT", "0") not in ("0", "false", "False", "")
 
 # When set to 1/true, every scraped article is sent to the LLM intelligence
 # layer (no keyword pre-filter). Useful when the keyword gate is suspected
@@ -121,7 +126,7 @@ LLM_ALL_ARTICLES = os.getenv("LLM_ALL_ARTICLES", "0") not in ("0", "false", "Fal
 
 OLLAMA_HOST    = (_R_OLLAMA.get("host") or "http://localhost:11434").rstrip("/")
 OLLAMA_MODEL   = _R_OLLAMA.get("model") or "llama3.1:8b"
-OLLAMA_TIMEOUT = float(_R_OLLAMA.get("timeout") or 45)
+OLLAMA_TIMEOUT = min(float(_R_OLLAMA.get("timeout") or 45), LLM_TIMEOUT_CAP)
 
 # OpenAI-compatible provider settings (Groq, OpenAI, Together, OpenRouter…).
 # Sourced exclusively from WP admin so the API key cannot leak via .env or
@@ -131,7 +136,7 @@ OLLAMA_TIMEOUT = float(_R_OLLAMA.get("timeout") or 45)
 OPENAI_BASE_URL = (_R_OPENAI.get("base_url") or "https://api.openai.com/v1").rstrip("/")
 OPENAI_API_KEY  = _R_OPENAI.get("api_key") or ""
 OPENAI_MODEL    = _R_OPENAI.get("model") or "gpt-4o-mini"
-OPENAI_TIMEOUT  = float(_R_OPENAI.get("timeout") or 60)
+OPENAI_TIMEOUT  = min(float(_R_OPENAI.get("timeout") or 60), LLM_TIMEOUT_CAP)
 
 # ── Social handles ─────────────────────────────────────────────────────────
 # Optional self-hosted RSSHub bridge for Facebook pages. When unset, Facebook

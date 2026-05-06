@@ -25,7 +25,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from api import llm_client
-from config import OLLAMA_ENABLED, OLLAMA_MODEL, LLM_PROVIDER, OPENAI_MODEL
+from config import (
+    OLLAMA_ENABLED,
+    OLLAMA_MODEL,
+    LLM_PROVIDER,
+    OPENAI_MODEL,
+    LLM_MAX_ATTEMPTS,
+    LLM_RETRY_BACKOFF,
+)
 from processors import classify as legacy
 
 log = logging.getLogger("intelligence")
@@ -214,7 +221,7 @@ def analyze(title: str, body: str = "") -> Intelligence:
     prompt = _build_user_prompt(title, body)
     last_exc: Exception | None = None
 
-    for attempt in range(2):
+    for attempt in range(LLM_MAX_ATTEMPTS):
         try:
             raw = llm_client.chat_json(
                 system=_SYSTEM_PROMPT,
@@ -223,11 +230,21 @@ def analyze(title: str, body: str = "") -> Intelligence:
             break
         except llm_client.LLMError as exc:
             last_exc = exc
-            if attempt == 0:
-                log.info("LLM attempt 1 failed (%s) — retrying in 2s", exc)
-                time.sleep(2)
+            if attempt + 1 < LLM_MAX_ATTEMPTS:
+                log.info(
+                    "LLM attempt %d/%d failed (%s) — retrying in %.1fs",
+                    attempt + 1,
+                    LLM_MAX_ATTEMPTS,
+                    exc,
+                    LLM_RETRY_BACKOFF,
+                )
+                time.sleep(LLM_RETRY_BACKOFF)
             else:
-                log.warning("LLM unavailable after 2 attempts (%s) — falling back to keyword classifier", exc)
+                log.warning(
+                    "LLM unavailable after %d attempt(s) (%s) — falling back to keyword classifier",
+                    LLM_MAX_ATTEMPTS,
+                    exc,
+                )
                 return _from_legacy(title, body)
 
     try:

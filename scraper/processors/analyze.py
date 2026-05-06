@@ -22,6 +22,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from functools import lru_cache
 
+from config import ENABLE_SPACY_ENRICHMENT
+
 log = logging.getLogger("analyze")
 
 # ── Topic taxonomy ────────────────────────────────────────────────────────────
@@ -80,6 +82,9 @@ def _vader():
 # ── spaCy NER (lazy) ──────────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
 def _nlp():
+    if not ENABLE_SPACY_ENRICHMENT:
+        log.info("spaCy enrichment disabled for scraper fast path — using regex fallback")
+        return None
     try:
         import spacy
         try:

@@ -1,2 +1,4 @@
 {"event": "record", "entry_id": "ctx-20260502-151147555735-2a27d669", "category": "feature", "title": "Backend: incident updates timeline, 7-day expiry, AI admin, reorganized menu", "timestamp": "2026-05-02T15:11:47Z"}
 {"event": "record", "entry_id": "ctx-20260502-164659134623-ebffcab6", "category": "feature", "title": "AI layer: provider-agnostic LLM client + WP-managed secret + setup guide", "timestamp": "2026-05-02T16:46:59Z"}
+{"event": "record", "entry_id": "ctx-20260506-074400254755-93b22f90", "category": "bugfix", "title": "Scraper deadlock and fast-path bounds", "timestamp": "2026-05-06T07:44:00Z"}
+{"event": "link-commit", "entry_id": "ctx-20260506-074400254755-93b22f90", "commit": "2039151", "timestamp": "2026-05-06T07:44:00Z"}
