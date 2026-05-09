@@ -26,7 +26,7 @@ from datetime import datetime, timezone
 
 from api import llm_client
 from config import (
-    OLLAMA_ENABLED,
+    LLM_ENABLED,
     OLLAMA_MODEL,
     LLM_PROVIDER,
     OPENAI_MODEL,
@@ -218,7 +218,7 @@ def analyze(title: str, body: str = "") -> Intelligence:
     attempted before giving up — prevents transient 429 / timeout from
     silently degrading to the keyword classifier.
     """
-    if not OLLAMA_ENABLED:
+    if not LLM_ENABLED:
         return _from_legacy(title, body)
 
     prompt = _build_user_prompt(title, body)

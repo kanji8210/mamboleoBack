@@ -8035,4 +8035,45 @@ UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: cha
 ==================================================================== 
 [08/05/2026 19:15:04.03] START cadence=fast 
 ==================================================================== 
+^C 
+==================================================================== 
+[09/05/2026 12:15:03.31] START cadence=fast 
+==================================================================== 
+Traceback (most recent call last):
+  File "<frozen importlib._bootstrap_external>", line 1266, in set_data
+  File "<frozen importlib._bootstrap_external>", line 206, in _write_atomic
+PermissionError: [Errno 13] Permission denied: 'C:\\Python313\\Lib\\encodings\\__pycache__\\cp869.cpython-313.pyc.3065856450928'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_all_scrapers.py", line 22, in <module>
+    from main import main as run_main
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 25, in <module>
+    from processors import analyze, classify as legacy, geocoder, intelligence, locations
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\processors\geocoder.py", line 19, in <module>
+    import requests
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\requests\__init__.py", line 48, in <module>
+    from charset_normalizer import __version__ as charset_normalizer_version
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\__init__.py", line 26, in <module>
+    from .api import from_bytes, from_fp, from_path, is_binary
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\api.py", line 47, in <module>
+    if is_multi_byte_encoding(_supported_enc):
+       ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\denis\AppData\Roaming\Python\Python313\site-packages\charset_normalizer\utils.py", line 281, in is_multi_byte_encoding
+    importlib.import_module(f"encodings.{name}").IncrementalDecoder,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 1022, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1173, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1241, in _cache_bytecode
+  File "<frozen importlib._bootstrap_external>", line 1270, in set_data
+  File "<frozen importlib._bootstrap>", line 491, in _verbose_message
+KeyboardInterrupt
 ^C

@@ -106,14 +106,29 @@ def _fetch_remote_llm_config() -> tuple[dict, str]:
     return {}, "none"
 
 
+def _normalize_llm_provider(value: str) -> str:
+    """Normalize provider labels sent by WP/admin to scraper runtime values."""
+    v = (value or "").strip().lower().replace("_", "-")
+    if v in ("openai", "openai-compatible", "openai compatible", "openai-api"):
+        return "openai"
+    if v in ("ollama", "local", "local-ollama"):
+        return "ollama"
+    # Unknown provider values should not crash the run. Default to ollama,
+    # which preserves historical behavior and offline compatibility.
+    return "ollama"
+
+
 _REMOTE, LLM_CONFIG_SOURCE = _fetch_remote_llm_config()
 _R_OLLAMA = _REMOTE.get("ollama") or {}
 _R_OPENAI = _REMOTE.get("openai") or {}
 
 # Provider + model + key all come from WP admin. .env is no longer consulted
 # for any LLM credential — the only env knobs are debug toggles below.
-LLM_PROVIDER   = (_REMOTE.get("provider") or "ollama").strip().lower()
-OLLAMA_ENABLED = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
+LLM_PROVIDER   = _normalize_llm_provider(str(_REMOTE.get("provider") or "ollama"))
+_env_llm_enabled = os.getenv("OLLAMA_ENABLED", "1") not in ("0", "false", "False", "")
+LLM_ENABLED = bool(_REMOTE.get("enabled")) if "enabled" in _REMOTE else _env_llm_enabled
+# Backward-compatible alias. Some modules still import OLLAMA_ENABLED.
+OLLAMA_ENABLED = LLM_ENABLED
 LLM_TIMEOUT_CAP = float(os.getenv("LLM_TIMEOUT_CAP", "8"))
 LLM_MAX_ATTEMPTS = max(1, int(os.getenv("LLM_MAX_ATTEMPTS", "1")))
 LLM_RETRY_BACKOFF = float(os.getenv("LLM_RETRY_BACKOFF", "1.5"))
