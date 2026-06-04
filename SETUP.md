@@ -40,6 +40,14 @@ Other supported endpoints:
 
 ## 3. Scraper (Python)
 
+Canonical architecture (single clear scraper flow):
+
+1. Scrape locally (feeds/APIs/pages)
+2. Analyze locally (classification + location + intelligence layer)
+3. Push normalized results to WordPress backend via REST API
+
+This is the default behavior of `scraper/run_pipeline.py`.
+
 ```powershell
 cd scraper
 python -m venv .venv
@@ -62,10 +70,20 @@ WP at startup via `GET /wp-json/mamboleo/v1/llm-config` (auth: `X-API-Key`).
 ### Run
 
 ```powershell
-python main.py                  # all enabled sources
-python main.py --sources social # just X/Facebook handles
+python run_pipeline.py                 # all enabled sources
+python run_pipeline.py --cadence fast  # breaking/fast bucket
+python run_pipeline.py --cadence slow  # slower bucket
+python run_pipeline.py --dry-run       # local scrape+analysis only, no push
+python main.py --sources social        # optional targeted run (advanced)
 python backfill_ai.py           # re-analyse incidents missing AI metadata
 ```
+
+After each run, a categorized JSON summary is written to:
+
+`scraper/data/last_run_summary.json`
+
+Categories include: `success`, `low_yield`, `analyzed_no_incident`, `no_data`,
+`skipped`, and `failed`.
 
 ### Scheduled task (Windows)
 
@@ -73,6 +91,9 @@ python backfill_ai.py           # re-analyse incidents missing AI metadata
 schtasks /Create /XML windows_scrape_task_fast.xml /TN MamboleoScraperFast
 schtasks /Create /XML windows_scrape_task_slow.xml /TN MamboleoScraperSlow
 ```
+
+Both task XML files invoke `run_scheduled.bat`, which now routes into the
+canonical `run_pipeline.py` entrypoint.
 
 ## 4. Optional integrations
 

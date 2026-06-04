@@ -1,17 +1,7 @@
-"""
-Run all Mamboleo scrapers for all mapped sources.
+"""Backward-compatible wrapper for the canonical pipeline entrypoint.
 
-Scheduled-entrypoint wrapper. Two cadences:
-
-    python run_all_scrapers.py --cadence fast   # every 15 min — breaking outlets
-    python run_all_scrapers.py --cadence slow   # hourly       — everything else
-    python run_all_scrapers.py --all            # one-off full sweep
-
-Cadence is defined per-source in sources.yaml (`cadence: fast | slow`).
-
-Windows Task Scheduler consumes this via:
-    windows_scrape_task_fast.xml  → every 15 min
-    windows_scrape_task_slow.xml  → every hour
+Prefer using run_pipeline.py directly. This file is kept so older scheduled
+tasks and scripts continue to work unchanged.
 """
 from __future__ import annotations
 
@@ -19,7 +9,7 @@ import argparse
 import logging
 import sys
 
-from main import main as run_main
+from run_pipeline import build_argv as build_pipeline_argv
 
 
 def parse_args():
@@ -31,20 +21,24 @@ def parse_args():
     return p.parse_args()
 
 
-def build_argv(args) -> list:
-    """Translate wrapper flags into main.py's argv."""
-    argv = [sys.argv[0]]
+def build_argv(args) -> list[str]:
+    """Translate legacy flags into run_pipeline.py-compatible argv."""
+    cadence = "all"
     if args.all:
-        argv.append("--all")
+        cadence = "all"
     elif args.cadence:
-        argv.extend(["--cadence", args.cadence])
-    else:
-        argv.append("--all")  # back-compat default
-    if args.limit:
-        argv.extend(["--limit", str(args.limit)])
-    if args.dry_run:
-        argv.append("--dry-run")
-    return argv
+        cadence = args.cadence
+
+    class _Args:
+        def __init__(self):
+            self.cadence = cadence
+            self.limit = args.limit
+            self.workers = None
+            self.dry_run = args.dry_run
+            self.llm_all = False
+            self.skip_preflight = False
+
+    return build_pipeline_argv(_Args())
 
 
 if __name__ == "__main__":
@@ -54,4 +48,5 @@ if __name__ == "__main__":
     )
     args = parse_args()
     sys.argv = build_argv(args)
+    from main import main as run_main
     run_main()

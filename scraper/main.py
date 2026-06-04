@@ -10,6 +10,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import re
@@ -21,7 +22,7 @@ from datetime import datetime, timezone
 import db
 import health
 from api import client as api
-from config import DB_PATH, MAX_ARTICLES, LLM_ALL_ARTICLES, MAX_SOURCE_SECONDS
+from config import DATA_DIR, DB_PATH, MAX_ARTICLES, LLM_ALL_ARTICLES, MAX_SOURCE_SECONDS
 from processors import analyze, classify as legacy, geocoder, intelligence, locations
 from scrapers.advisories import AdvisoryScraper
 from scrapers.generic import GenericScraper
@@ -320,7 +321,65 @@ def _build_runnables(
     return runnables
 
 
+def _categorize_source_result(result: dict) -> str:
+    if result.get("status") == "skipped":
+        return "skipped"
+    if result.get("status") == "failed":
+        return "failed"
+
+    seen = int(result.get("articles_seen", 0))
+    incidents = int(result.get("incidents_created", 0))
+
+    if seen == 0:
+        return "no_data"
+    if incidents == 0:
+        return "analyzed_no_incident"
+    if incidents < 2:
+        return "low_yield"
+    return "success"
+
+
+def _build_run_summary(
+    started_at: datetime,
+    args,
+    source_results: list[dict],
+    total_incidents: int,
+) -> dict:
+    categories = {
+        "success": 0,
+        "low_yield": 0,
+        "analyzed_no_incident": 0,
+        "no_data": 0,
+        "skipped": 0,
+        "failed": 0,
+    }
+    for result in source_results:
+        cat = _categorize_source_result(result)
+        categories[cat] = categories.get(cat, 0) + 1
+
+    return {
+        "started_at": started_at.isoformat(),
+        "finished_at": datetime.now(timezone.utc).isoformat(),
+        "mode": {
+            "dry_run": bool(args.dry_run),
+            "cadence": args.cadence,
+            "all": bool(args.all),
+            "workers": int(args.workers),
+            "limit": int(args.limit),
+            "llm_all": bool(args.llm_all),
+        },
+        "totals": {
+            "sources_selected": len(source_results),
+            "articles_seen": sum(int(r.get("articles_seen", 0)) for r in source_results),
+            "incidents_created": int(total_incidents),
+            **categories,
+        },
+        "sources": source_results,
+    }
+
+
 def main() -> None:
+    started_at = datetime.now(timezone.utc)
     parser = argparse.ArgumentParser(description="Mamboleo web scraper")
     parser.add_argument(
         "--sources", nargs="+",
@@ -503,11 +562,25 @@ def main() -> None:
     if args.dry_run:
         log.info("DRY-RUN mode: nothing will be posted to WordPress")
 
-    def _run_one(label: str, scraper) -> int:
-        """Drain one scraper. Returns number of new incidents posted."""
+    def _run_one(label: str, scraper) -> dict:
+        """Drain one scraper. Returns per-source categorized metrics."""
+        result = {
+            "source": label,
+            "status": "ok",
+            "articles_seen": 0,
+            "incidents_created": 0,
+            "already_seen": 0,
+            "prefilter_dropped": 0,
+            "llm_checked": 0,
+            "llm_rejected": 0,
+            "category": "unknown",
+            "duration_seconds": 0.0,
+        }
         if not health.should_run(label):
             log.info("--- %s skipped (in cooldown) ---", label.upper())
-            return 0
+            result["status"] = "skipped"
+            result["category"] = "skipped"
+            return result
         log.info("--- %s (limit=%d) ---", label.upper(), args.limit)
         started = time.monotonic()
         local = 0
@@ -549,16 +622,28 @@ def main() -> None:
             stats.get("llm_checked", 0),
             stats.get("llm_rejected", 0),
         )
-        return local
+        result["status"] = "failed" if crashed else "ok"
+        result["articles_seen"] = seen
+        result["incidents_created"] = local
+        result["already_seen"] = stats.get("already_seen", 0)
+        result["prefilter_dropped"] = stats.get("prefilter_dropped", 0)
+        result["llm_checked"] = stats.get("llm_checked", 0)
+        result["llm_rejected"] = stats.get("llm_rejected", 0)
+        result["duration_seconds"] = round(time.monotonic() - started, 2)
+        result["category"] = _categorize_source_result(result)
+        return result
 
     total_incidents = 0
+    source_results: list[dict] = []
     workers = max(1, min(args.workers, len(runnables)))
 
     if workers == 1:
         # Serial path — preserves the old log ordering when debugging.
         try:
             for label, scraper in runnables:
-                total_incidents += _run_one(label, scraper)
+                result = _run_one(label, scraper)
+                source_results.append(result)
+                total_incidents += int(result.get("incidents_created", 0))
         except KeyboardInterrupt:
             log.info("Interrupted by user.")
     else:
@@ -569,13 +654,51 @@ def main() -> None:
             try:
                 for fut in as_completed(futures):
                     try:
-                        total_incidents += fut.result()
+                        result = fut.result()
+                        source_results.append(result)
+                        total_incidents += int(result.get("incidents_created", 0))
                     except Exception as exc:
                         log.error("Scraper %s failed: %s", futures[fut], exc, exc_info=True)
+                        source_results.append({
+                            "source": futures[fut],
+                            "status": "failed",
+                            "articles_seen": 0,
+                            "incidents_created": 0,
+                            "already_seen": 0,
+                            "prefilter_dropped": 0,
+                            "llm_checked": 0,
+                            "llm_rejected": 0,
+                            "category": "failed",
+                            "duration_seconds": 0.0,
+                        })
             except KeyboardInterrupt:
                 log.info("Interrupted by user — cancelling pending scrapers.")
                 for fut in futures:
                     fut.cancel()
+
+    run_summary = _build_run_summary(
+        started_at=started_at,
+        args=args,
+        source_results=source_results,
+        total_incidents=total_incidents,
+    )
+    summary_path = DATA_DIR / "last_run_summary.json"
+    try:
+        summary_path.write_text(json.dumps(run_summary, indent=2), encoding="utf-8")
+        totals = run_summary["totals"]
+        log.info(
+            "Summary categories: success=%d low_yield=%d analyzed_no_incident=%d "
+            "no_data=%d skipped=%d failed=%d",
+            totals["success"],
+            totals["low_yield"],
+            totals["analyzed_no_incident"],
+            totals["no_data"],
+            totals["skipped"],
+            totals["failed"],
+        )
+        log.info("Run summary saved: %s", summary_path)
+    except Exception as exc:  # noqa: BLE001
+        log.warning("Could not write run summary JSON: %s", exc)
 
     log.info("=== Done. Total new incidents: %d ===", total_incidents)
 

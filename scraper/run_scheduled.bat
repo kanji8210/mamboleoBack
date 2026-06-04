@@ -19,7 +19,7 @@ echo ==================================================================== >> "%L
 echo [%DATE% %TIME%] START cadence=%CADENCE% >> "%LOG%"
 echo ==================================================================== >> "%LOG%"
 
-C:\Python313\python.exe run_all_scrapers.py --cadence %CADENCE% >> "%LOG%" 2>&1
+C:\Python313\python.exe run_pipeline.py --cadence %CADENCE% >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 
 echo [%DATE% %TIME%] END cadence=%CADENCE% exit=%RC% >> "%LOG%"
