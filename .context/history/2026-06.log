@@ -1,0 +1,2 @@
+{"event": "record", "entry_id": "ctx-20260604-103132303275-cba7d7a9", "category": "feature", "title": "Single clear local-first scraper pipeline with post-run categorization", "timestamp": "2026-06-04T10:31:32Z"}
+{"event": "link-commit", "entry_id": "ctx-20260604-103132303275-cba7d7a9", "commit": "03396f1", "timestamp": "2026-06-04T10:31:32Z"}
