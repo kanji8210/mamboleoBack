@@ -23079,3 +23079,24 @@ Traceback (most recent call last):
            ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
 [05/06/2026 10:00:07,05] END cadence=fast exit=1 
+ 
+==================================================================== 
+[05/06/2026 10:08:00,94] START cadence=slow 
+Traceback (most recent call last):
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\run_pipeline.py", line 15, in <module>
+    from main import main as run_main
+  File "C:\xampp\htdocs\wordpress\wp-content\plugins\mamboleoBack\scraper\main.py", line 19, in <module>
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+  File "<frozen importlib._bootstrap>", line 1412, in _handle_fromlist
+  File "C:\Python313\Lib\concurrent\futures\__init__.py", line 50, in __getattr__
+    from .thread import ThreadPoolExecutor as te
+  File "C:\Python313\Lib\concurrent\futures\thread.py", line 10, in <module>
+    import queue
+  File "C:\Python313\Lib\queue.py", line 9, in <module>
+    from _queue import SimpleQueue
+KeyboardInterrupt
+^C 
+==================================================================== 
+[05/06/2026 10:15:02,36] START cadence=fast 
+==================================================================== 
+^C
