@@ -4,6 +4,17 @@
  */
 
 add_action( 'add_meta_boxes', 'mamboleo_add_meta_box' );
+
+// Incident editing relies on classic meta-box POST values. Keeping this post
+// type out of Gutenberg avoids publish/update requests that skip those fields.
+add_filter( 'use_block_editor_for_post_type', function ( $use_block_editor, $post_type ) {
+    if ( $post_type === 'incident' ) {
+        return false;
+    }
+
+    return $use_block_editor;
+}, 10, 2 );
+
 function mamboleo_add_meta_box(): void {
     add_meta_box(
         'mamboleo_incident_fields',
