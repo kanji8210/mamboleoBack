@@ -39,7 +39,58 @@ function mamboleo_admin_rest_user_payload( WP_User $user ): array {
     ];
 }
 
-function mamboleo_admin_rest_session_payload( ?WP_User $user = null ): array {
+function mamboleo_admin_rest_token_key( string $token ): string {
+    return 'mamboleo_admin_token_' . md5( $token );
+}
+
+function mamboleo_admin_rest_token_from_request( WP_REST_Request $request ): string {
+    $token = trim( (string) $request->get_header( 'X-Mamboleo-Admin-Token' ) );
+    if ( $token !== '' ) {
+        return $token;
+    }
+
+    $auth = trim( (string) $request->get_header( 'Authorization' ) );
+    if ( preg_match( '/Bearer\s+(.+)/i', $auth, $matches ) ) {
+        return trim( (string) $matches[1] );
+    }
+
+    return '';
+}
+
+function mamboleo_admin_rest_store_token( int $user_id, bool $remember ): string {
+    $token = wp_generate_password( 64, false, false );
+    $ttl   = $remember ? ( 30 * DAY_IN_SECONDS ) : DAY_IN_SECONDS;
+    set_transient( mamboleo_admin_rest_token_key( $token ), $user_id, $ttl );
+    return $token;
+}
+
+function mamboleo_admin_rest_clear_token( string $token ): void {
+    if ( $token === '' ) {
+        return;
+    }
+    delete_transient( mamboleo_admin_rest_token_key( $token ) );
+}
+
+function mamboleo_admin_rest_token_user( WP_REST_Request $request ): ?WP_User {
+    $token = mamboleo_admin_rest_token_from_request( $request );
+    if ( $token === '' ) {
+        return null;
+    }
+
+    $user_id = (int) get_transient( mamboleo_admin_rest_token_key( $token ) );
+    if ( $user_id <= 0 ) {
+        return null;
+    }
+
+    $user = get_user_by( 'id', $user_id );
+    if ( ! $user instanceof WP_User || ! $user->exists() || ! user_can( $user, 'manage_options' ) ) {
+        return null;
+    }
+
+    return $user;
+}
+
+function mamboleo_admin_rest_session_payload( ?WP_User $user = null, string $token = '' ): array {
     $user = $user ?: wp_get_current_user();
     $authenticated = $user instanceof WP_User && $user->exists();
     $authorized    = $authenticated && user_can( $user, 'manage_options' );
@@ -48,12 +99,24 @@ function mamboleo_admin_rest_session_payload( ?WP_User $user = null ): array {
         'authenticated' => $authenticated,
         'authorized'    => $authorized,
         'nonce'         => $authorized ? wp_create_nonce( 'wp_rest' ) : '',
+        'token'         => $authorized ? $token : '',
+        'authMode'      => $authorized ? ( $token !== '' ? 'token' : 'cookie' ) : 'none',
         'user'          => $authorized ? mamboleo_admin_rest_user_payload( $user ) : null,
     ];
 }
 
-function mamboleo_admin_rest_require_manager(): bool {
-    return current_user_can( 'manage_options' );
+function mamboleo_admin_rest_require_manager( WP_REST_Request $request ): bool {
+    if ( current_user_can( 'manage_options' ) ) {
+        return true;
+    }
+
+    $token_user = mamboleo_admin_rest_token_user( $request );
+    if ( $token_user ) {
+        wp_set_current_user( (int) $token_user->ID );
+        return true;
+    }
+
+    return false;
 }
 
 function mamboleo_admin_rest_request_params( WP_REST_Request $request ): array {
@@ -187,7 +250,13 @@ add_action( 'rest_api_init', function () {
         [
             'methods'             => 'GET',
             'permission_callback' => '__return_true',
-            'callback'            => function () {
+            'callback'            => function ( WP_REST_Request $request ) {
+                $token_user = mamboleo_admin_rest_token_user( $request );
+                if ( $token_user ) {
+                    wp_set_current_user( (int) $token_user->ID );
+                    return mamboleo_admin_rest_session_payload( $token_user, mamboleo_admin_rest_token_from_request( $request ) );
+                }
+
                 return mamboleo_admin_rest_session_payload();
             },
         ],
@@ -221,13 +290,15 @@ add_action( 'rest_api_init', function () {
                     return new WP_Error( 'forbidden', 'This account does not have admin access.', [ 'status' => 403 ] );
                 }
 
-                return mamboleo_admin_rest_session_payload( $user );
+                $token = mamboleo_admin_rest_store_token( (int) $user->ID, ! empty( $params['remember'] ) );
+                return mamboleo_admin_rest_session_payload( $user, $token );
             },
         ],
         [
             'methods'             => 'DELETE',
             'permission_callback' => '__return_true',
-            'callback'            => function () {
+            'callback'            => function ( WP_REST_Request $request ) {
+                mamboleo_admin_rest_clear_token( mamboleo_admin_rest_token_from_request( $request ) );
                 if ( is_user_logged_in() ) {
                     wp_logout();
                 }

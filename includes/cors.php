@@ -12,6 +12,7 @@ $mamboleo_allowed_origins = [
     // Production and Vercel frontend domains:
     'https://mamboleole.com',
     'https://mamboleole.vercel.app',
+    'https://mamboleo-xi.vercel.app',
     // Add more deployed frontend URLs as needed
 ];
 
@@ -22,8 +23,9 @@ function mamboleo_graphql_cors( array $headers ): array {
     $origin = sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ?? '' ) );
     if ( in_array( $origin, $mamboleo_allowed_origins, true ) ) {
         $headers['Access-Control-Allow-Origin']  = $origin;
-        $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+        $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-WP-Nonce, X-Mamboleo-Admin-Token';
         $headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
+        $headers['Access-Control-Allow-Credentials'] = 'true';
     }
     return $headers;
 }
@@ -35,8 +37,9 @@ function mamboleo_rest_cors( bool $served, WP_HTTP_Response $result, WP_REST_Req
     $origin = sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ?? '' ) );
     if ( in_array( $origin, $mamboleo_allowed_origins, true ) ) {
         header( 'Access-Control-Allow-Origin: '  . $origin );
-        header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
+        header( 'Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce, X-Mamboleo-Admin-Token' );
         header( 'Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE' );
+        header( 'Access-Control-Allow-Credentials: true' );
     }
     return $served;
 }
