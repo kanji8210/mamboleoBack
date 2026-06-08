@@ -44,6 +44,15 @@ function mamboleo_register_rest_routes(): void {
         ],
     ] );
 
+    register_rest_route( 'mamboleo/v1', '/incidents/(?P<id>\d+)/detail', [
+        'methods'             => 'GET',
+        'callback'            => 'mamboleo_get_incident_detail',
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'id' => [ 'validate_callback' => fn( $v ) => is_numeric( $v ) ],
+        ],
+    ] );
+
     // API-key protected: ingestion endpoints
     register_rest_route( 'mamboleo/v1', '/incidents', [
         'methods'             => 'POST',
@@ -321,6 +330,30 @@ function mamboleo_get_incident_community( WP_REST_Request $request ): array|WP_E
     return [
         'count'   => $count,
         'entries' => $public_entries,
+    ];
+}
+
+function mamboleo_get_incident_detail( WP_REST_Request $request ): array|WP_Error {
+    $post_id = (int) $request->get_param( 'id' );
+    $post    = get_post( $post_id );
+
+    if ( ! $post || $post->post_type !== 'incident' || $post->post_status !== 'publish' ) {
+        return new WP_Error( 'not_found', __( 'Incident not found.', 'mamboleo' ), [ 'status' => 404 ] );
+    }
+
+    $body = (string) $post->post_content;
+    $excerpt = (string) $post->post_excerpt;
+    if ( $excerpt === '' && $body !== '' ) {
+        $excerpt = wp_trim_words( wp_strip_all_tags( $body ), 40, '…' );
+    }
+
+    return [
+        'id'           => $post_id,
+        'title'        => (string) $post->post_title,
+        'body'         => $body,
+        'excerpt'      => $excerpt,
+        'reviewReason' => (string) get_post_meta( $post_id, 'review_reason', true ),
+        'needsReview'  => (bool) get_post_meta( $post_id, 'needs_review', true ),
     ];
 }
 

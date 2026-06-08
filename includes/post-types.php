@@ -26,7 +26,7 @@ function mamboleo_register_post_types(): void {
         'show_in_graphql'     => true,
         'graphql_single_name' => 'incident',
         'graphql_plural_name' => 'incidents',
-        'supports'            => [ 'title', 'excerpt', 'custom-fields', 'revisions', 'thumbnail' ],
+        'supports'            => [ 'title', 'editor', 'excerpt', 'custom-fields', 'revisions', 'thumbnail' ],
         'has_archive'         => false,
         'rewrite'             => [ 'slug' => 'incidents' ],
         'menu_icon'           => 'dashicons-location-alt',

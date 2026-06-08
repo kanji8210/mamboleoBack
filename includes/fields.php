@@ -100,6 +100,11 @@ function mamboleo_register_meta(): void {
         'description' => 'Flagged for admin review (e.g. imprecise location)',
         'default'     => false,
     ] ) );
+    register_post_meta( 'incident', 'review_reason', array_merge( $incident, [
+        'type'        => 'string',
+        'description' => 'Reason why this incident was flagged for review',
+        'default'     => '',
+    ] ) );
 
     // Lifecycle — keeps incidents fresh and lets admins pin developing stories.
     // active     → recent / default
