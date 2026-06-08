@@ -166,10 +166,17 @@ function mamboleo_handle_report( WP_REST_Request $request ): array|WP_Error {
         return new WP_Error( 'out_of_bounds', __( 'Coordinates must be valid global latitude and longitude values.', 'mamboleo' ), [ 'status' => 422 ] );
     }
 
+    $description = sanitize_textarea_field( (string) $request->get_param( 'description' ) );
+    $excerpt = $description !== '' ? wp_trim_words( $description, 40, '…' ) : '';
+
     $post_id = wp_insert_post( [
-        'post_title'  => sanitize_text_field( $request->get_param( 'title' ) ),
-        'post_type'   => 'incident',
-        'post_status' => 'pending',
+        'post_title'   => sanitize_text_field( $request->get_param( 'title' ) ),
+        'post_content' => $description,
+        'post_excerpt' => $excerpt,
+        'post_type'    => 'incident',
+        // Public map and incident post page read published incidents.
+        // Keep user submissions visible but explicitly unverified.
+        'post_status'  => 'publish',
     ] );
     if ( is_wp_error( $post_id ) ) {
         return new WP_Error( 'insert_failed', $post_id->get_error_message(), [ 'status' => 500 ] );
@@ -181,7 +188,7 @@ function mamboleo_handle_report( WP_REST_Request $request ): array|WP_Error {
     update_post_meta( $post_id, 'latitude',            $lat );
     update_post_meta( $post_id, 'longitude',           $lng );
     update_post_meta( $post_id, 'severity',            sanitize_text_field( $request->get_param( 'severity' )     ?: 'low' ) );
-    update_post_meta( $post_id, 'status',              'unsafe' );
+    update_post_meta( $post_id, 'status',              sanitize_text_field( $request->get_param( 'status' ) ?: 'unsafe' ) );
     update_post_meta( $post_id, 'incident_time',       sanitize_text_field( $request->get_param( 'incident_time' ) ?: '' ) );
     update_post_meta( $post_id, 'video_url',           esc_url_raw( $request->get_param( 'video_url' )            ?: '' ) );
     update_post_meta( $post_id, 'location_name',       sanitize_text_field( $request->get_param( 'location_name' ) ?: '' ) );
@@ -189,6 +196,9 @@ function mamboleo_handle_report( WP_REST_Request $request ): array|WP_Error {
     update_post_meta( $post_id, 'reporter_name',       $is_anonymous ? '' : sanitize_text_field( $request->get_param( 'reporter_name' ) ?: '' ) );
     update_post_meta( $post_id, 'is_verified',         false );
     update_post_meta( $post_id, 'corroboration_count', 0 );
+    update_post_meta( $post_id, 'lifecycle',           'active' );
+    update_post_meta( $post_id, 'update_count',        0 );
+    update_post_meta( $post_id, 'last_update_at',      gmdate( 'c' ) );
 
     if ( ! empty( $request->get_param( 'county' ) ) ) {
         wp_set_post_terms( $post_id, sanitize_text_field( $request->get_param( 'county' ) ), 'county' );
