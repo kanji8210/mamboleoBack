@@ -337,6 +337,7 @@ add_action( 'rest_api_init', function () {
         'methods'             => 'GET',
         'permission_callback' => 'mamboleo_admin_rest_require_manager',
         'callback'            => function ( WP_REST_Request $request ) {
+            $scope        = sanitize_key( (string) ( $request->get_param( 'scope' ) ?: 'active' ) );
             $status       = sanitize_key( (string) $request->get_param( 'status' ) );
             $search       = sanitize_text_field( (string) $request->get_param( 'search' ) );
             $needs_review = $request->get_param( 'needsReview' );
@@ -344,6 +345,32 @@ add_action( 'rest_api_init', function () {
             $per_page     = min( 50, max( 1, (int) ( $request->get_param( 'perPage' ) ?: 20 ) ) );
 
             $post_status = [ 'publish', 'pending', 'draft' ];
+            $meta_query   = [];
+
+            if ( $scope === 'pending' ) {
+                $post_status = 'pending';
+            } elseif ( $scope === 'archived' ) {
+                $meta_query[] = [
+                    'key'     => 'lifecycle',
+                    'value'   => 'archived',
+                    'compare' => '=',
+                ];
+            } else {
+                $post_status = 'publish';
+                $meta_query[] = [
+                    'relation' => 'OR',
+                    [
+                        'key'     => 'lifecycle',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key'     => 'lifecycle',
+                        'value'   => 'archived',
+                        'compare' => '!=',
+                    ],
+                ];
+            }
+
             if ( in_array( $status, [ 'publish', 'pending', 'draft' ], true ) ) {
                 $post_status = $status;
             }
@@ -362,13 +389,17 @@ add_action( 'rest_api_init', function () {
             }
 
             if ( $needs_review !== null && $needs_review !== '' ) {
-                $args['meta_query'] = [
+                $meta_query[] = [
                     [
                         'key'     => 'needs_review',
                         'value'   => rest_sanitize_boolean( $needs_review ) ? '1' : '0',
                         'compare' => '=',
                     ],
                 ];
+            }
+
+            if ( ! empty( $meta_query ) ) {
+                $args['meta_query'] = array_merge( [ 'relation' => 'AND' ], $meta_query );
             }
 
             $query = new WP_Query( $args );

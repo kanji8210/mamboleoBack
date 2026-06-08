@@ -24,6 +24,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 require_once MAMBOLEO_PLUGIN_DIR . 'data/counties.php';
 require_once MAMBOLEO_PLUGIN_DIR . 'data/countries.php';
 
+function mamboleo_location_tools_can_manage( WP_REST_Request $request ): bool {
+    if ( function_exists( 'mamboleo_admin_rest_require_manager' ) ) {
+        return mamboleo_admin_rest_require_manager( $request );
+    }
+
+    return current_user_can( 'manage_options' );
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Core helpers
 // ──────────────────────────────────────────────────────────────────────────
@@ -239,7 +247,7 @@ add_action( 'save_post_incident', function ( $post_id, $post, $update ) {
 add_action( 'rest_api_init', function () {
     register_rest_route( 'mamboleo/v1', '/admin/counties', [
         'methods'             => 'GET',
-        'permission_callback' => function () { return current_user_can( 'manage_options' ); },
+        'permission_callback' => 'mamboleo_location_tools_can_manage',
         'callback'            => function () {
             $out = [];
             foreach ( mamboleo_counties_data() as $c ) {
@@ -256,7 +264,7 @@ add_action( 'rest_api_init', function () {
 
     register_rest_route( 'mamboleo/v1', '/admin/countries', [
         'methods'             => 'GET',
-        'permission_callback' => function () { return current_user_can( 'manage_options' ); },
+        'permission_callback' => 'mamboleo_location_tools_can_manage',
         'callback'            => function () {
             return array_map( function ( $c ) {
                 return [ 'name' => $c['name'], 'slug' => $c['slug'], 'center' => $c['center'] ];
@@ -266,7 +274,7 @@ add_action( 'rest_api_init', function () {
 
     register_rest_route( 'mamboleo/v1', '/admin/incidents/(?P<id>\d+)/fix-location', [
         'methods'             => 'POST',
-        'permission_callback' => function () { return current_user_can( 'manage_options' ); },
+        'permission_callback' => 'mamboleo_location_tools_can_manage',
         'args'                => [
             'country'   => [ 'required' => false, 'type' => 'string', 'default' => 'kenya' ],
             'county'    => [ 'required' => false, 'type' => 'string', 'default' => '' ],

@@ -148,9 +148,10 @@ function mamboleo_handle_report( WP_REST_Request $request ): array|WP_Error {
     $lat = (float) $request->get_param( 'latitude' );
     $lng = (float) $request->get_param( 'longitude' );
 
-    // Kenya bounding box: lat -5..5, lng 33.5..42.5
-    if ( $lat < -5 || $lat > 5 || $lng < 33.5 || $lng > 42.5 ) {
-        return new WP_Error( 'out_of_bounds', __( 'Coordinates must be within Kenya.', 'mamboleo' ), [ 'status' => 422 ] );
+    // Global coordinates are allowed. Validation now only ensures the values
+    // are real lat/lng pairs so the app can be used worldwide.
+    if ( $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 ) {
+        return new WP_Error( 'out_of_bounds', __( 'Coordinates must be valid global latitude and longitude values.', 'mamboleo' ), [ 'status' => 422 ] );
     }
 
     $post_id = wp_insert_post( [
