@@ -29,6 +29,18 @@ function mamboleo_register_rest_routes(): void {
         'permission_callback' => '__return_true',
         'args'                => [
             'id' => [ 'validate_callback' => fn( $v ) => is_numeric( $v ) ],
+            'comment'          => [ 'required' => false, 'type' => 'string' ],
+            'on_site'          => [ 'required' => false, 'type' => 'boolean' ],
+            'at_incident_time' => [ 'required' => false, 'type' => 'boolean' ],
+        ],
+    ] );
+
+    register_rest_route( 'mamboleo/v1', '/incidents/(?P<id>\d+)/community', [
+        'methods'             => 'GET',
+        'callback'            => 'mamboleo_get_incident_community',
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'id' => [ 'validate_callback' => fn( $v ) => is_numeric( $v ) ],
         ],
     ] );
 
@@ -188,6 +200,13 @@ function mamboleo_handle_report( WP_REST_Request $request ): array|WP_Error {
 }
 
 // ── Public: corroborate ───────────────────────────────────────────────────────
+function mamboleo_client_fingerprint(): string {
+    $ip = (string) sanitize_text_field( $_SERVER['REMOTE_ADDR'] ?? '' );
+    $ua = (string) sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ?? '' );
+    $salt = wp_salt( 'nonce' );
+    return hash( 'sha256', $ip . '|' . $ua . '|' . $salt );
+}
+
 function mamboleo_handle_corroborate( WP_REST_Request $request ): array|WP_Error {
     $post_id = (int) $request->get_param( 'id' );
     $post    = get_post( $post_id );
@@ -196,10 +215,103 @@ function mamboleo_handle_corroborate( WP_REST_Request $request ): array|WP_Error
         return new WP_Error( 'not_found', __( 'Incident not found.', 'mamboleo' ), [ 'status' => 404 ] );
     }
 
-    $count = (int) get_post_meta( $post_id, 'corroboration_count', true );
-    update_post_meta( $post_id, 'corroboration_count', $count + 1 );
+    $fingerprint = mamboleo_client_fingerprint();
+    $comment = sanitize_textarea_field( (string) $request->get_param( 'comment' ) );
+    $comment = trim( substr( $comment, 0, 400 ) );
+    $on_site = (bool) $request->get_param( 'on_site' );
+    $at_incident_time = (bool) $request->get_param( 'at_incident_time' );
 
-    return [ 'id' => $post_id, 'corroboration_count' => $count + 1 ];
+    $corroborators = get_post_meta( $post_id, 'mamboleo_corroborators', true );
+    if ( ! is_array( $corroborators ) ) {
+        $corroborators = [];
+    }
+
+    $entries = get_post_meta( $post_id, 'mamboleo_community_entries', true );
+    if ( ! is_array( $entries ) ) {
+        $entries = [];
+    }
+
+    $is_confirmed = in_array( $fingerprint, $corroborators, true );
+
+    if ( $is_confirmed ) {
+        $corroborators = array_values( array_filter( $corroborators, fn( $v ) => $v !== $fingerprint ) );
+        $entries = array_values( array_filter( $entries, function ( $entry ) use ( $fingerprint ) {
+            return ! is_array( $entry ) || ( $entry['fingerprint'] ?? '' ) !== $fingerprint;
+        } ) );
+        $confirmed = false;
+    } else {
+        $corroborators[] = $fingerprint;
+        $confirmed = true;
+
+        if ( $comment !== '' || $on_site || $at_incident_time ) {
+            $entries[] = [
+                'id'              => wp_generate_uuid4(),
+                'fingerprint'     => $fingerprint,
+                'createdAt'       => gmdate( 'c' ),
+                'comment'         => $comment,
+                'onSite'          => $on_site,
+                'atIncidentTime'  => $at_incident_time,
+            ];
+        }
+    }
+
+    // Keep metadata bounded.
+    if ( count( $corroborators ) > 1000 ) {
+        $corroborators = array_slice( $corroborators, -1000 );
+    }
+    if ( count( $entries ) > 200 ) {
+        $entries = array_slice( $entries, -200 );
+    }
+
+    $count = count( $corroborators );
+    update_post_meta( $post_id, 'mamboleo_corroborators', $corroborators );
+    update_post_meta( $post_id, 'mamboleo_community_entries', $entries );
+    update_post_meta( $post_id, 'corroboration_count', $count );
+
+    return [
+        'id'        => $post_id,
+        'count'     => $count,
+        'confirmed' => $confirmed,
+    ];
+}
+
+function mamboleo_get_incident_community( WP_REST_Request $request ): array|WP_Error {
+    $post_id = (int) $request->get_param( 'id' );
+    $post    = get_post( $post_id );
+
+    if ( ! $post || $post->post_type !== 'incident' || $post->post_status !== 'publish' ) {
+        return new WP_Error( 'not_found', __( 'Incident not found.', 'mamboleo' ), [ 'status' => 404 ] );
+    }
+
+    $count = (int) get_post_meta( $post_id, 'corroboration_count', true );
+    $entries = get_post_meta( $post_id, 'mamboleo_community_entries', true );
+    if ( ! is_array( $entries ) ) {
+        $entries = [];
+    }
+
+    // Newest first and stripped of internal fingerprint data.
+    $entries = array_reverse( $entries );
+    $entries = array_slice( $entries, 0, 30 );
+
+    $public_entries = array_map( function ( $entry ) {
+        if ( ! is_array( $entry ) ) {
+            return null;
+        }
+        return [
+            'id'             => (string) ( $entry['id'] ?? wp_generate_uuid4() ),
+            'createdAt'      => (string) ( $entry['createdAt'] ?? gmdate( 'c' ) ),
+            'comment'        => (string) ( $entry['comment'] ?? '' ),
+            'onSite'         => (bool) ( $entry['onSite'] ?? false ),
+            'atIncidentTime' => (bool) ( $entry['atIncidentTime'] ?? false ),
+        ];
+    }, $entries );
+
+    $public_entries = array_values( array_filter( $public_entries, fn( $entry ) => is_array( $entry ) ) );
+
+    return [
+        'count'   => $count,
+        'entries' => $public_entries,
+    ];
 }
 
 // ── API-key ingestion: incident ───────────────────────────────────────────────

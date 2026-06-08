@@ -11,17 +11,27 @@ $mamboleo_allowed_origins = [
     'http://127.0.0.1:5174',
     // Production and Vercel frontend domains:
     'https://mamboleole.com',
+    'https://www.mamboleole.com',
     'https://mamboleole.vercel.app',
     'https://mamboleo-xi.vercel.app',
     // Add more deployed frontend URLs as needed
 ];
 
+function mamboleo_is_allowed_origin( string $origin ): bool {
+    global $mamboleo_allowed_origins;
+    if ( in_array( $origin, $mamboleo_allowed_origins, true ) ) {
+        return true;
+    }
+
+    // Allow Vercel preview deployments like https://my-branch-abc123.vercel.app
+    return (bool) preg_match( '/^https:\/\/[a-z0-9-]+\.vercel\.app$/i', $origin );
+}
+
 // ── WPGraphQL CORS ────────────────────────────────────────────────────────────
 add_action( 'graphql_response_headers_to_send', 'mamboleo_graphql_cors' );
 function mamboleo_graphql_cors( array $headers ): array {
-    global $mamboleo_allowed_origins;
     $origin = sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ?? '' ) );
-    if ( in_array( $origin, $mamboleo_allowed_origins, true ) ) {
+    if ( mamboleo_is_allowed_origin( $origin ) ) {
         $headers['Access-Control-Allow-Origin']  = $origin;
         $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-WP-Nonce, X-Mamboleo-Admin-Token';
         $headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS';
@@ -33,9 +43,8 @@ function mamboleo_graphql_cors( array $headers ): array {
 // ── REST API CORS ─────────────────────────────────────────────────────────────
 add_filter( 'rest_pre_serve_request', 'mamboleo_rest_cors', 10, 4 );
 function mamboleo_rest_cors( bool $served, WP_HTTP_Response $result, WP_REST_Request $request, WP_REST_Server $server ): bool {
-    global $mamboleo_allowed_origins;
     $origin = sanitize_text_field( wp_unslash( $_SERVER['HTTP_ORIGIN'] ?? '' ) );
-    if ( in_array( $origin, $mamboleo_allowed_origins, true ) ) {
+    if ( mamboleo_is_allowed_origin( $origin ) ) {
         header( 'Access-Control-Allow-Origin: '  . $origin );
         header( 'Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce, X-Mamboleo-Admin-Token' );
         header( 'Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE' );
