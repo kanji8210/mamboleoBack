@@ -357,6 +357,66 @@ function mamboleo_get_incident_detail( WP_REST_Request $request ): array|WP_Erro
     ];
 }
 
+function mamboleo_normalize_article_url( string $url ): string {
+    $url = trim( $url );
+    if ( $url === '' ) {
+        return '';
+    }
+
+    $parts = wp_parse_url( $url );
+    if ( ! is_array( $parts ) || empty( $parts['host'] ) ) {
+        return rtrim( $url, '/' );
+    }
+
+    $scheme = strtolower( (string) ( $parts['scheme'] ?? 'https' ) );
+    $host   = strtolower( (string) $parts['host'] );
+    $path   = isset( $parts['path'] ) ? rtrim( (string) $parts['path'], '/' ) : '';
+    if ( $path === '' ) {
+        $path = '/';
+    }
+
+    $query_string = '';
+    if ( ! empty( $parts['query'] ) ) {
+        parse_str( (string) $parts['query'], $query );
+        if ( is_array( $query ) ) {
+            foreach ( array_keys( $query ) as $key ) {
+                $key_lc = strtolower( (string) $key );
+                if ( strpos( $key_lc, 'utm_' ) === 0 || in_array( $key_lc, [ 'fbclid', 'gclid', 'mc_cid', 'mc_eid' ], true ) ) {
+                    unset( $query[ $key ] );
+                }
+            }
+            if ( ! empty( $query ) ) {
+                ksort( $query );
+                $query_string = http_build_query( $query );
+            }
+        }
+    }
+
+    return $scheme . '://' . $host . $path . ( $query_string !== '' ? '?' . $query_string : '' );
+}
+
+function mamboleo_incident_dedupe_key( array $params ): string {
+    $title = strtolower( trim( wp_strip_all_tags( (string) ( $params['title'] ?? '' ) ) ) );
+    $title = preg_replace( '/[^a-z0-9\s]/', ' ', $title ) ?: '';
+    $title = preg_replace( '/\s+/', ' ', $title ) ?: '';
+
+    $type = strtolower( sanitize_text_field( (string) ( $params['type'] ?? '' ) ) );
+
+    $location = strtolower( trim( sanitize_text_field( (string) ( $params['location_name'] ?? '' ) ) ) );
+    $location = preg_replace( '/\s+/', ' ', $location ) ?: '';
+
+    $incident_time = trim( (string) ( $params['incident_time'] ?? '' ) );
+    $time_bucket = '';
+    if ( $incident_time !== '' ) {
+        $timestamp = strtotime( $incident_time );
+        if ( $timestamp !== false ) {
+            $time_bucket = gmdate( 'Y-m-d-H', $timestamp );
+        }
+    }
+
+    return md5( implode( '|', [ $title, $type, $location, $time_bucket ] ) );
+}
+
 // ── API-key ingestion: incident ───────────────────────────────────────────────
 function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     $params = $request->get_json_params();
@@ -367,16 +427,40 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     // Dedupe by article_url so the same news story scraped by two different
     // scrapers (e.g. Google News + Nation) doesn't create duplicate incidents.
     $article_url = isset( $params['article_url'] ) ? esc_url_raw( $params['article_url'] ) : '';
+    $article_url_canonical = $article_url ? mamboleo_normalize_article_url( $article_url ) : '';
     if ( $article_url ) {
+        $url_candidates = array_values( array_filter( array_unique( [ $article_url, $article_url_canonical ] ) ) );
+        $url_meta_query = [
+            'relation' => 'OR',
+            [ 'key' => 'article_url', 'value' => $url_candidates, 'compare' => 'IN' ],
+        ];
+        if ( $article_url_canonical ) {
+            $url_meta_query[] = [ 'key' => 'article_url_canonical', 'value' => $article_url_canonical ];
+        }
+
         $existing = get_posts( [
             'post_type'      => 'incident',
             'post_status'    => [ 'publish', 'pending', 'draft' ],
             'posts_per_page' => 1,
             'fields'         => 'ids',
-            'meta_query'     => [ [ 'key' => 'article_url', 'value' => $article_url ] ],
+            'meta_query'     => $url_meta_query,
         ] );
         if ( ! empty( $existing ) ) {
             return [ 'id' => (int) $existing[0], 'message' => 'Incident already exists (deduped by article_url).' ];
+        }
+    }
+
+    $dedupe_key = mamboleo_incident_dedupe_key( is_array( $params ) ? $params : [] );
+    if ( $dedupe_key !== '' ) {
+        $existing = get_posts( [
+            'post_type'      => 'incident',
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
+            'meta_query'     => [ [ 'key' => 'incident_dedupe_key', 'value' => $dedupe_key ] ],
+        ] );
+        if ( ! empty( $existing ) ) {
+            return [ 'id' => (int) $existing[0], 'message' => 'Incident already exists (deduped by fingerprint).' ];
         }
     }
 
@@ -404,6 +488,8 @@ function mamboleo_create_incident( WP_REST_Request $request ): array|WP_Error {
     if ( isset( $params['location_name'] ) ) update_post_meta( $post_id, 'location_name',  sanitize_text_field( $params['location_name'] ) );
     if ( isset( $params['reporter_name'] ) ) update_post_meta( $post_id, 'reporter_name',  sanitize_text_field( $params['reporter_name'] ) );
     if ( isset( $params['article_url'] ) )   update_post_meta( $post_id, 'article_url',    esc_url_raw( $params['article_url'] ) );
+    if ( $article_url_canonical )            update_post_meta( $post_id, 'article_url_canonical', $article_url_canonical );
+    if ( $dedupe_key )                       update_post_meta( $post_id, 'incident_dedupe_key', $dedupe_key );
 
     // Verified iff auto-published AND caller didn't override.
     $is_verified = isset( $params['is_verified'] ) ? (bool) $params['is_verified'] : ! $needs_review;
